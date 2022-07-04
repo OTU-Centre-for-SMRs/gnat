@@ -17,7 +17,7 @@ GnatApp::GnatApp(InputParameters parameters) : MooseApp(parameters)
   GnatApp::registerAll(_factory, _action_factory, _syntax);
 }
 
-GnatApp::~GnatApp() {}
+GnatApp::~GnatApp() { }
 
 void
 GnatApp::registerAll(Factory & f, ActionFactory & af, Syntax & syntax)
