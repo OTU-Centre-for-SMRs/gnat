@@ -5,12 +5,13 @@ registerMooseObject("GnatApp", BaseNeutronicsMaterial);
 InputParameters
 BaseNeutronicsMaterial::validParams()
 {
-  InputParameters params = Material::validParams();
-  params.addClassDescription("Provides basic functionality for other neutron"
-                             " transport kernels. This handles the generation"
-                             " of Gauss-Chebyshev angular quadrature"
-                             " set and spherical harmonics expansion"
-                             " coefficients.");
+  auto params = Material::validParams();
+  params.addClassDescription("Provides basic functionality for the neutron "
+                             "transport kernels. This handles the generation "
+                             "of Gauss-Chebyshev angular quadrature "
+                             "set. Note that these material properties should "
+                             "not be exposed to the user, instead being enabled "
+                             "through a transport action.");
   params.addRequiredRangeCheckedParam<unsigned int>("legendre_order",
                                                     "legendre_order > 0",
                                                     "Order of the polar Gauss-"
@@ -20,35 +21,36 @@ BaseNeutronicsMaterial::validParams()
                                                     "Order of the azimuthal "
                                                     "Gauss-Chebyshev "
                                                     "quadrature set.");
-  params.addRequiredRangeCheckedParam<unsigned int>("spherical_harmonics_order",
-                                                    "spherical_harmonics_order >= 0",
-                                                    "The spherical harmonics "
-                                                    "expansion order for the "
-                                                    "scattering and external "
-                                                    "sources.");
+  MooseEnum major_axis("x y z", "x");
+  params.addParam<MooseEnum>("major_axis", major_axis,
+                             "Major axis of the angular quadrature: $\\mu = "
+                             "\\vec{\\Omega}\\cdot\\hat{major}$. Allows the "
+                             "polar angular quadrature to align with a cartesian "
+                             "axis with minimal heterogeneity. Default is the "
+                             "x-axis.");
 
   return params;
 }
 
 BaseNeutronicsMaterial::BaseNeutronicsMaterial(const InputParameters & parameters)
   : Material(parameters)
-  , _harmonics_order(getParam<unsigned int>("spherical_harmonics_order"))
   , _quadrature_set(getParam<unsigned int>("chebyshev_order"),
-                    getParam<unsigned int>("legendre_order"))
+                    getParam<unsigned int>("legendre_order"),
+                    getParam<MooseEnum>("major_axis").getEnum<GaussAngularQuadrature::MajorAxis>())
   , _quadrature_directions(declareADProperty<std::vector<RealVectorValue>>("directions"))
   , _quadrature_weights(declareADProperty<std::vector<Real>>("direction_weights"))
-{
-  if (_harmonics_order >= _quadrature_set.totalOrder() - 1)
-    mooseWarning("Cannot fully integrate the requested SH order with the"
-                 " provided quadrature order(s).");
-}
+{ }
 
 void
 BaseNeutronicsMaterial::computeQpProperties()
 {
   auto & dir = _quadrature_set.getDirections();
   auto & w = _quadrature_set.getWeights();
-  for (unsigned int i = 0; i < _quadrature_set.totalOrder(); ++i)
+  auto order = _quadrature_set.totalOrder();
+
+  _quadrature_directions[_qp].resize(order, 0.0);
+  _quadrature_weights[_qp].resize(order, 0.0);
+  for (unsigned int i = 0; i < order; ++i)
   {
     _quadrature_directions[_qp][i] = dir[i];
     _quadrature_weights[_qp][i] = w[i];
