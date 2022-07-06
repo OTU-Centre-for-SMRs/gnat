@@ -17,8 +17,7 @@ ADNeutronTimeDerivative::validParams()
                                                     "group_index >= 0",
                                                     "The energy group index "
                                                     "$g$ of the current "
-                                                    "angular flux "
-                                                    "($\\Psi_{g, n}^{k}$).");
+                                                    "angular flux.");
   return params;
 }
 

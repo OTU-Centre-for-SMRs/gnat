@@ -1,0 +1,8 @@
+Applications:
+    gnat:
+        app_types:
+            - GnatApp
+        content_directory: ${ROOT_DIR}/doc/content
+        remove:
+        log_default: WARNING
+        show_warning: false

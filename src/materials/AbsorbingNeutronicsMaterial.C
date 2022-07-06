@@ -14,15 +14,15 @@ AbsorbingNeutronicsMaterial::validParams()
   params.addRequiredRangeCheckedParam<unsigned int>("num_groups",
                                                     "num_groups > 0",
                                                     "The number of neutron "
-                                                    "energy groups ($n_{g}$) "
+                                                    "energy groups $n_{g}$ "
                                                     "the energy spectrum is "
                                                     "divided into.");
   params.addRequiredParam<std::vector<Real>>("group_speeds",
-                                             "The neutron speeds ($v_{g}$) for "
+                                             "The neutron speeds $v_{g}$ for "
                                              "all energy groups. Units of $cm s^{-1}$.");
   params.addRequiredParam<std::vector<Real>>("group_removal",
                                              "The macroscopic neutron removal "
-                                             "cross-sections ($\\Sigma_{r,g}$) "
+                                             "cross-sections $\\Sigma_{r,g}$)"
                                              "for all energy groups. Units of $cm^{-1}$.");
 
   return params;

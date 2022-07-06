@@ -19,8 +19,7 @@ ADDGNeutronStreamingUpwind::validParams()
                                                     "ordinate_index >= 0",
                                                     "The discrete ordinate index "
                                                     "$n$ of the current angular "
-                                                    "flux "
-                                                    "($\\Psi_{g, n}^{k}$).");
+                                                    "flux.");
 
   return params;
 }
