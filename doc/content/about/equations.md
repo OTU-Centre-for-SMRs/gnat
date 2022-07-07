@@ -32,17 +32,17 @@ The boundary conditions for [!eqref](nte) are the following:
 
 !equation id=nte_bc
 \Psi_{g}(\vec{r}, \hat{\Omega}, t) = \Psi_{inc,\, g}(\vec{r}, \hat{\Omega}, t) + \alpha_{s,\, g}(\vec{r})\Psi_{g}(\vec{r}, \hat{\Omega}_{r}, t),\\
-\vec{r}\in\Gamma\text{ and } \hat{n}(\vec{r})\cdot\hat{\Omega} < 0
+\vec{r}\in\Gamma\text{ and } \hat{n}\cdot\hat{\Omega} < 0
 
 where
 
-- $\hat{\Omega}_{r}$ is the specular reflection direction ($st$). $\hat{\Omega}_{r} = \hat{\Omega} - 2\hat{\Omega}\cdot\hat{n}(\vec{r})\,\hat{n}(\vec{r})$
+- $\hat{\Omega}_{r}$ is the specular reflection direction ($st$). $\hat{\Omega}_{r} = \hat{\Omega} - (2\hat{\Omega}\cdot\hat{n})\hat{n}$
 - $\Psi_{inc,\, g}(\vec{r}, \hat{\Omega}, t)$ is the incoming angular neutron flux for energy group $g$
   ($cm^{-2}s^{-1}st^{-1}$).
 - $\alpha_{s,\, g}(\vec{r})$ is the specular reflection albedo (dimensionless).
 - $\Psi_{g}(\vec{r}, \hat{\Omega}_{r}, t)$ is the specularly reflected angular neutron flux for energy group $g$
   ($cm^{-2}s^{-1}st^{-1}$).
-- $\hat{n}(\vec{r})$ is the boundary normal vector.
+- $\hat{n}$ is the boundary normal vector.
 - $\Gamma$ is the boundary surface.
 
 The discontinuous weak form of [!eqref](nte) is given by the following (with functional
@@ -57,13 +57,24 @@ notation omitted for brevity):
 - \underbrace{\Big( \psi_{j},\, \sum_{g' = 1}^{G}\int_{4\pi}\Sigma_{s,\, g'\rightarrow g}f_{g'\rightarrow g}\Psi^{k}_{g'}\, d\hat{\Omega}' \Big)_{D^{k}}}_{\text{Scattering Kernel}}
 - \underbrace{\Big( \psi_{j},\, S_{g} \Big)_{D^{k}}}_{\text{Source Kernel}} = 0
 
-The weak form of [!eqref](nte_bc) is given by the following (with functional notation omitted for brevity):
+The weak forms of [!eqref](nte_bc) are given by the following (with functional notation omitted for brevity):
 
-!equation id=nte_bc_wf
-h
+!equation id=nte_bc_wf_r
+\underbrace{\Big\langle \psi_{j},\, \Psi_{g}(\vec{r}, \hat{\Omega}, t)
+- \alpha_{s,\, g}(\vec{r})\Psi_{g}(\vec{r}, \hat{\Omega}_{r}, t)\Big\rangle_{\Gamma_{r}}}_{\text{Reflective Boundary Condition}} = 0
+
+for the reflective boundary condition and
+
+!equation id=nte_bc_wf_i
+\underbrace{\Big\langle \psi_{j},\, \Psi_{g}(\vec{r}, \hat{\Omega}, t)
+- \Psi_{inc,\, g}(\vec{r}, \hat{\Omega}, t)\Big\rangle_{\Gamma_{i}}}_{\text{Incoming Flux Boundary Condition}} = 0
+
+for the incoming flux boundary condition. The combined boundary condition has been
+decomposed into two boundary conditions for reflective boundaries $\Gamma_{r}$ and
+incoming flux bondaries $\Gamma_{i}$ such that $\Gamma = \Gamma_{r}\cup\Gamma_{i}$.
 
 The discrete ordiantes (+S@n@+) method is used to discretize the angular variable in
-[!eqref](nte_wf) and [!eqref](nte_bc_wf), and the scattering kernel is expanded in Legendre
+[!eqref](nte_wf), [!eqref](nte_bc_wf_r), and [!eqref](nte_bc_wf_i). The scattering kernel is expanded in Legendre
 polynomials to yield a spherical harmonics representation for anisotropic scattering.
 These methods are discussed in the [angular approach section](angular_approach.md).
 
