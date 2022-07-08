@@ -133,7 +133,8 @@ y_{j,\, C} = \cos{(\omega_{j,\,C})},\, \omega_{j,\,C} = \frac{(2j - 1)\pi}{2n_{C
 
 The order of the quadrature is $2n_{L}n_{C}$, as the angular flux is not guaranteed
 to be symmetrical about $\omega = \pi$ and must therefore be evaluated twice for
-positive and negative angular directions. We can chose $\hat{\Omega}_{n}$ such that:
+positive and negative angular directions. We can chose the discrete ordinates
+$\hat{\Omega}_{n}$ such that:
 
 !equation
 \hat{\Omega}_{n} = \hat{\Omega}(\mu_{i,\, L}, y_{j,\, C})

@@ -12,24 +12,89 @@ GaussAngularQuadrature::GaussAngularQuadrature(unsigned int n_c,
   , _azimuthal_quadrature(std::move(n_c))
 {
   // Build the quadrature set.
-  for (unsigned int i = 1; i <= _n_l; ++i)
+  switch (axis)
   {
-    for (unsigned int j = 1; j <= _n_c; ++j)
+    case MajorAxis::X:
     {
-      auto weight = _polar_quadrature.weight(i - 1u) * _azimuthal_quadrature.weight(j - 1u);
-      const auto mu = _polar_quadrature.root(i - 1u);
-      const auto omega = _azimuthal_quadrature.angularRoot(j - 1u);
+      for (unsigned int i = 1; i <= _n_l; ++i)
+      {
+        for (unsigned int j = 1; j <= _n_c; ++j)
+        {
+          auto weight = _polar_quadrature.weight(i - 1u)
+                        * _azimuthal_quadrature.weight(j - 1u);
+          const auto mu = _polar_quadrature.root(i - 1u);
+          const auto omega = _azimuthal_quadrature.angularRoot(j - 1u);
 
-      _quadrature_set_omega.emplace_back(
-        RealVectorValue(mu, std::sqrt(1.0 - (mu * mu)) * std::cos(omega),
-                        std::sqrt(1.0 - (mu * mu)) * std::sin(omega)));
-      _quadrature_set_weight.emplace_back(weight);
+          _quadrature_set_omega.emplace_back(
+            RealVectorValue(mu,
+                            std::sqrt(1.0 - (mu * mu)) * std::cos(omega),
+                            std::sqrt(1.0 - (mu * mu)) * std::sin(omega)));
+          _quadrature_set_weight.emplace_back(weight);
 
-      _quadrature_set_omega.emplace_back(
-        RealVectorValue(-1.0 * mu,
-                        -1.0 * std::sqrt(1.0 - (mu * mu)) * std::cos(omega),
-                        -1.0 * std::sqrt(1.0 - (mu * mu)) * std::sin(omega)));
-      _quadrature_set_weight.emplace_back(weight);
+          _quadrature_set_omega.emplace_back(
+            RealVectorValue(-1.0 * mu,
+                            -1.0 * std::sqrt(1.0 - (mu * mu)) * std::cos(omega),
+                            -1.0 * std::sqrt(1.0 - (mu * mu)) * std::sin(omega)));
+          _quadrature_set_weight.emplace_back(weight);
+        }
+      }
+
+      break;
+    }
+
+    case MajorAxis::Y:
+    {
+      for (unsigned int i = 1; i <= _n_l; ++i)
+      {
+        for (unsigned int j = 1; j <= _n_c; ++j)
+        {
+          auto weight = _polar_quadrature.weight(i - 1u)
+                        * _azimuthal_quadrature.weight(j - 1u);
+          const auto mu = _polar_quadrature.root(i - 1u);
+          const auto omega = _azimuthal_quadrature.angularRoot(j - 1u);
+
+          _quadrature_set_omega.emplace_back(
+            RealVectorValue(std::sqrt(1.0 - (mu * mu)) * std::sin(omega), mu,
+                            std::sqrt(1.0 - (mu * mu)) * std::cos(omega)));
+          _quadrature_set_weight.emplace_back(weight);
+
+          _quadrature_set_omega.emplace_back(
+            RealVectorValue(-1.0 * std::sqrt(1.0 - (mu * mu)) * std::sin(omega),
+                            -1.0 * mu,
+                            -1.0 * std::sqrt(1.0 - (mu * mu)) * std::cos(omega)));
+          _quadrature_set_weight.emplace_back(weight);
+        }
+      }
+
+      break;
+    }
+
+    case MajorAxis::Z:
+    {
+      for (unsigned int i = 1; i <= _n_l; ++i)
+      {
+        for (unsigned int j = 1; j <= _n_c; ++j)
+        {
+          auto weight = _polar_quadrature.weight(i - 1u)
+                        * _azimuthal_quadrature.weight(j - 1u);
+          const auto mu = _polar_quadrature.root(i - 1u);
+          const auto omega = _azimuthal_quadrature.angularRoot(j - 1u);
+
+          _quadrature_set_omega.emplace_back(
+            RealVectorValue(std::sqrt(1.0 - (mu * mu)) * std::cos(omega),
+                            std::sqrt(1.0 - (mu * mu)) * std::sin(omega),
+                            mu));
+          _quadrature_set_weight.emplace_back(weight);
+
+          _quadrature_set_omega.emplace_back(
+            RealVectorValue(-1.0 * std::sqrt(1.0 - (mu * mu)) * std::cos(omega),
+                            -1.0 * std::sqrt(1.0 - (mu * mu)) * std::sin(omega),
+                            -1.0 * mu));
+          _quadrature_set_weight.emplace_back(weight);
+        }
+      }
+      
+      break;
     }
   }
 }

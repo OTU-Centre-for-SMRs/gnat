@@ -23,8 +23,7 @@ BaseNeutronicsMaterial::validParams()
                                                     "quadrature set.");
   MooseEnum major_axis("x y z", "x");
   params.addParam<MooseEnum>("major_axis", major_axis,
-                             "Major axis of the angular quadrature: $\\mu = "
-                             "\\vec{\\Omega}\\cdot\\hat{major}$. Allows the "
+                             "Major axis of the angular quadrature. Allows the "
                              "polar angular quadrature to align with a cartesian "
                              "axis with minimal heterogeneity. Default is the "
                              "x-axis.");

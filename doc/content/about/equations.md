@@ -60,18 +60,24 @@ notation omitted for brevity):
 The weak forms of [!eqref](nte_bc) are given by the following (with functional notation omitted for brevity):
 
 !equation id=nte_bc_wf_r
-\underbrace{\Big\langle \psi_{j},\, \Psi_{g}(\vec{r}, \hat{\Omega}, t)
-- \alpha_{s,\, g}(\vec{r})\Psi_{g}(\vec{r}, \hat{\Omega}_{r}, t)\Big\rangle_{\Gamma_{r}}}_{\text{Reflective Boundary Condition}} = 0
+\Big\langle \psi_{j},\, \hat{n}\cdot\hat{\Omega}\alpha_{s,\, g}\Psi_{r,\,g}^{k}\Big\rangle_{\Gamma_{r}} = 0,\quad\hat{n}\cdot\hat{\Omega} \leq 0
+\\
+\underbrace
+{
+\Big\langle \psi_{j},\, \hat{n}\cdot\hat{\Omega}\Psi_{g}^{k}\Big\rangle_{\Gamma_{r}} = 0,\quad\hat{n}\cdot\hat{\Omega} > 0
+}_{\text{Reflective Boundary Condition}}
 
 for the reflective boundary condition and
 
 !equation id=nte_bc_wf_i
-\underbrace{\Big\langle \psi_{j},\, \Psi_{g}(\vec{r}, \hat{\Omega}, t)
-- \Psi_{inc,\, g}(\vec{r}, \hat{\Omega}, t)\Big\rangle_{\Gamma_{i}}}_{\text{Incoming Flux Boundary Condition}} = 0
+\Big\langle \psi_{j},\, \hat{n}\cdot\hat{\Omega}\Psi_{inc,\, g}\Big\rangle_{\Gamma_{i}} = 0,\quad\hat{n}\cdot\hat{\Omega} \leq 0\\
+\underbrace{\Big\langle \psi_{j},\, \hat{n}\cdot\hat{\Omega}\Psi_{g}\Big\rangle_{\Gamma_{i}} = 0,\quad\hat{n}\cdot\hat{\Omega} > 0}_{\text{Incoming Flux Boundary Condition}}
 
 for the incoming flux boundary condition. The combined boundary condition has been
 decomposed into two boundary conditions for reflective boundaries $\Gamma_{r}$ and
 incoming flux bondaries $\Gamma_{i}$ such that $\Gamma = \Gamma_{r}\cup\Gamma_{i}$.
+A special case of an incoming flux boundary condition where $\Psi_{inc,\, g}(\vec{r}, \hat{\Omega}, t) = 0$
+is the vacuum boundary condition.
 
 The discrete ordiantes (+S@n@+) method is used to discretize the angular variable in
 [!eqref](nte_wf), [!eqref](nte_bc_wf_r), and [!eqref](nte_bc_wf_i). The scattering kernel is expanded in Legendre

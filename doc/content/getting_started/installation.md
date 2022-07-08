@@ -99,7 +99,7 @@ Before continuing with the compilation process, ensure that the MOOSE environmen
 has been activated in your shell. This can be done with the following command:
 
 ```language=bash
-namba activate moose
+mamba activate moose
 ```
 
 You can then compile the application using the `make` buildsystem:
