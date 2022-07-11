@@ -13,11 +13,12 @@ public:
   NeutronFluxMoment(const InputParameters & parameters);
 
 protected:
-  void cartesianToSpherical(RealVectorValue ordinate, Real & mu, Real & omega);
+  void cartesianToSpherical(const RealVectorValue & ordinate, Real & mu,
+                            Real & omega);
 
   virtual Real computeValue() override;
 
-  std::vector<const VariableValue *> _flux_ordinates;
+  std::vector<const ADVariableValue *> _flux_ordinates;
 
   const GaussAngularQuadrature::MajorAxis _axis;
   const unsigned int _degree;

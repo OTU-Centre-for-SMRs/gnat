@@ -41,12 +41,12 @@ NeutronFluxMoment::NeutronFluxMoment(const InputParameters & parameters)
 
   _flux_ordinates.reserve(num_coupled);
   for (unsigned int i = 0; i < num_coupled; ++i)
-    _flux_ordinates.emplace_back(&coupledValue("group_flux_ordinates", i));
+    _flux_ordinates.emplace_back(&adCoupledValue("group_flux_ordinates", i));
 }
 
 void
-NeutronFluxMoment::cartesianToSpherical(RealVectorValue ordinate, Real & mu,
-                                        Real & omega)
+NeutronFluxMoment::cartesianToSpherical(const RealVectorValue & ordinate,
+                                        Real & mu, Real & omega)
 {
   switch (_axis)
   {
