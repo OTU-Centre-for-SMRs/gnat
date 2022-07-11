@@ -17,5 +17,5 @@ capabilities through NJOY, a aerosol transport model for the activation of speci
 in both liquids and gases, and a depletion solver for activated materials. MOOSE
 provides several advantages for Gnat: scalability to machines from single-digit
 core counts to tens of thousands of cores, continuous open-source framework
-improvements, semi-automatic software quality assurance (to NQA1), and
+improvements, semi-automatic software quality assurance (to NQA-1), and
 additional physics modules (such as finite volume and finite element fluids).

@@ -7,9 +7,10 @@ BaseNeutronicsMaterial::validParams()
 {
   auto params = Material::validParams();
   params.addClassDescription("Provides basic functionality for the neutron "
-                             "transport kernels. This handles the generation "
-                             "of Gauss-Chebyshev angular quadrature "
-                             "set. Note that these material properties should "
+                             "transport kernels, and should be applied over the "
+                             "entire domain. This material handles the generation "
+                             "of angular quadrature "
+                             "sets. Note that these material properties should "
                              "not be exposed to the user, instead being enabled "
                              "through a transport action.");
   params.addRequiredRangeCheckedParam<unsigned int>("legendre_order",

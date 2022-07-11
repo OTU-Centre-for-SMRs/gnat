@@ -5,7 +5,7 @@ registerMooseObject("GnatApp", AbsorbingNeutronicsMaterial);
 InputParameters
 AbsorbingNeutronicsMaterial::validParams()
 {
-  auto params = BaseNeutronicsMaterial::validParams();
+  auto params = Material::validParams();
   params.addClassDescription("Provides the neutron group velocity ($v_{g}$) "
                              "and the neutron group removal cross-section "
                              "($\\Sigma_{r,g}$) for simple transport problems. "
@@ -29,7 +29,7 @@ AbsorbingNeutronicsMaterial::validParams()
 }
 
 AbsorbingNeutronicsMaterial::AbsorbingNeutronicsMaterial(const InputParameters & parameters)
-  : BaseNeutronicsMaterial(parameters)
+  : Material(parameters)
   , _num_groups(getParam<unsigned int>("num_groups"))
   , _v_g(getParam<std::vector<Real>>("group_speeds"))
   , _sigma_r_g(getParam<std::vector<Real>>("group_removal"))

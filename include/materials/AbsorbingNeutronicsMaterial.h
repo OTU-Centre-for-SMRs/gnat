@@ -1,8 +1,8 @@
 #pragma once
 
-#include "BaseNeutronicsMaterial.h"
+#include "Material.h"
 
-class AbsorbingNeutronicsMaterial : public BaseNeutronicsMaterial
+class AbsorbingNeutronicsMaterial : public Material
 {
 public:
   static InputParameters validParams();
