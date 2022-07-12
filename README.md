@@ -24,10 +24,10 @@ cd gnat/doc
 ./moosedocs.py build --serve
 ```
 
-Afterwards, navigate to `http://127.0.0.1:8000/source/index.html` with your browser of
+Afterwards, navigate to [here](http://127.0.0.1:8000/source/index.html) with your browser of
 choice to view the source file documentation. To view a breakdown of the governing
-equations, visit `http://127.0.0.1:8000/about/equations.html`. The tutorials (when
-written) can be found at http://127.0.0.1:8000/getting_started/tutorials.html.
+equations, visit [this page](http://127.0.0.1:8000/about/equations.html). The tutorials (when
+written) can be found [here](http://127.0.0.1:8000/getting_started/tutorials.html).
 
 The documentation website can be closed by entering `Ctrl + c` in the
 terminal which built the documentation.
