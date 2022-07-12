@@ -18,6 +18,8 @@ protected:
                             Real & mu, Real & omega);
 
   const unsigned int _ordinate_index; // n
+  const unsigned int _group_index; // g
+  const unsigned int _num_groups; // G
   const GaussAngularQuadrature::MajorAxis _axis;
 
   const ADMaterialProperty<std::vector<RealVectorValue>> & _directions;

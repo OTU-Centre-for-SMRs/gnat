@@ -15,8 +15,8 @@ ADNeutronRemoval::validParams()
   params.addRequiredRangeCheckedParam<unsigned int>("group_index",
                                                     "group_index >= 0",
                                                     "The energy group index "
-                                                    "$g$ of the current "
-                                                    "angular flux.");
+                                                    "of the current angular "
+                                                    "flux.");
 
   return params;
 }
