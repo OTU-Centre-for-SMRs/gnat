@@ -22,7 +22,7 @@ protected:
 
   const GaussAngularQuadrature::MajorAxis _axis;
   const unsigned int _degree;
-  const unsigned int _order;
+  const int _order;
 
   const ADMaterialProperty<std::vector<RealVectorValue>> & _quadrature_directions;
   const ADMaterialProperty<std::vector<Real>> & _quadrature_weights;

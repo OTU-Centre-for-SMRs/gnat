@@ -1,12 +1,12 @@
-#include "ConstantNeutronPointSource.h"
+#include "IsotropicNeutronPointSource.h"
 
-registerMooseObject("GnatApp", ConstantNeutronPointSource);
+registerMooseObject("GnatApp", IsotropicNeutronPointSource);
 
 InputParameters
-ConstantNeutronPointSource::validParams()
+IsotropicNeutronPointSource::validParams()
 {
   InputParameters params = DiracKernel::validParams();
-  params.addClassDescription("Computes the point (isotropic) source term for "
+  params.addClassDescription("Computes the isotropic point source term for "
                              "current group of the discrete ordinates neutron "
                              "transport equation. The weak form is given by "
                              "$-(\\psi_{j}, \\frac{S_{g,0,0}}{4\\pi})$. "
@@ -14,11 +14,11 @@ ConstantNeutronPointSource::validParams()
                              "instead being enabled through a transport action.");
   params.addRequiredParam<std::vector<Real>>("intensities",
                                              "Isotropic source intensities for "
-                                             "all constant point sources. "
+                                             "all isotropic point sources. "
                                              "Number of provided intensities "
                                              "must match the number of points "
                                              "in 'points'.");
-  params.addRequiredParam<std::vector<Point>>("points", "All point source "
+  params.addRequiredParam<std::vector<Point>>("points", "All isotropic point source "
                                               "locations. Number of provided "
                                               "points must match the number of "
                                               "provided intensities in "
@@ -27,7 +27,7 @@ ConstantNeutronPointSource::validParams()
   return params;
 }
 
-ConstantNeutronPointSource::ConstantNeutronPointSource(const InputParameters & parameters)
+IsotropicNeutronPointSource::IsotropicNeutronPointSource(const InputParameters & parameters)
   : DiracKernel(parameters)
   , _source_intensities(getParam<std::vector<Real>>("intensities"))
   , _source_locations(getParam<std::vector<Point>>("points"))
@@ -40,7 +40,7 @@ ConstantNeutronPointSource::ConstantNeutronPointSource(const InputParameters & p
 }
 
 void
-ConstantNeutronPointSource::addPoints()
+IsotropicNeutronPointSource::addPoints()
 {
   _point_intensity_mapping.clear();
   for (unsigned int i = 0; i < _source_intensities.size(); ++i)
@@ -51,7 +51,7 @@ ConstantNeutronPointSource::addPoints()
 }
 
 Real
-ConstantNeutronPointSource::computeQpResidual()
+IsotropicNeutronPointSource::computeQpResidual()
 {
   return (-1.0 / M_PI) * _test[_i][_qp]
          * _source_intensities[_point_intensity_mapping[_current_point]];

@@ -23,8 +23,7 @@ NeutronFluxMoment::validParams()
                              "in the BaseNeutronicsMaterial.");
   params.addRequiredParam<unsigned int>("degree", "Degree of this angular flux "
                                         "moment.");
-  params.addRequiredParam<unsigned int>("order", "Order of this angular flux "
-                                        "moment.");
+  params.addRequiredParam<int>("order", "Order of this angular flux moment.");
 
   return params;
 }
@@ -35,7 +34,7 @@ NeutronFluxMoment::NeutronFluxMoment(const InputParameters & parameters)
   , _quadrature_weights(getADMaterialProperty<std::vector<Real>>("direction_weights"))
   , _axis(getParam<MooseEnum>("major_axis").getEnum<GaussAngularQuadrature::MajorAxis>())
   , _degree(getParam<unsigned int>("degree"))
-  , _order(getParam<unsigned int>("order"))
+  , _order(getParam<int>("order"))
 {
   unsigned int num_coupled = coupledComponents("group_flux_ordinates");
 

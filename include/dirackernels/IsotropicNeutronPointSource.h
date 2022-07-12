@@ -5,12 +5,12 @@
 #include <map>
 
 // This source is an isotopic neutron source for the current group.
-class ConstantNeutronPointSource : public DiracKernel
+class IsotropicNeutronPointSource : public DiracKernel
 {
 public:
   static InputParameters validParams();
 
-  ConstantNeutronPointSource(const InputParameters & parameters);
+  IsotropicNeutronPointSource(const InputParameters & parameters);
 
   virtual void addPoints() override;
 

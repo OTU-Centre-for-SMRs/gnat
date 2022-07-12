@@ -27,7 +27,7 @@ ADNeutronMaterialSource::validParams()
   params.addRequiredRangeCheckedParam<unsigned int>("ordinate_index",
                                                     "ordinate_index >= 0",
                                                     "The discrete ordinate index "
-                                                    "$n$ of the current angular "
+                                                    "of the current angular "
                                                     "flux.");
   params.addRequiredRangeCheckedParam<unsigned int>("group_index",
                                                     "group_index >= 0",
