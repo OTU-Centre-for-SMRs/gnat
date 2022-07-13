@@ -28,8 +28,7 @@ Extensions:
                 Gnat Source Pages: source/index.md
                 MOOSE Source Pages: https://mooseframework.inl.gov/source/index.html
     MooseDocs.extensions.appsyntax:
-        executable: ${ROOT_DIR}/gnat-opt
-        app_name: GnatApp
+        executable: ${ROOT_DIR}
         remove: !include ${MOOSE_DIR}/framework/doc/remove.yml
         includes:
             - include
