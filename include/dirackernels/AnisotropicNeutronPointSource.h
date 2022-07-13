@@ -8,7 +8,6 @@
  * integral of f_{g}(\hat{\Omega}) over the unit sphere equals 1.
 */
 // TODO: Multiple anisotropic point sources?
-// TODO: Quadrature dir+w from materials. Source moments. Residual contrib.
 class AnisotropicNeutronPointSource : public DiracKernel
 {
 public:
@@ -28,4 +27,4 @@ protected:
   const Point _source_location;
 
   const ADMaterialProperty<std::vector<RealVectorValue>> & _directions;
-};
+}; // class AnisotropicNeutronPointSource

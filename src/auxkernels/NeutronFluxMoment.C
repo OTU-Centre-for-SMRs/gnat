@@ -36,7 +36,7 @@ NeutronFluxMoment::NeutronFluxMoment(const InputParameters & parameters)
   , _degree(getParam<unsigned int>("degree"))
   , _order(getParam<int>("order"))
 {
-  unsigned int num_coupled = coupledComponents("group_flux_ordinates");
+  const unsigned int num_coupled = coupledComponents("group_flux_ordinates");
 
   _flux_ordinates.reserve(num_coupled);
   for (unsigned int i = 0; i < num_coupled; ++i)

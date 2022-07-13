@@ -18,4 +18,4 @@ protected:
 
   ADMaterialProperty<std::vector<RealVectorValue>> & _quadrature_directions;
   ADMaterialProperty<std::vector<Real>> & _quadrature_weights;
-};
+}; // class BaseNeutronicsMaterial

@@ -84,4 +84,4 @@ The discrete ordiantes (+S@n@+) method is used to discretize the angular variabl
 polynomials to yield a spherical harmonics representation for anisotropic scattering.
 These methods are discussed in the [angular approach section](angular_approach.md).
 
-## Mass Transport and Depletion
+## Mass Transport and Activation

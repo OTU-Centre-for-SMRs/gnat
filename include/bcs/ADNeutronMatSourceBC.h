@@ -16,4 +16,4 @@ protected:
 
   const ADMaterialProperty<std::vector<RealVectorValue>> & _directions;
   const ADMaterialProperty<std::vector<Real>> & _surface_source;
-};
+}; // class ADNeutronMatSourceBC

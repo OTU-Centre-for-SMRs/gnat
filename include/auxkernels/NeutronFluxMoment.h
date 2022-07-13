@@ -26,4 +26,4 @@ protected:
 
   const ADMaterialProperty<std::vector<RealVectorValue>> & _quadrature_directions;
   const ADMaterialProperty<std::vector<Real>> & _quadrature_weights;
-};
+}; // class NeutronFluxMoment

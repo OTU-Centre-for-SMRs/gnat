@@ -8,6 +8,7 @@ public:
   static InputParameters validParams();
 
   AbsorbingNeutronicsMaterial(const InputParameters & parameters);
+
 protected:
   virtual void computeQpProperties() override;
 
@@ -18,4 +19,4 @@ protected:
 
   ADMaterialProperty<std::vector<Real>> & _mat_v_g;
   ADMaterialProperty<std::vector<Real>> & _mat_sigma_r_g;
-};
+}; // class AbsorbingNeutronicsMaterial

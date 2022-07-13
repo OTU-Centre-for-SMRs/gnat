@@ -17,4 +17,4 @@ protected:
 
   const ADMaterialProperty<std::vector<RealVectorValue>> & _directions;
   const ADMaterialProperty<Real> & _albedo;
-};
+}; // class ADNeutronReflectiveBC

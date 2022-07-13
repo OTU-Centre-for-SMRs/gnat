@@ -43,13 +43,17 @@ ADNeutronMaterialSource::validParams()
 
 ADNeutronMaterialSource::ADNeutronMaterialSource(const InputParameters & parameters)
   : ADKernel(parameters)
+  , _source_moments(getADMaterialProperty<std::vector<Real>>("source_moments"))
+  , _directions(getADMaterialProperty<std::vector<RealVectorValue>>("directions"))
+  , _anisotropy(getMaterialProperty<unsigned int>("medium_source_anisotropy"))
   , _ordinate_index(getParam<unsigned int>("ordinate_index"))
   , _group_index(getParam<unsigned int>("group_index"))
   , _num_groups(getParam<unsigned int>("num_groups"))
   , _axis(getParam<MooseEnum>("major_axis").getEnum<GaussAngularQuadrature::MajorAxis>())
-  , _source_moments(getADMaterialProperty<std::vector<Real>>("source_moments"))
-  , _directions(getADMaterialProperty<std::vector<RealVectorValue>>("directions"))
-{ }
+{
+  if (_group_index >= _num_groups)
+    mooseError("The group index exceeds the number of energy groups.");
+}
 
 void
 ADNeutronMaterialSource::cartesianToSpherical(const RealVectorValue & ordinate,
@@ -77,54 +81,19 @@ ADNeutronMaterialSource::cartesianToSpherical(const RealVectorValue & ordinate,
   }
 }
 
-/*
- * We assume that the vector of source moments is stored in order of group first,
- * then moment indices. As an example for 2 energy groups (G = 2) and a 2nd
- * order real spherical harmonics source expansion with L = 2 is given below.
- *
- * The source moments are indexed as S_{g, l, m}:
- * _source_moments[_qp][0] = S_{1, 0, 0}
- * _source_moments[_qp][1] = S_{1, 1, -1}
- * _source_moments[_qp][2] = S_{1, 1, 0}
- * _source_moments[_qp][3] = S_{1, 1, 1}
- * _source_moments[_qp][4] = S_{1, 1, 1}
- * _source_moments[_qp][5] = S_{1, 2, -2}
- * _source_moments[_qp][6] = S_{1, 2, -1}
- * _source_moments[_qp][7] = S_{1, 2, 0}
- * _source_moments[_qp][8] = S_{1, 2, 1}
- * _source_moments[_qp][9] = S_{1, 2, 2}
- * _source_moments[_qp][10] = S_{2, 0, 0}
- * _source_moments[_qp][11] = S_{2, 1, -1}
- * _source_moments[_qp][12] = S_{2, 1, 0}
- * _source_moments[_qp][13] = S_{2, 1, 1}
- * _source_moments[_qp][14] = S_{2, 1, 1}
- * _source_moments[_qp][15] = S_{2, 2, -2}
- * _source_moments[_qp][16] = S_{2, 2, -1}
- * _source_moments[_qp][17] = S_{2, 2, 0}
- * _source_moments[_qp][18] = S_{2, 2, 1}
- * _source_moments[_qp][19] = S_{2, 2, 2}
- *
- * The material providing the source moments is expected to format them
- * according to this arrangement.
-*/
-
 ADReal
 ADNeutronMaterialSource::computeQpResidual()
 {
   if (_ordinate_index >= _directions[_qp].size())
     mooseError("The ordinates index exceeds the number of quadrature points.");
-  if (_group_index >= _num_groups)
-    mooseError("The group index exceeds the number of energy groups.");
 
   const unsigned int num_group_moments = _source_moments[_qp].size() / _num_groups;
-  const unsigned int degree = std::sqrt(num_group_moments) - 1u;
-  const unsigned int group_offset = _group_index * degree;
 
   ADReal res, src_l = 0.0;
   Real omega, mu = 0.0;
 
-  unsigned int moment_index = group_offset;
-  for (unsigned int l = 0u; l <= degree; ++l)
+  unsigned int moment_index = _group_index * num_group_moments;
+  for (unsigned int l = 0u; l <= _anisotropy[_qp]; ++l)
   {
     for (int m = -1 * static_cast<int>(l); m <= static_cast<int>(l); ++m)
     {

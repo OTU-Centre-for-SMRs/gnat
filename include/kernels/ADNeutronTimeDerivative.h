@@ -14,4 +14,4 @@ protected:
   const unsigned int _group_index; // g
 
   const ADMaterialProperty<std::vector<Real>> & _v_g;
-};
+}; // class ADNeutronTimeDerivative
