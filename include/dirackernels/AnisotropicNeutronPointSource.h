@@ -1,6 +1,7 @@
 #pragma once
 
 #include "DiracKernel.h"
+#include "GnatBase.h"
 
 /*
  * This kernel assumes that the external point sources take the form:
@@ -19,6 +20,9 @@ public:
 
 protected:
   virtual Real computeQpResidual() override;
+
+  const ProblemType _type;
+  Real _symmetry_factor;
 
   const unsigned int _ordinate_index;
 

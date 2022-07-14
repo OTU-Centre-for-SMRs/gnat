@@ -14,6 +14,9 @@ AnisotropicNeutronPointSource::validParams()
                              "$-(\\psi_{j}, S_{g}(\\hat{\\Omega}))$. "
                              "This kernel should not be exposed to the user, "
                              "instead being enabled through a transport action.");
+  params.addRequiredParam<MooseEnum>("dimensionality",
+                                     "Dimensionality and the coordinate system of the "
+                                     "problem.");
   params.addRequiredRangeCheckedParam<unsigned int>("ordinate_index",
                                                     "ordinate_index >= 0",
                                                     "The discrete ordinate index "
@@ -33,12 +36,22 @@ AnisotropicNeutronPointSource::validParams()
 
 AnisotropicNeutronPointSource::AnisotropicNeutronPointSource(const InputParameters & parameters)
   : DiracKernel(parameters)
+  , _type(getParam<MooseEnum>("dimensionality").getEnum<ProblemType>())
   , _directions(getADMaterialProperty<std::vector<RealVectorValue>>("directions"))
   , _ordinate_index(getParam<unsigned int>("ordinate_index"))
   , _source_intensity(getParam<Real>("intensities"))
   , _angular_distribution(getFunction("phase_function"))
   , _source_location(getParam<Point>("points"))
-{ }
+  , _symmetry_factor(1.0)
+{
+  switch (_type)
+  {
+    case ProblemType::Cartesian1D: _symmetry_factor = 2.0 * M_PI; break;
+    case ProblemType::Cartesian2D: _symmetry_factor = 2.0; break;
+    case ProblemType::Cartesian3D: _symmetry_factor = 1.0; break;
+    default: _symmetry_factor = 1.0; break;
+  }
+}
 
 void
 AnisotropicNeutronPointSource::addPoints()
@@ -56,5 +69,5 @@ AnisotropicNeutronPointSource::computeQpResidual()
   // Hijacking the MOOSE function system so the user can parse in an analytical
   // phase function for this point source.
   return -1.0 * _test[_i][_qp] * _angular_distribution.value(_t, temp)
-              * _source_intensity;
+              * _source_intensity * _symmetry_factor;
 }

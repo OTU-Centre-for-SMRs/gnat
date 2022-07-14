@@ -17,9 +17,11 @@
 class GaussAngularQuadrature
 {
 public:
-  GaussAngularQuadrature(unsigned int n_c, unsigned int n_l, MajorAxis axis = MajorAxis::X);
+  GaussAngularQuadrature(unsigned int n_c, unsigned int n_l,
+                         MajorAxis axis = MajorAxis::X,
+                         ProblemType type = ProblemType::Cartesian3D);
 
-  unsigned int totalOrder() const { return 2 * _n_c * _n_l; }
+  unsigned int totalOrder() const { return _quadrature_set_omega.size(); }
   unsigned int chebyshevOrder() const { return _n_c; }
   unsigned int legendreOrder() const { return _n_l; }
   MajorAxis getAxis() const { return _axis; }

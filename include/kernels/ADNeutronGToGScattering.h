@@ -1,7 +1,6 @@
 #pragma once
 
 #include "ADKernel.h"
-
 #include "GaussAngularQuadrature.h"
 
 // TODO: Finish implementing this kernel.
@@ -18,6 +17,9 @@ protected:
   void cartesianToSpherical(const RealVectorValue & ordinate,
                             Real & mu, Real & omega);
 
+  const ProblemType _type;
+  Real _symmetry_factor;
+
   const unsigned int _ordinate_index; // n
   const unsigned int _group_index; // g
   const unsigned int _num_groups; // G
@@ -25,8 +27,8 @@ protected:
   /*
    * We assume that the vector of all group flux moments is stored in order of
    * group first, then moment indices. As an example for 2 energy groups (G = 2)
-   * and a 2nd order real spherical harmonics expansion with L = 2 is
-   * given below.
+   * and a 2nd order real spherical harmonics expansion with L = 2 in 3D is
+   * given below. 
    *
    * The external flux moments are indexed as Phi_{g, l, m}:
    * _group_flux_moments[_qp][0] = Phi_{1, 0, 0}

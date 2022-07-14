@@ -1,7 +1,6 @@
 #pragma once
 
 #include "ADKernel.h"
-
 #include "GaussAngularQuadrature.h"
 
 class ADNeutronMaterialSource : public ADKernel
@@ -16,6 +15,9 @@ protected:
 
   void cartesianToSpherical(const RealVectorValue & ordinate,
                             Real & mu, Real & omega);
+
+  const ProblemType _type;
+  Real _symmetry_factor;
 
   const unsigned int _ordinate_index; // n
   const unsigned int _group_index; // g

@@ -5,7 +5,8 @@
 
 GaussAngularQuadrature::GaussAngularQuadrature(unsigned int n_c,
                                                unsigned int n_l,
-                                               MajorAxis axis)
+                                               MajorAxis axis,
+                                               ProblemType type)
   : _n_c(std::move(n_c))
   , _n_l(std::move(n_l))
   , _axis(std::move(axis))
@@ -97,5 +98,34 @@ GaussAngularQuadrature::GaussAngularQuadrature(unsigned int n_c,
 
       break;
     }
+  }
+
+  // Process the quadrature set to remove elements that don't work for certain
+  // problem dimensionalities.
+  switch (type)
+  {
+    case ProblemType::Cartesian1D:
+      _quadrature_set_omega.clear();
+      _quadrature_set_weight.clear();
+      for (unsigned int i = 1; i <= _n_l; ++i)
+      {
+        _quadrature_set_omega.emplace_back(RealVectorValue(_polar_quadrature.root(i - 1u), 0.0, 0.0));
+        _quadrature_set_weight.emplace_back(_polar_quadrature.weight(i - 1u));
+      }
+      break;
+
+    case ProblemType::Cartesian2D:
+      for (unsigned int i = 0; i < _quadrature_set_omega.size(); ++i)
+      {
+        if (_quadrature_set_omega[i](2) < 0.0)
+        {
+          _quadrature_set_omega.erase(_quadrature_set_omega.begin() + i);
+          _quadrature_set_weight.erase(_quadrature_set_weight.begin() + i);
+        }
+      }
+      break;
+
+    default:
+      break;
   }
 }

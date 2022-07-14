@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ADIntegratedBC.h"
+#include "GnatBase.h"
 
 class ADNeutronMatSourceBC : public ADIntegratedBC
 {
@@ -11,6 +12,9 @@ public:
 
 protected:
   virtual ADReal computeQpResidual() override;
+
+  const ProblemType _type;
+  Real _symmetry_factor;
 
   const unsigned int _ordinate_index; // n
 

@@ -10,7 +10,7 @@ enum class MajorAxis
 
 // Problem type to determine the appropriate quadrature set and spherical
 // harmonics expansion.
-// TODO: Cylindrical and spherical coordiante systems + meshes.
+// TODO: Cylindrical and spherical coordiante systems.
 enum class ProblemType
 {
   Cartesian1D = 0u,

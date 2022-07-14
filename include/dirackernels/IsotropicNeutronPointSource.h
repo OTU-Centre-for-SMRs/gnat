@@ -1,6 +1,7 @@
 #pragma once
 
 #include "DiracKernel.h"
+#include "GnatBase.h"
 
 #include <map>
 
@@ -16,6 +17,9 @@ public:
 
 protected:
   virtual Real computeQpResidual() override;
+
+  const ProblemType _type;
+  Real _symmetry_factor;
 
   const std::vector<Real> _source_intensities; // S_{g, 0, 0} for all points.
   const std::vector<Point> _source_locations;

@@ -23,6 +23,9 @@ ADNeutronGToGScattering::validParams()
                              "instead being enabled through a transport action.");
   params.addRequiredCoupledVar("group_flux_moments",
                                "The flux moments for all groups.");
+  params.addRequiredParam<MooseEnum>("dimensionality",
+                                     "Dimensionality and the coordinate system of the "
+                                     "problem.");
   params.addRequiredRangeCheckedParam<unsigned int>("ordinate_index",
                                                     "ordinate_index >= 0",
                                                     "The discrete ordinate index "
@@ -43,6 +46,7 @@ ADNeutronGToGScattering::validParams()
 
 ADNeutronGToGScattering::ADNeutronGToGScattering(const InputParameters & parameters)
   : ADKernel(parameters)
+  , _type(getParam<MooseEnum>("dimensionality").getEnum<ProblemType>())
   , _directions(getADMaterialProperty<std::vector<RealVectorValue>>("directions"))
   , _axis(getMaterialProperty<MajorAxis>("quadrature_axis_alignment"))
   , _sigma_s_g_prime_g_l(getADMaterialProperty<std::vector<Real>>("scattering_matrix"))
@@ -50,14 +54,43 @@ ADNeutronGToGScattering::ADNeutronGToGScattering(const InputParameters & paramet
   , _ordinate_index(getParam<unsigned int>("ordinate_index"))
   , _group_index(getParam<unsigned int>("group_index"))
   , _num_groups(getParam<unsigned int>("num_groups"))
+  , _symmetry_factor(1.0)
 {
   if (_group_index >= _num_groups)
     mooseError("The group index exceeds the number of energy groups.");
 
   const unsigned int num_coupled = coupledComponents("group_flux_moments");
-
   const unsigned int num_group_moments = num_coupled / _num_groups;
-  _provided_moment_degree = std::sqrt(num_group_moments) - 1u;
+
+  switch (_type)
+  {
+    case ProblemType::Cartesian1D:
+      _provided_moment_degree = num_group_moments - 1u;
+
+      _symmetry_factor = 2.0 * M_PI;
+      break;
+
+    case ProblemType::Cartesian2D:
+      // Doing it this way to minimize divisions. Trying to keep it fixed-point
+      // for as long as possible.
+      _provided_moment_degree = static_cast<unsigned int>(-3 + std::sqrt(9 - 8 * (1 - static_cast<int>(num_group_moments))));
+      _provided_moment_degree /= 2u;
+
+      _symmetry_factor = 2.0;
+      break;
+
+    case ProblemType::Cartesian3D:
+      _provided_moment_degree = std::sqrt(num_group_moments) - 1u;
+
+      _symmetry_factor = 1.0;
+      break;
+
+    default:
+      _provided_moment_degree = 0u;
+
+      _symmetry_factor = 1.0;
+      break;
+  }
 
   _group_flux_moments.reserve(num_coupled);
   for (unsigned int i = 0; i < num_coupled; ++i)
@@ -99,29 +132,87 @@ ADNeutronGToGScattering::computeQpResidual()
   ADReal res, moment_l = 0.0;
   Real omega, mu = 0.0;
 
+  unsigned int num_moments;
+  switch (_type)
+  {
+    case ProblemType::Cartesian1D:
+      num_moments = _provided_moment_degree + 1u;
+      break;
+
+    case ProblemType::Cartesian2D:
+      num_moments = (_provided_moment_degree + 1u)
+                    * (_provided_moment_degree + 2u) / 2u;
+      break;
+
+    case ProblemType::Cartesian3D:
+      num_moments = (_provided_moment_degree + 1u)
+                    * (_provided_moment_degree + 1u);
+      break;
+
+    default:
+      num_moments = (_provided_moment_degree + 1u)
+                    * (_provided_moment_degree + 1u);
+      break;
+  }
+
   unsigned int scattering_index = 0u;
   unsigned int moment_index = 0u;
   for (unsigned int g_prime = 0; g_prime < _num_groups; ++g_prime)
   {
-    moment_index = g_prime * (_provided_moment_degree + 1u) * (_provided_moment_degree + 1u);
+    moment_index = g_prime * num_moments;
     scattering_index = g_prime * _num_groups * _anisotropy[_qp] + _group_index * _anisotropy[_qp];
 
     if (g_prime == _group_index)
       continue;
 
-    for (unsigned int l = 0; l <= _anisotropy[_qp]; ++l)
+    // The maximum degree of anisotropy we can handle.
+    const unsigned int max_anisotropy = std::min(_anisotropy[_qp],
+                                                 _provided_moment_degree);
+    for (unsigned int l = 0; l <= max_anisotropy; ++l)
     {
-      for (int m = -1 * static_cast<int>(l); m <= static_cast<int>(l); ++m)
+      // Handle different levels of dimensionality.
+      switch (_type)
       {
-        cartesianToSpherical(MetaPhysicL::raw_value(_directions[_qp][_ordinate_index]),
-                             mu, omega);
-        moment_l += (*_group_flux_moments[moment_index])[_qp]
-                    * RealSphericalHarmonics::evaluate(l, m, mu, omega);
-        moment_index++;
+        // Legendre moments in 1D, looping over m is unecessary.
+        case ProblemType::Cartesian1D:
+          cartesianToSpherical(MetaPhysicL::raw_value(_directions[_qp][_ordinate_index]),
+                               mu, omega);
+          moment_l += (*_group_flux_moments[moment_index])[_qp]
+                      * RealSphericalHarmonics::evaluate(l, 0, mu, omega);
+          moment_index++;
+          break;
+
+        // Need moments with m >= 0 for 2D.
+        case ProblemType::Cartesian2D:
+          for (int m = 0; m <= static_cast<int>(l); ++m)
+          {
+            cartesianToSpherical(MetaPhysicL::raw_value(_directions[_qp][_ordinate_index]),
+                                 mu, omega);
+            moment_l += (*_group_flux_moments[moment_index])[_qp]
+                        * RealSphericalHarmonics::evaluate(l, m, mu, omega);
+            moment_index++;
+          }
+          break;
+
+        // Need all moments in 3D.
+        case ProblemType::Cartesian3D:
+          for (int m = -1 * static_cast<int>(l); m <= static_cast<int>(l); ++m)
+          {
+            cartesianToSpherical(MetaPhysicL::raw_value(_directions[_qp][_ordinate_index]),
+                                 mu, omega);
+            moment_l += (*_group_flux_moments[moment_index])[_qp]
+                        * RealSphericalHarmonics::evaluate(l, m, mu, omega);
+            moment_index++;
+          }
+          break;
+
+        default: // Defaults to doing nothing for now.
+          break;
       }
 
       res += (2.0 * static_cast<Real>(l) + 1.0) / (4.0 * M_PI)
-             * _sigma_s_g_prime_g_l[_qp][scattering_index] * moment_l;
+             * _sigma_s_g_prime_g_l[_qp][scattering_index] * moment_l
+             * _symmetry_factor;
 
       scattering_index++;
     }
