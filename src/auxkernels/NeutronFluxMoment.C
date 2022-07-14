@@ -14,13 +14,6 @@ NeutronFluxMoment::validParams()
                                "all discrete directions. Must be listed in the "
                                "same order as the quadrature directions and "
                                "weights.");
-  MooseEnum major_axis("x y z", "x");
-  params.addParam<MooseEnum>("major_axis", major_axis,
-                             "Major axis of the angular quadrature. Allows the "
-                             "polar angular quadrature to align with a cartesian "
-                             "axis with minimal heterogeneity. Default is the "
-                             "x-axis. Must be equal to the major axis specified "
-                             "in the BaseNeutronicsMaterial.");
   params.addRequiredParam<unsigned int>("degree", "Degree of this angular flux "
                                         "moment.");
   params.addRequiredParam<int>("order", "Order of this angular flux moment.");
@@ -32,7 +25,7 @@ NeutronFluxMoment::NeutronFluxMoment(const InputParameters & parameters)
   : AuxKernel(parameters)
   , _quadrature_directions(getADMaterialProperty<std::vector<RealVectorValue>>("directions"))
   , _quadrature_weights(getADMaterialProperty<std::vector<Real>>("direction_weights"))
-  , _axis(getParam<MooseEnum>("major_axis").getEnum<GaussAngularQuadrature::MajorAxis>())
+  , _axis(getMaterialProperty<MajorAxis>("quadrature_axis_alignment"))
   , _degree(getParam<unsigned int>("degree"))
   , _order(getParam<int>("order"))
 {
@@ -47,21 +40,21 @@ void
 NeutronFluxMoment::cartesianToSpherical(const RealVectorValue & ordinate,
                                         Real & mu, Real & omega)
 {
-  switch (_axis)
+  switch (_axis[_qp])
   {
-    case GaussAngularQuadrature::MajorAxis::X:
+    case MajorAxis::X:
       mu = ordinate(0);
       omega = std::acos(ordinate(1) / std::sqrt(1.0 - (mu * mu)));
 
       break;
 
-    case GaussAngularQuadrature::MajorAxis::Y:
+    case MajorAxis::Y:
       mu = ordinate(1);
       omega = std::acos(ordinate(2) / std::sqrt(1.0 - (mu * mu)));
 
       break;
 
-    case GaussAngularQuadrature::MajorAxis::Z:
+    case MajorAxis::Z:
       mu = ordinate(2);
       omega = std::acos(ordinate(0) / std::sqrt(1.0 - (mu * mu)));
 

@@ -12,21 +12,17 @@
 #include "LegendrePolynomial.h"
 #include "ChebyshevPolynomial.h"
 
+#include "GnatBase.h"
+
 class GaussAngularQuadrature
 {
 public:
-  enum class MajorAxis
-  {
-    X = 0u,
-    Y = 1u,
-    Z = 2u
-  }; // enumclass  MajorAxis
-
   GaussAngularQuadrature(unsigned int n_c, unsigned int n_l, MajorAxis axis = MajorAxis::X);
 
   unsigned int totalOrder() const { return 2 * _n_c * _n_l; }
   unsigned int chebyshevOrder() const { return _n_c; }
   unsigned int legendreOrder() const { return _n_l; }
+  MajorAxis getAxis() const { return _axis; }
 
   RealVectorValue getQPDirection(unsigned int n) const { return _quadrature_set_omega[n]; }
   Real getQPWeight(unsigned int n) const { return _quadrature_set_weight[n]; }
@@ -42,6 +38,7 @@ private:
   // points, respectively.
   const unsigned int _n_c;
   const unsigned int _n_l;
+  const MajorAxis _axis;
 
   LegendrePolynomial _polar_quadrature;
   ChebyshevPolynomial _azimuthal_quadrature;

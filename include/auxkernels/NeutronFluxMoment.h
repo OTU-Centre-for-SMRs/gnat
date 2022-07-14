@@ -20,10 +20,10 @@ protected:
 
   std::vector<const ADVariableValue *> _flux_ordinates;
 
-  const GaussAngularQuadrature::MajorAxis _axis;
   const unsigned int _degree;
   const int _order;
 
   const ADMaterialProperty<std::vector<RealVectorValue>> & _quadrature_directions;
   const ADMaterialProperty<std::vector<Real>> & _quadrature_weights;
+  const MaterialProperty<MajorAxis> & _axis;
 }; // class NeutronFluxMoment

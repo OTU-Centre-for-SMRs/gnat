@@ -20,13 +20,6 @@ ADNeutronInGroupScattering::validParams()
                              "transport action.");
   params.addRequiredCoupledVar("within_group_flux_moments",
                               "The flux moments of the current group.");
-  MooseEnum major_axis("x y z", "x");
-  params.addParam<MooseEnum>("major_axis", major_axis,
-                             "Major axis of the angular quadrature. Allows the "
-                             "polar angular quadrature to align with a cartesian "
-                             "axis with minimal heterogeneity. Default is the "
-                             "x-axis. Must be equal to the major axis specified "
-                             "in the BaseNeutronicsMaterial.");
   params.addRequiredRangeCheckedParam<unsigned int>("ordinate_index",
                                                     "ordinate_index >= 0",
                                                     "The discrete ordinate index "
@@ -48,12 +41,12 @@ ADNeutronInGroupScattering::validParams()
 ADNeutronInGroupScattering::ADNeutronInGroupScattering(const InputParameters & parameters)
   : ADKernel(parameters)
   , _directions(getADMaterialProperty<std::vector<RealVectorValue>>("directions"))
+  , _axis(getMaterialProperty<MajorAxis>("quadrature_axis_alignment"))
   , _sigma_s_g_prime_g_l(getADMaterialProperty<std::vector<Real>>("scattering_matrix"))
   , _anisotropy(getMaterialProperty<unsigned int>("medium_anisotropy"))
   , _ordinate_index(getParam<unsigned int>("ordinate_index"))
   , _group_index(getParam<unsigned int>("group_index"))
   , _num_groups(getParam<unsigned int>("num_groups"))
-  , _axis(getParam<MooseEnum>("major_axis").getEnum<GaussAngularQuadrature::MajorAxis>())
 {
   if (_group_index >= _num_groups)
     mooseError("The group index exceeds the number of energy groups.");
@@ -71,21 +64,21 @@ void
 ADNeutronInGroupScattering::cartesianToSpherical(const RealVectorValue & ordinate,
                                                  Real & mu, Real & omega)
 {
-  switch (_axis)
+  switch (_axis[_qp])
   {
-    case GaussAngularQuadrature::MajorAxis::X:
+    case MajorAxis::X:
       mu = ordinate(0);
       omega = std::acos(ordinate(1) / std::sqrt(1.0 - (mu * mu)));
 
       break;
 
-    case GaussAngularQuadrature::MajorAxis::Y:
+    case MajorAxis::Y:
       mu = ordinate(1);
       omega = std::acos(ordinate(2) / std::sqrt(1.0 - (mu * mu)));
 
       break;
 
-    case GaussAngularQuadrature::MajorAxis::Z:
+    case MajorAxis::Z:
       mu = ordinate(2);
       omega = std::acos(ordinate(0) / std::sqrt(1.0 - (mu * mu)));
 
@@ -121,5 +114,5 @@ ADNeutronInGroupScattering::computeQpResidual()
            * _sigma_s_g_prime_g_l[_qp][scattering_index + l] * moment_l;
   }
 
-  return -1.0 * _test[_i][_qp] * res; 
+  return -1.0 * _test[_i][_qp] * res;
 }

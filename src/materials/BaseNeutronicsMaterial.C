@@ -36,9 +36,10 @@ BaseNeutronicsMaterial::BaseNeutronicsMaterial(const InputParameters & parameter
   : Material(parameters)
   , _quadrature_set(getParam<unsigned int>("chebyshev_order"),
                     getParam<unsigned int>("legendre_order"),
-                    getParam<MooseEnum>("major_axis").getEnum<GaussAngularQuadrature::MajorAxis>())
+                    getParam<MooseEnum>("major_axis").getEnum<MajorAxis>())
   , _quadrature_directions(declareADProperty<std::vector<RealVectorValue>>("directions"))
   , _quadrature_weights(declareADProperty<std::vector<Real>>("direction_weights"))
+  , _axis(declareProperty<MajorAxis>("quadrature_axis_alignment"))
 { }
 
 void
@@ -55,4 +56,6 @@ BaseNeutronicsMaterial::computeQpProperties()
     _quadrature_directions[_qp][i] = dir[i];
     _quadrature_weights[_qp][i] = w[i];
   }
+
+  _axis[_qp] = _quadrature_set.getAxis();
 }

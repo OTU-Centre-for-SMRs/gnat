@@ -18,7 +18,6 @@ protected:
   const unsigned int _ordinate_index; // n
   const unsigned int _group_index; // g
   const unsigned int _num_groups; // G
-  const GaussAngularQuadrature::MajorAxis _axis;
 
   /*
    * We assume that the vector of all group flux moments is stored in order of
@@ -45,6 +44,7 @@ protected:
   unsigned int _provided_moment_degree;
 
   const ADMaterialProperty<std::vector<RealVectorValue>> & _directions;
+  const MaterialProperty<MajorAxis> & _axis;
 
   /*
   * We assume that the vector of scattering cross-sections is stored in the

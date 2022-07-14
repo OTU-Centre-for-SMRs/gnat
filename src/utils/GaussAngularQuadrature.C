@@ -8,6 +8,7 @@ GaussAngularQuadrature::GaussAngularQuadrature(unsigned int n_c,
                                                MajorAxis axis)
   : _n_c(std::move(n_c))
   , _n_l(std::move(n_l))
+  , _axis(std::move(axis))
   , _polar_quadrature(std::move(n_l))
   , _azimuthal_quadrature(std::move(n_c))
 {
@@ -93,7 +94,7 @@ GaussAngularQuadrature::GaussAngularQuadrature(unsigned int n_c,
           _quadrature_set_weight.emplace_back(weight);
         }
       }
-      
+
       break;
     }
   }

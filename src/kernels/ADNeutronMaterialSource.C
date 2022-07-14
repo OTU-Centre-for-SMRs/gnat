@@ -17,13 +17,6 @@ ADNeutronMaterialSource::validParams()
                              "S_{g,l,m}Y_{l,m}(\\hat{\\Omega}_{n}))$. "
                              "This kernel should not be exposed to the user, "
                              "instead being enabled through a transport action.");
-  MooseEnum major_axis("x y z", "x");
-  params.addParam<MooseEnum>("major_axis", major_axis,
-                             "Major axis of the angular quadrature. Allows the "
-                             "polar angular quadrature to align with a cartesian "
-                             "axis with minimal heterogeneity. Default is the "
-                             "x-axis. Must be equal to the major axis specified "
-                             "in the BaseNeutronicsMaterial.");
   params.addRequiredRangeCheckedParam<unsigned int>("ordinate_index",
                                                     "ordinate_index >= 0",
                                                     "The discrete ordinate index "
@@ -45,11 +38,11 @@ ADNeutronMaterialSource::ADNeutronMaterialSource(const InputParameters & paramet
   : ADKernel(parameters)
   , _source_moments(getADMaterialProperty<std::vector<Real>>("source_moments"))
   , _directions(getADMaterialProperty<std::vector<RealVectorValue>>("directions"))
+  , _axis(getMaterialProperty<MajorAxis>("quadrature_axis_alignment"))
   , _anisotropy(getMaterialProperty<unsigned int>("medium_source_anisotropy"))
   , _ordinate_index(getParam<unsigned int>("ordinate_index"))
   , _group_index(getParam<unsigned int>("group_index"))
   , _num_groups(getParam<unsigned int>("num_groups"))
-  , _axis(getParam<MooseEnum>("major_axis").getEnum<GaussAngularQuadrature::MajorAxis>())
 {
   if (_group_index >= _num_groups)
     mooseError("The group index exceeds the number of energy groups.");
@@ -59,21 +52,21 @@ void
 ADNeutronMaterialSource::cartesianToSpherical(const RealVectorValue & ordinate,
                                               Real & mu, Real & omega)
 {
-  switch (_axis)
+  switch (_axis[_qp])
   {
-    case GaussAngularQuadrature::MajorAxis::X:
+    case MajorAxis::X:
       mu = ordinate(0);
       omega = std::acos(ordinate(1) / std::sqrt(1.0 - (mu * mu)));
 
       break;
 
-    case GaussAngularQuadrature::MajorAxis::Y:
+    case MajorAxis::Y:
       mu = ordinate(1);
       omega = std::acos(ordinate(2) / std::sqrt(1.0 - (mu * mu)));
 
       break;
 
-    case GaussAngularQuadrature::MajorAxis::Z:
+    case MajorAxis::Z:
       mu = ordinate(2);
       omega = std::acos(ordinate(0) / std::sqrt(1.0 - (mu * mu)));
 

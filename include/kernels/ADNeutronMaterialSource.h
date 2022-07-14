@@ -20,9 +20,9 @@ protected:
   const unsigned int _ordinate_index; // n
   const unsigned int _group_index; // g
   const unsigned int _num_groups; // G
-  const GaussAngularQuadrature::MajorAxis _axis;
 
   const ADMaterialProperty<std::vector<RealVectorValue>> & _directions;
+  const MaterialProperty<MajorAxis> & _axis;
 
   /*
    * We assume that the vector of source moments is stored in order of group first,
