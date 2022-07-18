@@ -12,7 +12,8 @@ IsotropicNeutronPointSource::validParams()
                              "$-(\\psi_{j}, \\frac{S_{g,0,0}}{4\\pi})$. "
                              "This kernel should not be exposed to the user, "
                              "instead being enabled through a transport action.");
-  params.addRequiredParam<MooseEnum>("dimensionality",
+  MooseEnum dimensionality("1D_cartesian 2D_cartesian 3D_cartesian");
+  params.addRequiredParam<MooseEnum>("dimensionality", dimensionality,
                                      "Dimensionality and the coordinate system of the "
                                      "problem.");
   params.addRequiredParam<std::vector<Real>>("intensities",

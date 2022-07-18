@@ -8,9 +8,6 @@ clear for users.
 
 !syntax description /NeutronActivationStudy/NeutronTransportAction
 
-For more information about setting up neutron activation studies in Gnat visit the
-[neutron activation study](syntax/NeutronActivationStudy/index.md) documentation.
-
 ## Overview
 
 !! Replace these lines with information regarding the NeutronTransportAction action.

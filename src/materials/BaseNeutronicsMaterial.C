@@ -22,7 +22,7 @@ BaseNeutronicsMaterial::validParams()
                                                     "Order of the azimuthal "
                                                     "Gauss-Chebyshev "
                                                     "quadrature set.");
-  MooseEnum major_axis("x y z", "x");
+  MooseEnum major_axis("x y z");
   params.addParam<MooseEnum>("major_axis", major_axis,
                              "Major axis of the angular quadrature. Allows the "
                              "polar angular quadrature to align with a cartesian "

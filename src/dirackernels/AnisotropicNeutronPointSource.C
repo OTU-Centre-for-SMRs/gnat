@@ -14,7 +14,8 @@ AnisotropicNeutronPointSource::validParams()
                              "$-(\\psi_{j}, S_{g}(\\hat{\\Omega}))$. "
                              "This kernel should not be exposed to the user, "
                              "instead being enabled through a transport action.");
-  params.addRequiredParam<MooseEnum>("dimensionality",
+  MooseEnum dimensionality("1D_cartesian 2D_cartesian 3D_cartesian");
+  params.addRequiredParam<MooseEnum>("dimensionality", dimensionality,
                                      "Dimensionality and the coordinate system of the "
                                      "problem.");
   params.addRequiredRangeCheckedParam<unsigned int>("ordinate_index",
@@ -68,6 +69,6 @@ AnisotropicNeutronPointSource::computeQpResidual()
 
   // Hijacking the MOOSE function system so the user can parse in an analytical
   // phase function for this point source.
-  return -1.0 * _test[_i][_qp] * _angular_distribution.value(_t, temp)
-              * _source_intensity * _symmetry_factor;
+  return (-1.0 / M_PI) * _test[_i][_qp] * _angular_distribution.value(_t, temp)
+         * _source_intensity * _symmetry_factor;
 }

@@ -17,7 +17,8 @@ ADNeutronMaterialSource::validParams()
                              "S_{g,l,m}Y_{l,m}(\\hat{\\Omega}_{n}))$. "
                              "This kernel should not be exposed to the user, "
                              "instead being enabled through a transport action.");
-  params.addRequiredParam<MooseEnum>("dimensionality",
+  MooseEnum dimensionality("1D_cartesian 2D_cartesian 3D_cartesian");
+  params.addRequiredParam<MooseEnum>("dimensionality", dimensionality,
                                      "Dimensionality and the coordinate system of the "
                                      "problem.");
   params.addRequiredRangeCheckedParam<unsigned int>("ordinate_index",

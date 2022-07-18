@@ -13,11 +13,11 @@
 #include "libmesh/string_to_enum.h"
 #include "libmesh/fe_type.h"
 
-registerMooseAction("GnatApp", NeutronTransportAction, "add_variable");
-registerMooseAction("GnatApp", NeutronTransportAction, "add_kernel");
-registerMooseAction("GnatApp", NeutronTransportAction, "add_dg_kernel");
-registerMooseAction("GnatApp", NeutronTransportAction, "add_dirac_kernel");
-registerMooseAction("GnatApp", NeutronTransportAction, "add_bc");
+registerMooseAction("GnatApp", NeutronTransportAction, "add_variable"); //
+registerMooseAction("GnatApp", NeutronTransportAction, "add_kernel"); //
+registerMooseAction("GnatApp", NeutronTransportAction, "add_dg_kernel"); //
+registerMooseAction("GnatApp", NeutronTransportAction, "add_dirac_kernel"); //
+registerMooseAction("GnatApp", NeutronTransportAction, "add_bc"); //
 registerMooseAction("GnatApp", NeutronTransportAction, "add_ic");
 registerMooseAction("GnatApp", NeutronTransportAction, "add_material");
 registerMooseAction("GnatApp", NeutronTransportAction, "add_aux_variable");
@@ -35,7 +35,6 @@ NeutronTransportAction::validParams()
 
   //----------------------------------------------------------------------------
   // Parameters for variables.
-  // Get MooseEnums for the possible order/family options for this variable.
   MooseEnum families(AddVariableAction::getNonlinearVariableFamilies());
   MooseEnum orders(AddVariableAction::getNonlinearVariableOrders());
   // Set the params required to add new variables. These will be used for both
@@ -62,6 +61,11 @@ NeutronTransportAction::validParams()
                                                     "The number of spectral "
                                                     "energy groups in the "
                                                     "problem.");
+  MooseEnum execution_type("steady_source transient", "steady_source");
+  params.addParam<MooseEnum>("execution_type", execution_type,
+                             "The method of execution for the problem. Options "
+                             "are steady-state source driven problems and "
+                             "transient source problems.");
   params.addRangeCheckedParam<unsigned int>("n_polar", 3, "n_polar > 0",
                                             "Number of Legendre polar "
                                             "quadrature points in a single "
@@ -72,6 +76,12 @@ NeutronTransportAction::validParams()
                                             "quadrature points in a single "
                                             "octant of the unit sphere. "
                                             "Defaults to 3.");
+  MooseEnum major_axis("x y z", "x");
+  params.addParam<MooseEnum>("major_axis", major_axis,
+                             "Major axis of the angular quadrature. Allows the "
+                             "polar angular quadrature to align with a cartesian "
+                             "axis with minimal heterogeneity. Default is the "
+                             "x-axis.");
   params.addParam<unsigned int>("max_anisotropy", 0,
                                 "The maximum degree of anisotropy to evaluate. "
                                 "Defaults to 0 for isotropic scattering.");
@@ -100,9 +110,25 @@ NeutronTransportAction::validParams()
                                              "boundary conditions.");
 
   //----------------------------------------------------------------------------
+  // Isotropic point sources.
+  params.addParam<std::vector<RealVectorValue>>("point_source_locations",
+                                                "The locations of all isotropic "
+                                                "point sources in the problem "
+                                                "space.");
+  params.addParam<std::vector<Real>>("point_source_intensities",
+                                     "The intensities of all "
+                                     "isotropic point sources.");
+  params.addParam<std::vector<unsigned int>>("point_source_groups",
+                                             "The spectral energy groups each "
+                                             "isotropic point source emits "
+                                             "into.");
+
+  //----------------------------------------------------------------------------
   // Parameters for debugging.
   params.addParam<bool>("debug_disable_scattering", false,
                         "Debug option to disable scattering evaluation.");
+  params.addParam<bool>("debug_disable_source_iteration", true,
+                        "Debug option to disable source iteration.");
 
   return params;
 }
@@ -110,6 +136,7 @@ NeutronTransportAction::validParams()
 NeutronTransportAction::NeutronTransportAction(const InputParameters & params)
   : Action(params)
   , _num_groups(getParam<unsigned int>("num_groups"))
+  , _exec_type(getParam<MooseEnum>("execution_type").getEnum<ExecutionType>())
   , _n_l(getParam<unsigned int>("n_polar"))
   , _n_c(getParam<unsigned int>("n_azimuthal"))
   , _max_eval_anisotropy(getParam<unsigned int>("max_anisotropy"))
@@ -135,23 +162,53 @@ NeutronTransportAction::NeutronTransportAction(const InputParameters & params)
   }
 
   // Set the enum so quadrature sets can be determined appropriately.
+  unsigned int _num_group_moments = 0u;
   switch (_problem->mesh().getMesh().spatial_dimension())
   {
     case 1u:
       _p_type = ProblemType::Cartesian1D;
+      _num_group_moments = (_max_eval_anisotropy + 1u);
       break;
 
     case 2u:
       _p_type = ProblemType::Cartesian2D;
+      _num_group_moments = (_max_eval_anisotropy + 1u) * (_max_eval_anisotropy + 2u) / 2u;
       break;
 
     case 3u:
       _p_type = ProblemType::Cartesian3D;
+      _num_group_moments = (_max_eval_anisotropy + 1u) * (_max_eval_anisotropy + 1u);
       break;
 
     default:
       mooseError("Unknown mesh dimensionality.");
       break;
+  }
+
+  for (unsigned int g = 0; g < _num_groups; ++g)
+  {
+    // Set up variable names for the group angular fluxes.
+    _group_angular_fluxes.emplace(g, std::vector<VariableName>());
+    _group_angular_fluxes[g].reserve(2 * _n_l * 4 * _n_c);
+    for (unsigned int n = 1; n <= 2 * _n_l * 4 * _n_c; ++n)
+    {
+      _group_angular_fluxes[g].emplace_back(_angular_flux_name + "_"
+                                           + Moose::stringify(g + 1u)  + "_"
+                                           + Moose::stringify(n));
+    }
+    // Set up variable names for the group flux moments.
+    _group_flux_moments.emplace(g, std::vector<VariableName>());
+    _group_flux_moments[g].reserve(_num_group_moments);
+    for (unsigned int l = 0; l <= _max_eval_anisotropy; ++l)
+    {
+      for (int m = -1 * static_cast<int>(l); m <= static_cast<int>(l); ++m)
+      {
+        _group_flux_moments[g - 1u].emplace_back(_flux_moment_name + "_"
+                                                 + Moose::stringify(g + 1u) + "_"
+                                                 + Moose::stringify(l) + "_"
+                                                 + Moose::stringify(m));
+      }
+    }
   }
 }
 
@@ -175,7 +232,476 @@ NeutronTransportAction::addVariable(const std::string & var_name)
 }
 
 void
-NeutronTransportAction::act()
+NeutronTransportAction::addKernels(const std::string & var_name, unsigned int g,
+                                   unsigned int n)
+{
+  // Add ADNeutronTimeDerivative.
+  if (_exec_type == ExecutionType::Transient)
+  {
+    auto params = _factory.getValidParams("ADNeutronTimeDerivative");
+    params.set<NonlinearVariableName>("variable") = var_name;
+    // Group index is required to fetch the group neutron velocity.
+    params.set<unsigned int>("group_index") = g;
+
+    if (isParamValid("block"))
+    {
+      params.set<std::vector<SubdomainName>>("block")
+        = getParam<std::vector<SubdomainName>>("block");
+    }
+
+    _problem->addKernel("NtTimeDerivative",
+                        "ADNeutronTimeDerivative_" + var_name,
+                        params);
+  } // ADNeutronTimeDerivative
+
+  // Add ADNeutronStreaming.
+  {
+    auto params = _factory.getValidParams("ADNeutronStreaming");
+    params.set<NonlinearVariableName>("variable") = var_name;
+    // Ordinate index is required to fetch the neutron direction.
+    params.set<unsigned int>("ordinate_index") = n;
+
+    if (isParamValid("block"))
+    {
+      params.set<std::vector<SubdomainName>>("block")
+        = getParam<std::vector<SubdomainName>>("block");
+    }
+
+    _problem->addKernel("ADNeutronStreaming",
+                        "ADNeutronStreaming_" + var_name,
+                        params);
+  } // ADNeutronStreaming
+
+  // Add ADNeutronRemoval.
+  {
+    auto params = _factory.getValidParams("ADNeutronRemoval");
+    params.set<NonlinearVariableName>("variable") = var_name;
+    // Group index is required to fetch the group neutron removal
+    // cross-section.
+    params.set<unsigned int>("group_index") = g;
+
+    if (isParamValid("block"))
+    {
+      params.set<std::vector<SubdomainName>>("block")
+        = getParam<std::vector<SubdomainName>>("block");
+    }
+
+    _problem->addKernel("ADNeutronRemoval",
+                        "ADNeutronRemoval_" + var_name,
+                        params);
+  } // ADNeutronRemoval
+
+  // Add ADNeutronMaterialSource.
+  {
+    auto params = _factory.getValidParams("ADNeutronMaterialSource");
+    params.set<NonlinearVariableName>("variable") = var_name;
+    // Group index and the number of groups are required to fetch the
+    // source moments for the proper spectral energy group.
+    params.set<unsigned int>("group_index") = g;
+    params.set<unsigned int>("num_groups") = _num_groups;
+    // Ordinate index is required to fetch the neutron direction.
+    params.set<unsigned int>("ordinate_index") = n;
+
+    if (isParamValid("block"))
+    {
+      params.set<std::vector<SubdomainName>>("block")
+        = getParam<std::vector<SubdomainName>>("block");
+    }
+
+    _problem->addKernel("ADNeutronMaterialSource",
+                        "ADNeutronMaterialSource_" + var_name,
+                        params);
+  } // ADNeutronMaterialSource
+
+  // Only add scattering kernels if debug doesn't disable them.
+  if (!getParam<bool>("debug_disable_scattering"))
+  {
+    // Debug option to disable the source iteration solver.
+    if (!getParam<bool>("debug_disable_source_iteration"))
+    {
+      // Compute the scattering evaluation with source iteration.
+      mooseError("Scattering iteration currently is not supported and is a work "
+                 "in progress.");
+
+      // Add ADNeutronGToGScattering. This kernel is only enabled if there's
+      // more than one group.
+      if (_num_groups > 1u)
+      {
+        auto params = _factory.getValidParams("ADNeutronGToGScattering");
+        params.set<NonlinearVariableName>("variable") = var_name;
+        // Group index and the number of groups are required to fetch the
+        // source moments for the proper spectral energy group.
+        params.set<unsigned int>("group_index") = g;
+        params.set<unsigned int>("num_groups") = _num_groups;
+        // Ordinate index is required to fetch the neutron direction.
+        params.set<unsigned int>("ordinate_index") = n;
+        // Dimensionality of the problem.
+        MooseEnum dimensionality("1D_cartesian 2D_cartesian 3D_cartesian");
+        dimensionality.assign(static_cast<int>(_p_type));
+        params.set<MooseEnum>("dimensionality") = dimensionality;
+
+        // Copy all of the group flux moment names into the moment variable
+        // parameter.
+        auto & moment_names = params.set<std::vector<VariableName>>("group_flux_moments");
+        for (unsigned int g_prime = 0; g_prime < _num_groups; ++g_prime)
+        {
+          std::copy(_group_flux_moments[g_prime].begin(),
+                    _group_flux_moments[g_prime].end(),
+                    std::back_inserter(moment_names));
+        }
+
+        if (isParamValid("block"))
+        {
+          params.set<std::vector<SubdomainName>>("block")
+            = getParam<std::vector<SubdomainName>>("block");
+        }
+
+        _problem->addKernel("ADNeutronGToGScattering",
+                            "ADNeutronGToGScattering_" + var_name,
+                            params);
+      } // ADNeutronGToGScattering
+
+      // Add ADNeutronInGroupScattering.
+      {
+        auto params = _factory.getValidParams("ADNeutronInGroupScattering");
+        params.set<NonlinearVariableName>("variable") = var_name;
+        // Group index and the number of groups are required to fetch the
+        // source moments for the proper spectral energy group.
+        params.set<unsigned int>("group_index") = g;
+        params.set<unsigned int>("num_groups") = _num_groups;
+        // Ordinate index is required to fetch the neutron direction.
+        params.set<unsigned int>("ordinate_index") = n;
+        // Dimensionality of the problem.
+        MooseEnum dimensionality("1D_cartesian 2D_cartesian 3D_cartesian");
+        dimensionality.assign(static_cast<int>(_p_type));
+        params.set<MooseEnum>("dimensionality") = dimensionality;
+
+        // Copy all of the in-group flux moment names into the moment
+        // variable parameter.
+        params.set<std::vector<VariableName>>("within_group_flux_moments")
+          = _group_flux_moments[g];
+
+        if (isParamValid("block"))
+        {
+          params.set<std::vector<SubdomainName>>("block")
+            = getParam<std::vector<SubdomainName>>("block");
+        }
+
+        _problem->addKernel("ADNeutronInGroupScattering",
+                            "ADNeutronInGroupScattering_" + var_name,
+                            params);
+      } // ADNeutronInGroupScattering
+    }
+    else
+    {
+      // TODO: Compute the scattering evaluation without source iteration.
+    }
+  }
+}
+
+void
+NeutronTransportAction::addDGKernels(const std::string & var_name,
+                                     unsigned int g, unsigned int n)
+{
+  // Add ADDGNeutronStreamingUpwind.
+  {
+    auto params = _factory.getValidParams("ADDGNeutronStreamingUpwind");
+    params.set<NonlinearVariableName>("variable") = var_name;
+    // Ordinate index is required to fetch the neutron direction.
+    params.set<unsigned int>("ordinate_index") = n;
+
+    if (isParamValid("block"))
+    {
+      params.set<std::vector<SubdomainName>>("block")
+        = getParam<std::vector<SubdomainName>>("block");
+    }
+
+    _problem->addDGKernel("ADDGNeutronStreamingUpwind",
+                          "ADDGNeutronStreamingUpwind_" + var_name,
+                          params);
+  } // ADDGNeutronStreamingUpwind
+}
+
+void
+NeutronTransportAction::addBCs(const std::string & var_name, unsigned int g,
+                               unsigned int n)
+{
+  // Add ADNeutronVacuumBC.
+  if (_vacuum_side_sets.size() > 0u)
+  {
+    InputParameters params = _factory.getValidParams("ADNeutronVacuumBC");
+    params.set<NonlinearVariableName>("variable") = var_name;
+    // Ordinate index is required to fetch the neutron direction.
+    params.set<unsigned int>("ordinate_index") = n;
+
+    params.set<std::vector<BoundaryName>>("boundary") = _vacuum_side_sets;
+
+    _problem->addBoundaryCondition("ADNeutronVacuumBC",
+                                   "ADNeutronVacuumBC_" + var_name,
+                                   params);
+  } // ADNeutronVacuumBC
+
+  // Add ADNeutronMatSourceBC.
+  if (_source_side_sets.size() > 0u)
+  {
+    InputParameters params = _factory.getValidParams("ADNeutronMatSourceBC");
+    params.set<NonlinearVariableName>("variable") = var_name;
+    // Ordinate index is required to fetch the neutron direction.
+    params.set<unsigned int>("ordinate_index") = n;
+    // Dimensionality of the problem.
+    MooseEnum dimensionality("1D_cartesian 2D_cartesian 3D_cartesian");
+    dimensionality.assign(static_cast<int>(_p_type));
+    params.set<MooseEnum>("dimensionality") = dimensionality;
+
+    params.set<std::vector<BoundaryName>>("boundary") = _source_side_sets;
+
+    _problem->addBoundaryCondition("ADNeutronMatSourceBC",
+                                   "ADNeutronMatSourceBC" + var_name,
+                                   params);
+  } // ADNeutronMatSourceBC
+
+  // Add ADNeutronReflectiveBC.
+  // TODO: Complete this implementation.
+  if (_reflective_side_sets.size() > 0u)
+  {
+    mooseError("Reflective boundary conditions are currently not supported.");
+  } // ADNeutronReflectiveBC
+}
+
+// TODO: Initial conditions.
+void
+NeutronTransportAction::addICs(const std::string & var_name, unsigned int g,
+                               unsigned int n)
 {
 
+}
+
+void
+NeutronTransportAction::addAuxVariables(const std::string & var_name)
+{
+  auto fe_type = AddVariableAction::feType(_pars);
+  if (_subdomain_ids.empty())
+    _problem->addAuxVariable(var_name, fe_type);
+  else
+    _problem->addAuxVariable(var_name, fe_type, &_subdomain_ids);
+}
+
+void
+NeutronTransportAction::addAuxKernels(const std::string & var_name,
+                                      unsigned int g,
+                                      unsigned int l,
+                                      int m)
+{
+  // Add NeutronFluxMoment.
+  {
+    InputParameters params = _factory.getValidParams("NeutronFluxMoment");
+    params.set<AuxVariableName>("variable") = var_name;
+    // Flux moment degree and order.
+    params.set<unsigned int>("degree") = l;
+    params.set<unsigned int>("order") = m;
+
+    // The flux ordinates for this group.
+    params.set<std::vector<VariableName>>("group_flux_ordinates")
+      = _group_angular_fluxes[g];
+
+    if (isParamValid("block"))
+    {
+      params.set<std::vector<SubdomainName>>("block")
+        = getParam<std::vector<SubdomainName>>("block");
+    }
+
+    _problem->addAuxKernel("NeutronFluxMoment",
+                           "NeutronFluxMoment_" + var_name,
+                           params);
+  } // NeutronFluxMoment
+}
+
+void
+NeutronTransportAction::addDiracKernels()
+{
+  // Add IsotropicNeutronPointSource.
+  {
+    const auto & source_locations
+      = getParam<std::vector<RealVectorValue>>("point_source_locations");
+    const auto & source_intensities
+      = getParam<std::vector<Real>>("point_source_intensities");
+    const auto & source_groups
+      = getParam<std::vector<unsigned int>>("point_source_groups");
+
+    if (source_locations.size() != source_intensities.size() ||
+        source_intensities.size() != source_groups.size())
+    {
+      mooseWarning("The number of provided parameters for the isotropic point "
+                   "sources do not match. Some sources will be ignored and "
+                   "others may be mismatched between their locations, "
+                   "intensities, and emission groups.");
+    }
+
+    // Loop over the vector of group indices to bin the source indices by the
+    // group they emit into.
+    std::unordered_map<unsigned int, std::vector<unsigned int>> group_map;
+    const unsigned int num_sources = std::min(std::min(source_locations.size(),
+                                                       source_intensities.size()),
+                                                       source_groups.size());
+    for (unsigned int i = 0; i < num_sources; ++i)
+    {
+      if (source_groups[i] >= _num_groups)
+      {
+        mooseWarning("Group " + Moose::stringify(source_groups[i]) + " exceeds "
+                     "the number of groups requested. Ignoring this source.");
+        continue;
+      }
+
+      if (group_map.count(source_groups[i]) > 0u)
+        group_map.emplace(source_groups[i], std::vector<unsigned int>());
+      else
+        group_map[source_groups[i]].emplace_back(i);
+    }
+
+    // Loop over the sorted groups and assign dirac kernels to each flux group.
+    for (const auto & [g, mapping] : group_map)
+    {
+      for (unsigned int n = 0; n < 2 * _n_l * 4 * _n_c; ++n)
+      {
+        const auto & var_name = _group_angular_fluxes[g][n];
+
+        auto params = _factory.getValidParams("IsotropicNeutronPointSource");
+        params.set<NonlinearVariableName>("variable") = var_name;
+        // Dimensionality of the problem.
+        MooseEnum dimensionality("1D_cartesian 2D_cartesian 3D_cartesian");
+        dimensionality.assign(static_cast<int>(_p_type));
+        params.set<MooseEnum>("dimensionality") = dimensionality;
+
+        // Set the intensities and points for the group g.
+        auto & points = params.set<std::vector<RealVectorValue>>("points");
+        auto & intensities = params.set<std::vector<RealVectorValue>>("intensities");
+        points.reserve(mapping.size());
+        intensities.reserve(mapping.size());
+        for (const auto & index : mapping)
+        {
+          points.emplace_back(source_locations[index]);
+          intensities.emplace_back(source_intensities[index]);
+        }
+
+        if (isParamValid("block"))
+        {
+          params.set<std::vector<SubdomainName>>("block")
+            = getParam<std::vector<SubdomainName>>("block");
+        }
+
+        _problem->addDiracKernel("IsotropicNeutronPointSource",
+                                 "IsotropicNeutronPointSource_" + var_name,
+                                 params);
+      }
+    }
+  } // IsotropicNeutronPointSource
+}
+
+void
+NeutronTransportAction::addMaterials()
+{
+  // Add BaseNeutronicsMaterial.
+  {
+    auto params = _factory.getValidParams("BaseNeutronicsMaterial");
+    // Quadrature order in the polar and azimuthal axis.
+    params.set<unsigned int>("legendre_order") = 2u * _n_l;
+    params.set<unsigned int>("chebyshev_order") = 4u * _n_c;
+    params.set<MooseEnum>("major_axis") = getParam<MooseEnum>("major_axis");
+
+    if (isParamValid("block"))
+    {
+      params.set<std::vector<SubdomainName>>("block")
+        = getParam<std::vector<SubdomainName>>("block");
+    }
+
+    auto & boundary_ids = params.set<std::vector<BoundaryName>>("boundary");
+    if (_vacuum_side_sets.size() > 0)
+    {
+      std::copy(_vacuum_side_sets.begin(),
+                _vacuum_side_sets.end(),
+                std::back_inserter(boundary_ids));
+    }
+
+    if (_source_side_sets.size() > 0)
+    {
+      std::copy(_source_side_sets.begin(),
+                _source_side_sets.end(),
+                std::back_inserter(boundary_ids));
+    }
+
+    if (_reflective_side_sets.size() > 0)
+    {
+      std::copy(_reflective_side_sets.begin(),
+                _reflective_side_sets.end(),
+                std::back_inserter(boundary_ids));
+    }
+
+    _problem->addMaterial("BaseNeutronicsMaterial",
+                          "BaseNeutronicsMaterial",
+                          params);
+  } // BaseNeutronicsMaterial
+}
+
+void
+NeutronTransportAction::act()
+{
+  // Loop over all groups.
+  for (unsigned int g = 0; g < _num_groups; ++g)
+  {
+    // Loop over all the flux ordinates.
+    for (unsigned int n = 0; n < 2 * _n_l * 4 * _n_c; ++n)
+    {
+      const auto & var_name = _group_angular_fluxes[g][n];
+
+      // Add a non-linear variable.
+      if (_current_task == "add_variable")
+        addVariable(var_name);
+
+      // Add kernels.
+      if (_current_task == "add_kernel")
+        addKernels(var_name, g, n);
+
+      // Add DG kernels.
+      if (_current_task == "add_dg_kernel")
+        addDGKernels(var_name, g, n);
+
+      // Add boundary conditions.
+      if (_current_task == "add_bc")
+        addBCs(var_name, g, n);
+
+      // Add initial conditions.
+      if (_current_task == "add_ic")
+        addICs(var_name, g, n);
+    }
+
+    // Loop over all moments and set up auxvariables and auxkernels.
+    unsigned int moment_index = 0u;
+    for (unsigned int l = 0; l <= _max_eval_anisotropy; ++l)
+    {
+      for (int m = -1 * static_cast<int>(l); m <= static_cast<int>(l); ++m)
+      {
+        const auto & var_name = _group_flux_moments[g][moment_index];
+
+        // Add auxvariables.
+        if (_current_task == "add_aux_variable")
+          addAuxVariables(var_name);
+
+        // Add auxkernels.
+        if (_current_task == "add_aux_kernel")
+          addAuxKernels(var_name, g, l, m);
+
+        moment_index++;
+      }
+    }
+  }
+
+  // Add materials. In this case it's just the BaseNeutronicsMaterial which
+  // handles the quadrature sets.
+  if (_current_task == "add_material")
+    addMaterials();
+
+  // Add Dirac kernels (isotropic point sources). Anisotropic point sources are
+  // handled separately.
+  if (_current_task == "add_dirac_kernel")
+    addDiracKernels();
 }

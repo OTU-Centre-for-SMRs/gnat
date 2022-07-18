@@ -23,7 +23,8 @@ ADNeutronGToGScattering::validParams()
                              "instead being enabled through a transport action.");
   params.addRequiredCoupledVar("group_flux_moments",
                                "The flux moments for all groups.");
-  params.addRequiredParam<MooseEnum>("dimensionality",
+  MooseEnum dimensionality("1D_cartesian 2D_cartesian 3D_cartesian");
+  params.addRequiredParam<MooseEnum>("dimensionality", dimensionality,
                                      "Dimensionality and the coordinate system of the "
                                      "problem.");
   params.addRequiredRangeCheckedParam<unsigned int>("ordinate_index",
