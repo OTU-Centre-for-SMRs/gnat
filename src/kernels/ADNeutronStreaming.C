@@ -16,7 +16,7 @@ ADNeutronStreaming::validParams()
   params.addRequiredRangeCheckedParam<unsigned int>("ordinate_index",
                                                     "ordinate_index >= 0",
                                                     "The discrete ordinate index "
-                                                    "$n$ of the current angular "
+                                                    "of the current angular "
                                                     "flux.");
 
   return params;
@@ -25,14 +25,17 @@ ADNeutronStreaming::validParams()
 ADNeutronStreaming::ADNeutronStreaming(const InputParameters & parameters)
   : ADKernel(parameters)
   , _ordinate_index(getParam<unsigned int>("ordinate_index"))
-  , _directions(getADMaterialProperty<std::vector<RealVectorValue>>("directions"))
+  , _directions(getMaterialProperty<std::vector<RealVectorValue>>("directions"))
 { }
 
 ADReal
 ADNeutronStreaming::computeQpResidual()
 {
   if (_ordinate_index >= _directions[_qp].size())
+  {
+    mooseWarning(Moose::stringify(_directions[_qp].size()));
     mooseError("The ordinates index exceeds the number of quadrature points.");
+  }
 
   return -1.0 * _grad_test[_i][_qp] * _directions[_qp][_ordinate_index] * _u[_qp];
 }

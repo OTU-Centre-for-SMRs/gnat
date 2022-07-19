@@ -17,10 +17,10 @@ ADNeutronMaterialSource::validParams()
                              "S_{g,l,m}Y_{l,m}(\\hat{\\Omega}_{n}))$. "
                              "This kernel should not be exposed to the user, "
                              "instead being enabled through a transport action.");
-  MooseEnum dimensionality("1D_cartesian 2D_cartesian 3D_cartesian");
-  params.addRequiredParam<MooseEnum>("dimensionality", dimensionality,
-                                     "Dimensionality and the coordinate system of the "
-                                     "problem.");
+  params.addRequiredParam<MooseEnum>("dimensionality",
+                                     MooseEnum("1D_cartesian 2D_cartesian 3D_cartesian"),
+                                     "Dimensionality and the coordinate system "
+                                     "of the problem.");
   params.addRequiredRangeCheckedParam<unsigned int>("ordinate_index",
                                                     "ordinate_index >= 0",
                                                     "The discrete ordinate index "
@@ -42,7 +42,7 @@ ADNeutronMaterialSource::ADNeutronMaterialSource(const InputParameters & paramet
   : ADKernel(parameters)
   , _type(getParam<MooseEnum>("dimensionality").getEnum<ProblemType>())
   , _source_moments(getADMaterialProperty<std::vector<Real>>("source_moments"))
-  , _directions(getADMaterialProperty<std::vector<RealVectorValue>>("directions"))
+  , _directions(getMaterialProperty<std::vector<RealVectorValue>>("directions"))
   , _axis(getMaterialProperty<MajorAxis>("quadrature_axis_alignment"))
   , _anisotropy(getMaterialProperty<unsigned int>("medium_source_anisotropy"))
   , _ordinate_index(getParam<unsigned int>("ordinate_index"))
@@ -93,6 +93,10 @@ ADNeutronMaterialSource::computeQpResidual()
 {
   if (_ordinate_index >= _directions[_qp].size())
     mooseError("The ordinates index exceeds the number of quadrature points.");
+
+  // Quit early if there are no provided source moments.
+  if (_source_moments[_qp].size() == 0u)
+    return 0.0;
 
   const unsigned int num_group_moments = _source_moments[_qp].size() / _num_groups;
 

@@ -28,7 +28,7 @@ ADNeutronReflectiveBC::ADNeutronReflectiveBC(const InputParameters & parameters)
   , _ordinate_index(getParam<unsigned int>("ordinate_index"))
   , _u_ref(adCoupledValue("psi_ref"))
   , _albedo(getADMaterialProperty<Real>("boundary_albedo"))
-  , _directions(getADMaterialProperty<std::vector<RealVectorValue>>("directions"))
+  , _directions(getMaterialProperty<std::vector<RealVectorValue>>("directions"))
 { }
 
 ADReal

@@ -1,9 +1,9 @@
 #pragma once
 
 #include "ADKernel.h"
+
 #include "GaussAngularQuadrature.h"
 
-// TODO: Finish implementing this kernel.
 class ADNeutronGToGScattering : public ADKernel
 {
 public:
@@ -28,7 +28,7 @@ protected:
    * We assume that the vector of all group flux moments is stored in order of
    * group first, then moment indices. As an example for 2 energy groups (G = 2)
    * and a 2nd order real spherical harmonics expansion with L = 2 in 3D is
-   * given below. 
+   * given below.
    *
    * The external flux moments are indexed as Phi_{g, l, m}:
    * _group_flux_moments[_qp][0] = Phi_{1, 0, 0}
@@ -59,7 +59,7 @@ protected:
   std::vector<const VariableValue *> _group_flux_moments;
   unsigned int _provided_moment_degree;
 
-  const ADMaterialProperty<std::vector<RealVectorValue>> & _directions;
+  const MaterialProperty<std::vector<RealVectorValue>> & _directions;
   const MaterialProperty<MajorAxis> & _axis;
 
   /*

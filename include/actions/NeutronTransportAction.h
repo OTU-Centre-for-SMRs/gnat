@@ -8,7 +8,6 @@
 #include <vector>
 
 // TODO:
-// - Compute the scattering evaluation without source iteration.
 // - Complete the reflective boundary condition implementation.
 // - Initial conditions.
 class NeutronTransportAction : public Action
@@ -66,6 +65,7 @@ protected:
   // The coordinate system type and dimensionality.
   ProblemType _p_type;
   unsigned int _num_group_moments;
+  unsigned int _num_flux_ordinates;
 
   // Boundary side-sets.
   const std::vector<BoundaryName> _vacuum_side_sets;

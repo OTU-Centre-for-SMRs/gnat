@@ -14,5 +14,5 @@ protected:
 
   const unsigned int _ordinate_index; // n
 
-  const ADMaterialProperty<std::vector<RealVectorValue>> & _directions;
+  const MaterialProperty<std::vector<RealVectorValue>> & _directions;
 }; // class ADNeutronVacuumBC

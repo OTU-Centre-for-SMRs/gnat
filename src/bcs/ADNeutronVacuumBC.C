@@ -24,7 +24,7 @@ ADNeutronVacuumBC::validParams()
 ADNeutronVacuumBC::ADNeutronVacuumBC(const InputParameters & parameters)
   : ADIntegratedBC(parameters)
   , _ordinate_index(getParam<unsigned int>("ordinate_index"))
-  , _directions(getADMaterialProperty<std::vector<RealVectorValue>>("directions"))
+  , _directions(getMaterialProperty<std::vector<RealVectorValue>>("directions"))
 { }
 
 ADReal

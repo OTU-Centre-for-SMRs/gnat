@@ -16,7 +16,7 @@ protected:
 
   GaussAngularQuadrature _quadrature_set;
 
-  ADMaterialProperty<std::vector<RealVectorValue>> & _quadrature_directions;
-  ADMaterialProperty<std::vector<Real>> & _quadrature_weights;
+  MaterialProperty<std::vector<RealVectorValue>> & _quadrature_directions;
+  MaterialProperty<std::vector<Real>> & _quadrature_weights;
   MaterialProperty<MajorAxis> & _axis;
 }; // class BaseNeutronicsMaterial

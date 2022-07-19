@@ -27,7 +27,7 @@ ADDGNeutronStreamingUpwind::validParams()
 ADDGNeutronStreamingUpwind::ADDGNeutronStreamingUpwind(const InputParameters & parameters)
   : ADDGKernel(parameters)
   , _ordinate_index(getParam<unsigned int>("ordinate_index"))
-  , _directions(getADMaterialProperty<std::vector<RealVectorValue>>("directions"))
+  , _directions(getMaterialProperty<std::vector<RealVectorValue>>("directions"))
 { }
 
 ADReal

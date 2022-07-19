@@ -30,5 +30,5 @@ protected:
   const Function & _angular_distribution; // f_{g}(\hat{\Omega})
   const Point _source_location;
 
-  const ADMaterialProperty<std::vector<RealVectorValue>> & _directions;
+  const MaterialProperty<std::vector<RealVectorValue>> & _directions;
 }; // class AnisotropicNeutronPointSource

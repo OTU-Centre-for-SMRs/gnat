@@ -47,7 +47,7 @@ protected:
   std::vector<const VariableValue *> _within_group_flux_moments;
   unsigned int _provided_moment_degree;
 
-  const ADMaterialProperty<std::vector<RealVectorValue>> & _directions;
+  const MaterialProperty<std::vector<RealVectorValue>> & _directions;
   const MaterialProperty<MajorAxis> & _axis;
 
   /*

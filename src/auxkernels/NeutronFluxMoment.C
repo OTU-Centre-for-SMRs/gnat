@@ -23,8 +23,8 @@ NeutronFluxMoment::validParams()
 
 NeutronFluxMoment::NeutronFluxMoment(const InputParameters & parameters)
   : AuxKernel(parameters)
-  , _quadrature_directions(getADMaterialProperty<std::vector<RealVectorValue>>("directions"))
-  , _quadrature_weights(getADMaterialProperty<std::vector<Real>>("direction_weights"))
+  , _directions(getMaterialProperty<std::vector<RealVectorValue>>("directions"))
+  , _weights(getMaterialProperty<std::vector<Real>>("direction_weights"))
   , _axis(getMaterialProperty<MajorAxis>("quadrature_axis_alignment"))
   , _degree(getParam<unsigned int>("degree"))
   , _order(getParam<int>("order"))
@@ -65,22 +65,22 @@ NeutronFluxMoment::cartesianToSpherical(const RealVectorValue & ordinate,
 Real
 NeutronFluxMoment::computeValue()
 {
-  if (_quadrature_directions[_qp].size() != _flux_ordinates.size()
-      || _quadrature_weights[_qp].size() != _flux_ordinates.size())
+  if (_directions[_qp].size() != _flux_ordinates.size()
+      || _weights[_qp].size() != _flux_ordinates.size())
   {
     mooseError("The number of flux ordiantes does not match the number of "
                "quadrature directions and/or weights.");
   }
 
   Real moment, omega, mu = 0.0;
-  for (unsigned int i = 0; i < _quadrature_directions[_qp].size(); ++i)
+  for (unsigned int i = 0; i < _directions[_qp].size(); ++i)
   {
-    cartesianToSpherical(MetaPhysicL::raw_value(_quadrature_directions[_qp][i]),
+    cartesianToSpherical(MetaPhysicL::raw_value(_directions[_qp][i]),
                          mu, omega);
 
     moment += RealSphericalHarmonics::evaluate(_degree, _order, mu, omega)
               * MetaPhysicL::raw_value((* _flux_ordinates[i])[_qp]
-                                       * _quadrature_weights[_qp][i]);
+                                       * _weights[_qp][i]);
   }
 
   return moment;

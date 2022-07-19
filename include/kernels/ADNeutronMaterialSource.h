@@ -23,7 +23,7 @@ protected:
   const unsigned int _group_index; // g
   const unsigned int _num_groups; // G
 
-  const ADMaterialProperty<std::vector<RealVectorValue>> & _directions;
+  const MaterialProperty<std::vector<RealVectorValue>> & _directions;
   const MaterialProperty<MajorAxis> & _axis;
 
   /*

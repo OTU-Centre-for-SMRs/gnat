@@ -20,8 +20,8 @@ ADNeutronInGroupScattering::validParams()
                              "transport action.");
   params.addRequiredCoupledVar("within_group_flux_moments",
                                "The flux moments of the current group.");
-  MooseEnum dimensionality("1D_cartesian 2D_cartesian 3D_cartesian");
-  params.addRequiredParam<MooseEnum>("dimensionality", dimensionality,
+  params.addRequiredParam<MooseEnum>("dimensionality",
+                                     MooseEnum("1D_cartesian 2D_cartesian 3D_cartesian"),
                                      "Dimensionality and the coordinate system of the "
                                      "problem.");
   params.addRequiredRangeCheckedParam<unsigned int>("ordinate_index",
@@ -45,7 +45,7 @@ ADNeutronInGroupScattering::validParams()
 ADNeutronInGroupScattering::ADNeutronInGroupScattering(const InputParameters & parameters)
   : ADKernel(parameters)
   , _type(getParam<MooseEnum>("dimensionality").getEnum<ProblemType>())
-  , _directions(getADMaterialProperty<std::vector<RealVectorValue>>("directions"))
+  , _directions(getMaterialProperty<std::vector<RealVectorValue>>("directions"))
   , _axis(getMaterialProperty<MajorAxis>("quadrature_axis_alignment"))
   , _sigma_s_g_prime_g_l(getADMaterialProperty<std::vector<Real>>("scattering_matrix"))
   , _anisotropy(getMaterialProperty<unsigned int>("medium_anisotropy"))
@@ -127,6 +127,10 @@ ADNeutronInGroupScattering::computeQpResidual()
 {
   if (_ordinate_index >= _directions[_qp].size())
     mooseError("The ordinates index exceeds the number of quadrature points.");
+
+  // Quit early if no Legendre cross-section moments are provided.
+  if (_sigma_s_g_prime_g_l[_qp].size() == 0u)
+    return 0.0;
 
   ADReal res, moment_l = 0.0;
   Real omega, mu = 0.0;

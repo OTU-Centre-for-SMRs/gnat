@@ -23,7 +23,7 @@ protected:
   const unsigned int _degree;
   const int _order;
 
-  const ADMaterialProperty<std::vector<RealVectorValue>> & _quadrature_directions;
-  const ADMaterialProperty<std::vector<Real>> & _quadrature_weights;
+  const MaterialProperty<std::vector<RealVectorValue>> & _directions;
+  const MaterialProperty<std::vector<Real>> & _weights;
   const MaterialProperty<MajorAxis> & _axis;
 }; // class NeutronFluxMoment

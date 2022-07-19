@@ -29,7 +29,7 @@ ADNeutronMatSourceBC::ADNeutronMatSourceBC(const InputParameters & parameters)
   : ADIntegratedBC(parameters)
   , _type(getParam<MooseEnum>("dimensionality").getEnum<ProblemType>())
   , _ordinate_index(getParam<unsigned int>("ordinate_index"))
-  , _directions(getADMaterialProperty<std::vector<RealVectorValue>>("directions"))
+  , _directions(getMaterialProperty<std::vector<RealVectorValue>>("directions"))
   , _surface_source(getADMaterialProperty<std::vector<Real>>("surface_source"))
   , _symmetry_factor(1.0)
 {
