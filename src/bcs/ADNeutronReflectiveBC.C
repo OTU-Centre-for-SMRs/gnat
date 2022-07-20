@@ -5,7 +5,7 @@ registerMooseObject("GnatApp", ADNeutronReflectiveBC);
 InputParameters
 ADNeutronReflectiveBC::validParams()
 {
-  auto params = ADIntegratedBC::validParams();
+  auto params = ADNeutronBaseBC::validParams();
   params.addClassDescription("Computes the reflected boundary condition with a "
                              "weak form given by "
                              "$\\langle \\psi_{j},\\, \\hat{n}\\cdot\\hat{\\Omega}\\Psi_{r,\\, g}\\rangle_{\\Gamma_{i}}$, "
@@ -24,21 +24,20 @@ ADNeutronReflectiveBC::validParams()
 }
 
 ADNeutronReflectiveBC::ADNeutronReflectiveBC(const InputParameters & parameters)
-  : ADIntegratedBC(parameters)
+  : ADNeutronBaseBC(parameters)
   , _ordinate_index(getParam<unsigned int>("ordinate_index"))
   , _u_ref(adCoupledValue("psi_ref"))
   , _albedo(getADMaterialProperty<Real>("boundary_albedo"))
-  , _directions(getMaterialProperty<std::vector<RealVectorValue>>("directions"))
 { }
 
 ADReal
 ADNeutronReflectiveBC::computeQpResidual()
 {
-  if (_ordinate_index >= _directions[_qp].size())
+  if (_ordinate_index >= _quadrature_set.totalOrder())
     mooseError("The ordinates index exceeds the number of quadrature points.");
 
   ADReal res = 0.0;
-  ADReal n_dot_omega = _directions[_qp][_ordinate_index] * _normals[_qp];
+  ADReal n_dot_omega = _quadrature_set.direction(_ordinate_index) * _normals[_qp];
   if (n_dot_omega > 0.0)
     res += _u[_qp] * n_dot_omega * _test[_i][_qp];
   else

@@ -5,7 +5,7 @@ registerMooseObject("GnatApp", ADNeutronStreaming);
 InputParameters
 ADNeutronStreaming::validParams()
 {
-  auto params = ADKernel::validParams();
+  auto params = ADNeutronBaseKernel::validParams();
   params.addClassDescription("Computes the streaming term for the "
                              "discrete ordinates neutron transport equation. "
                              "The weak form is given by "
@@ -23,19 +23,16 @@ ADNeutronStreaming::validParams()
 }
 
 ADNeutronStreaming::ADNeutronStreaming(const InputParameters & parameters)
-  : ADKernel(parameters)
+  : ADNeutronBaseKernel(parameters)
   , _ordinate_index(getParam<unsigned int>("ordinate_index"))
-  , _directions(getMaterialProperty<std::vector<RealVectorValue>>("directions"))
 { }
 
 ADReal
 ADNeutronStreaming::computeQpResidual()
 {
-  if (_ordinate_index >= _directions[_qp].size())
-  {
-    mooseWarning(Moose::stringify(_directions[_qp].size()));
+  if (_ordinate_index >= _quadrature_set.totalOrder())
     mooseError("The ordinates index exceeds the number of quadrature points.");
-  }
 
-  return -1.0 * _grad_test[_i][_qp] * _directions[_qp][_ordinate_index] * _u[_qp];
+  return -1.0 * _grad_test[_i][_qp] * _quadrature_set.direction(_ordinate_index)
+         * _u[_qp];
 }

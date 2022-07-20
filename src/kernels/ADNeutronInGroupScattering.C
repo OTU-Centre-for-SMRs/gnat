@@ -5,7 +5,7 @@ registerMooseObject("GnatApp", ADNeutronInGroupScattering);
 InputParameters
 ADNeutronInGroupScattering::validParams()
 {
-  auto params = ADKernel::validParams();
+  auto params = ADNeutronBaseKernel::validParams();
   params.addClassDescription("Computes the within-group scattering source for the "
                              "current group of the discrete ordinates neutron "
                              "transport equation. The weak form is given by "
@@ -20,10 +20,6 @@ ADNeutronInGroupScattering::validParams()
                              "transport action.");
   params.addRequiredCoupledVar("within_group_flux_moments",
                                "The flux moments of the current group.");
-  params.addRequiredParam<MooseEnum>("dimensionality",
-                                     MooseEnum("1D_cartesian 2D_cartesian 3D_cartesian"),
-                                     "Dimensionality and the coordinate system of the "
-                                     "problem.");
   params.addRequiredRangeCheckedParam<unsigned int>("ordinate_index",
                                                     "ordinate_index >= 0",
                                                     "The discrete ordinate index "
@@ -43,28 +39,25 @@ ADNeutronInGroupScattering::validParams()
 }
 
 ADNeutronInGroupScattering::ADNeutronInGroupScattering(const InputParameters & parameters)
-  : ADKernel(parameters)
-  , _type(getParam<MooseEnum>("dimensionality").getEnum<ProblemType>())
-  , _directions(getMaterialProperty<std::vector<RealVectorValue>>("directions"))
-  , _axis(getMaterialProperty<MajorAxis>("quadrature_axis_alignment"))
+  : ADNeutronBaseKernel(parameters)
   , _sigma_s_g_prime_g_l(getADMaterialProperty<std::vector<Real>>("scattering_matrix"))
   , _anisotropy(getMaterialProperty<unsigned int>("medium_anisotropy"))
   , _ordinate_index(getParam<unsigned int>("ordinate_index"))
   , _group_index(getParam<unsigned int>("group_index"))
   , _num_groups(getParam<unsigned int>("num_groups"))
-  , _symmetry_factor(1.0)
 {
   if (_group_index >= _num_groups)
     mooseError("The group index exceeds the number of energy groups.");
 
+  if (_ordinate_index >= _quadrature_set.totalOrder())
+    mooseError("The ordinates index exceeds the number of quadrature points.");
+
   const unsigned int num_coupled = coupledComponents("within_group_flux_moments");
 
-  switch (_type)
+  switch (_quadrature_set.getProblemType())
   {
     case ProblemType::Cartesian1D:
       _provided_moment_degree = num_coupled - 1u;
-
-      _symmetry_factor = 2.0 * M_PI;
       break;
 
     case ProblemType::Cartesian2D:
@@ -74,14 +67,10 @@ ADNeutronInGroupScattering::ADNeutronInGroupScattering(const InputParameters & p
                                   + std::sqrt(9 - 8 * (1
                                     - static_cast<int>(num_coupled))));
       _provided_moment_degree /= 2u;
-
-      _symmetry_factor = 2.0;
       break;
 
     case ProblemType::Cartesian3D:
       _provided_moment_degree = std::sqrt(num_coupled) - 1u;
-
-      _symmetry_factor = 1.0;
       break;
 
     default:
@@ -96,38 +85,9 @@ ADNeutronInGroupScattering::ADNeutronInGroupScattering(const InputParameters & p
     _within_group_flux_moments.emplace_back(&coupledValue("within_group_flux_moments", i));
 }
 
-void
-ADNeutronInGroupScattering::cartesianToSpherical(const RealVectorValue & ordinate,
-                                                 Real & mu, Real & omega)
-{
-  switch (_axis[_qp])
-  {
-    case MajorAxis::X:
-      mu = ordinate(0);
-      omega = std::acos(ordinate(1) / std::sqrt(1.0 - (mu * mu)));
-
-      break;
-
-    case MajorAxis::Y:
-      mu = ordinate(1);
-      omega = std::acos(ordinate(2) / std::sqrt(1.0 - (mu * mu)));
-
-      break;
-
-    case MajorAxis::Z:
-      mu = ordinate(2);
-      omega = std::acos(ordinate(0) / std::sqrt(1.0 - (mu * mu)));
-
-      break;
-  }
-}
-
 ADReal
 ADNeutronInGroupScattering::computeQpResidual()
 {
-  if (_ordinate_index >= _directions[_qp].size())
-    mooseError("The ordinates index exceeds the number of quadrature points.");
-
   // Quit early if no Legendre cross-section moments are provided.
   if (_sigma_s_g_prime_g_l[_qp].size() == 0u)
     return 0.0;
@@ -145,11 +105,11 @@ ADNeutronInGroupScattering::computeQpResidual()
   for (unsigned int l = 0; l <= max_anisotropy; ++l)
   {
     // Handle different levels of dimensionality.
-    switch (_type)
+    switch (_quadrature_set.getProblemType())
     {
       // Legendre moments in 1D, looping over m is unecessary.
       case ProblemType::Cartesian1D:
-        cartesianToSpherical(MetaPhysicL::raw_value(_directions[_qp][_ordinate_index]),
+        cartesianToSpherical(_quadrature_set.direction(_ordinate_index),
                              mu, omega);
         moment_l += (*_within_group_flux_moments[moment_index])[_qp]
                     * RealSphericalHarmonics::evaluate(l, 0, mu, omega);
@@ -160,7 +120,7 @@ ADNeutronInGroupScattering::computeQpResidual()
       case ProblemType::Cartesian2D:
         for (int m = 0; m <= static_cast<int>(l); ++m)
         {
-          cartesianToSpherical(MetaPhysicL::raw_value(_directions[_qp][_ordinate_index]),
+          cartesianToSpherical(_quadrature_set.direction(_ordinate_index),
                                mu, omega);
           moment_l += (*_within_group_flux_moments[moment_index])[_qp]
                       * RealSphericalHarmonics::evaluate(l, m, mu, omega);
@@ -172,7 +132,7 @@ ADNeutronInGroupScattering::computeQpResidual()
       case ProblemType::Cartesian3D:
         for (int m = -1 * static_cast<int>(l); m <= static_cast<int>(l); ++m)
         {
-          cartesianToSpherical(MetaPhysicL::raw_value(_directions[_qp][_ordinate_index]),
+          cartesianToSpherical(_quadrature_set.direction(_ordinate_index),
                                mu, omega);
           moment_l += (*_within_group_flux_moments[moment_index])[_qp]
                       * RealSphericalHarmonics::evaluate(l, m, mu, omega);
@@ -184,18 +144,10 @@ ADNeutronInGroupScattering::computeQpResidual()
         break;
     }
 
-    for (int m = -1 * static_cast<int>(l); m <= static_cast<int>(l); ++m)
-    {
-      cartesianToSpherical(MetaPhysicL::raw_value(_directions[_qp][_ordinate_index]),
-                           mu, omega);
-      moment_l += (*_within_group_flux_moments[moment_index])[_qp]
-                  * RealSphericalHarmonics::evaluate(l, m, mu, omega);
-      moment_index++;
-    }
-
     res += (2.0 * static_cast<Real>(l) + 1.0) / (4.0 * M_PI)
            * _sigma_s_g_prime_g_l[_qp][scattering_index + l] * moment_l
            * _symmetry_factor;
+    moment_l = 0.0;
   }
 
   return -1.0 * _test[_i][_qp] * res;

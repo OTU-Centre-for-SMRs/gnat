@@ -2,10 +2,10 @@
 # medium and a point source at the origin.
 
 [Mesh]
-  type = GeneratedMesh # Can generate simple lines, rectangles and rectangular prisms
-  dim = 2 # Dimension of the mesh
-  nx = 10 # Number of elements in the x direction
-  ny = 10 # Number of elements in the y direction
+  type = GeneratedMesh
+  dim = 2
+  nx = 10
+  ny = 10 
   xmin = 0
   xmax = 1
   ymin = 0
@@ -16,10 +16,9 @@
   execution_type = steady
   family = LAGRANGE
   order = FIRST
+
   num_groups = 1
-
   max_anisotropy = 0
-
   vacuum_boundaries = '0 1 2 3'
 
   point_source_locations = '0.0 0.0 0.0'

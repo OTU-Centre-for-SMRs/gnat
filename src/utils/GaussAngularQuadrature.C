@@ -10,6 +10,7 @@ GaussAngularQuadrature::GaussAngularQuadrature(unsigned int n_c,
   : _n_c(std::move(n_c))
   , _n_l(std::move(n_l))
   , _axis(std::move(axis))
+  , _type(std::move(type))
   , _polar_quadrature(std::move(n_l))
   , _azimuthal_quadrature(std::move(n_c))
 {

@@ -2,6 +2,8 @@
 
 #include "ADDGKernel.h"
 
+#include "GaussAngularQuadrature.h"
+
 class ADDGNeutronStreamingUpwind : public ADDGKernel
 {
 public:
@@ -12,7 +14,7 @@ public:
 protected:
   virtual ADReal computeQpResidual(Moose::DGResidualType type) override;
 
-  const unsigned int _ordinate_index; // n
+  const GaussAngularQuadrature _quadrature_set;
 
-  const MaterialProperty<std::vector<RealVectorValue>> & _directions;
+  const unsigned int _ordinate_index; // n
 }; // class ADDGNeutronStreamingUpwind

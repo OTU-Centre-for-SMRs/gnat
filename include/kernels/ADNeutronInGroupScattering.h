@@ -1,9 +1,8 @@
 #pragma once
 
-#include "ADKernel.h"
-#include "GnatBase.h"
+#include "ADNeutronBaseKernel.h"
 
-class ADNeutronInGroupScattering : public ADKernel
+class ADNeutronInGroupScattering : public ADNeutronBaseKernel
 {
 public:
   static InputParameters validParams();
@@ -12,12 +11,6 @@ public:
 
 protected:
   virtual ADReal computeQpResidual() override;
-
-  void cartesianToSpherical(const RealVectorValue & ordinate,
-                            Real & mu, Real & omega);
-
-  const ProblemType _type;
-  Real _symmetry_factor;
 
   const unsigned int _ordinate_index; // n
   const unsigned int _group_index; // g
@@ -46,9 +39,6 @@ protected:
   */
   std::vector<const VariableValue *> _within_group_flux_moments;
   unsigned int _provided_moment_degree;
-
-  const MaterialProperty<std::vector<RealVectorValue>> & _directions;
-  const MaterialProperty<MajorAxis> & _axis;
 
   /*
   * We assume that the vector of scattering cross-sections is stored in the

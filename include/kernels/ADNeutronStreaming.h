@@ -1,8 +1,8 @@
 #pragma once
 
-#include "ADKernel.h"
+#include "ADNeutronBaseKernel.h"
 
-class ADNeutronStreaming : public ADKernel
+class ADNeutronStreaming : public ADNeutronBaseKernel
 {
 public:
   static InputParameters validParams();
@@ -13,6 +13,4 @@ protected:
   virtual ADReal computeQpResidual() override;
 
   const unsigned int _ordinate_index; // n
-
-  const MaterialProperty<std::vector<RealVectorValue>> & _directions;
 }; // class ADNeutronStreaming

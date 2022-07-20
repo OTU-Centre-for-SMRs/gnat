@@ -8,6 +8,7 @@
 #include <vector>
 
 // TODO:
+// - Fix the angular quadrature set.
 // - Complete the reflective boundary condition implementation.
 // - Initial conditions.
 class NeutronTransportAction : public Action
@@ -31,7 +32,6 @@ protected:
                      unsigned int l, int m);
 
   void addDiracKernels();
-  void addMaterials();
 
   enum class ExecutionType
   {

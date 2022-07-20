@@ -14,8 +14,23 @@ AnisotropicNeutronPointSource::validParams()
                              "$-(\\psi_{j}, S_{g}(\\hat{\\Omega}))$. "
                              "This kernel should not be exposed to the user, "
                              "instead being enabled through a transport action.");
-  MooseEnum dimensionality("1D_cartesian 2D_cartesian 3D_cartesian");
-  params.addRequiredParam<MooseEnum>("dimensionality", dimensionality,
+  params.addRequiredRangeCheckedParam<unsigned int>("n_l",
+                                                    "n_l > 0",
+                                                    "Order of the polar Gauss-"
+                                                    "Legendre quadrature set.");
+  params.addRequiredRangeCheckedParam<unsigned int>("n_c",
+                                                    "n_c > 0",
+                                                    "Order of the azimuthal "
+                                                    "Gauss-Chebyshev "
+                                                    "quadrature set.");
+  params.addParam<MooseEnum>("major_axis", MooseEnum("x y z", "x"),
+                             "Major axis of the angular quadrature. Allows the "
+                             "polar angular quadrature to align with a cartesian "
+                             "axis with minimal heterogeneity. Default is the "
+                             "x-axis. This parameter is ignored for 1D and 2D "
+                             "problems.");
+  params.addRequiredParam<MooseEnum>("dimensionality",
+                                     MooseEnum("1D_cartesian 2D_cartesian 3D_cartesian"),
                                      "Dimensionality and the coordinate system of the "
                                      "problem.");
   params.addRequiredRangeCheckedParam<unsigned int>("ordinate_index",
@@ -37,15 +52,17 @@ AnisotropicNeutronPointSource::validParams()
 
 AnisotropicNeutronPointSource::AnisotropicNeutronPointSource(const InputParameters & parameters)
   : DiracKernel(parameters)
-  , _type(getParam<MooseEnum>("dimensionality").getEnum<ProblemType>())
-  , _directions(getMaterialProperty<std::vector<RealVectorValue>>("directions"))
+  , _quadrature_set(getParam<unsigned int>("n_c"),
+                    getParam<unsigned int>("n_l"),
+                    getParam<MooseEnum>("major_axis").getEnum<MajorAxis>(),
+                    getParam<MooseEnum>("dimensionality").getEnum<ProblemType>())
   , _ordinate_index(getParam<unsigned int>("ordinate_index"))
   , _source_intensity(getParam<Real>("intensities"))
   , _angular_distribution(getFunction("phase_function"))
   , _source_location(getParam<Point>("points"))
   , _symmetry_factor(1.0)
 {
-  switch (_type)
+  switch (_quadrature_set.getProblemType())
   {
     case ProblemType::Cartesian1D: _symmetry_factor = 2.0 * M_PI; break;
     case ProblemType::Cartesian2D: _symmetry_factor = 2.0; break;
@@ -63,9 +80,9 @@ AnisotropicNeutronPointSource::addPoints()
 Real
 AnisotropicNeutronPointSource::computeQpResidual()
 {
-  Point temp(MetaPhysicL::raw_value(_directions[_qp][_ordinate_index](0)),
-             MetaPhysicL::raw_value(_directions[_qp][_ordinate_index](1)),
-             MetaPhysicL::raw_value(_directions[_qp][_ordinate_index](2)));
+  Point temp(_quadrature_set.direction(_ordinate_index)(0),
+             _quadrature_set.direction(_ordinate_index)(1),
+             _quadrature_set.direction(_ordinate_index)(2));
 
   // Hijacking the MOOSE function system so the user can parse in an analytical
   // phase function for this point source.

@@ -1,9 +1,8 @@
 #pragma once
 
-#include "ADKernel.h"
-#include "GaussAngularQuadrature.h"
+#include "ADNeutronBaseKernel.h"
 
-class ADNeutronMaterialSource : public ADKernel
+class ADNeutronMaterialSource : public ADNeutronBaseKernel
 {
 public:
   static InputParameters validParams();
@@ -13,18 +12,9 @@ public:
 protected:
   virtual ADReal computeQpResidual() override;
 
-  void cartesianToSpherical(const RealVectorValue & ordinate,
-                            Real & mu, Real & omega);
-
-  const ProblemType _type;
-  Real _symmetry_factor;
-
   const unsigned int _ordinate_index; // n
   const unsigned int _group_index; // g
   const unsigned int _num_groups; // G
-
-  const MaterialProperty<std::vector<RealVectorValue>> & _directions;
-  const MaterialProperty<MajorAxis> & _axis;
 
   /*
    * We assume that the vector of source moments is stored in order of group first,

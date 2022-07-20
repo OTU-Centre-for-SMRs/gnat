@@ -33,7 +33,10 @@ IsotropicNeutronPointSource::validParams()
 
 IsotropicNeutronPointSource::IsotropicNeutronPointSource(const InputParameters & parameters)
   : DiracKernel(parameters)
-  , _type(getParam<MooseEnum>("dimensionality").getEnum<ProblemType>())
+  , _quadrature_set(getParam<unsigned int>("n_c"),
+                    getParam<unsigned int>("n_l"),
+                    getParam<MooseEnum>("major_axis").getEnum<MajorAxis>(),
+                    getParam<MooseEnum>("dimensionality").getEnum<ProblemType>())
   , _source_intensities(getParam<std::vector<Real>>("intensities"))
   , _source_locations(getParam<std::vector<Point>>("points"))
   , _symmetry_factor(1.0)
@@ -44,7 +47,7 @@ IsotropicNeutronPointSource::IsotropicNeutronPointSource(const InputParameters &
                "of source intensities.");
   }
 
-  switch (_type)
+  switch (_quadrature_set.getProblemType())
   {
     case ProblemType::Cartesian1D: _symmetry_factor = 2.0 * M_PI; break;
     case ProblemType::Cartesian2D: _symmetry_factor = 2.0; break;

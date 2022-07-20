@@ -25,9 +25,10 @@ public:
   unsigned int chebyshevOrder() const { return _n_c; }
   unsigned int legendreOrder() const { return _n_l; }
   MajorAxis getAxis() const { return _axis; }
+  ProblemType getProblemType() const { return _type; }
 
-  RealVectorValue getQPDirection(unsigned int n) const { return _quadrature_set_omega[n]; }
-  Real getQPWeight(unsigned int n) const { return _quadrature_set_weight[n]; }
+  RealVectorValue direction(unsigned int n) const { return _quadrature_set_omega[n]; }
+  Real weight(unsigned int n) const { return _quadrature_set_weight[n]; }
 
   std::vector<RealVectorValue> & getDirections() { return _quadrature_set_omega; }
   std::vector<Real> & getWeights() { return _quadrature_set_weight; }
@@ -41,6 +42,7 @@ private:
   const unsigned int _n_c;
   const unsigned int _n_l;
   const MajorAxis _axis;
+  const ProblemType _type;
 
   LegendrePolynomial _polar_quadrature;
   ChebyshevPolynomial _azimuthal_quadrature;

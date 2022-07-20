@@ -1,17 +1,12 @@
-#include "NeutronFluxMoment.h"
-
-#include "RealSphericalHarmonics.h"
-
-registerMooseObject("GnatApp", NeutronFluxMoment);
+#include "ADNeutronBaseKernel.h"
 
 InputParameters
-NeutronFluxMoment::validParams()
+ADNeutronBaseKernel::validParams()
 {
-  auto params = AuxKernel::validParams();
-  params.addClassDescription("Computes the flux moments "
-                             "$\\Phi_{g,l,m}(\\vec{r}, t)$ of the scattering "
-                             "source using the quadrature rule provided by "
-                             "the material system.");
+  auto params = ADKernel::validParams();
+  params.addClassDescription("Provides basic functionality for the neutron "
+                             "transport kernel. This kernel does NOT implement "
+                             "computeQpResidual().");
   params.addRequiredRangeCheckedParam<unsigned int>("n_l",
                                                     "n_l > 0",
                                                     "Order of the polar Gauss-"
@@ -31,39 +26,40 @@ NeutronFluxMoment::validParams()
                                      MooseEnum("1D_cartesian 2D_cartesian 3D_cartesian"),
                                      "Dimensionality and the coordinate system of the "
                                      "problem.");
-  params.addRequiredCoupledVar("group_flux_ordinates", "The flux solutions for "
-                               "all discrete directions. Must be listed in the "
-                               "same order as the quadrature directions and "
-                               "weights.");
-  params.addRequiredParam<unsigned int>("degree", "Degree of this angular flux "
-                                        "moment.");
-  params.addRequiredParam<int>("order", "Order of this angular flux moment.");
-
   return params;
 }
 
-NeutronFluxMoment::NeutronFluxMoment(const InputParameters & parameters)
-  : AuxKernel(parameters)
+ADNeutronBaseKernel::ADNeutronBaseKernel(const InputParameters & parameters)
+  : ADKernel(parameters)
   , _quadrature_set(getParam<unsigned int>("n_c"),
                     getParam<unsigned int>("n_l"),
                     getParam<MooseEnum>("major_axis").getEnum<MajorAxis>(),
                     getParam<MooseEnum>("dimensionality").getEnum<ProblemType>())
-  , _degree(getParam<unsigned int>("degree"))
-  , _order(getParam<int>("order"))
+  , _symmetry_factor(1.0)
 {
-  const unsigned int num_coupled = coupledComponents("group_flux_ordinates");
+  switch (_quadrature_set.getProblemType())
+  {
+    case ProblemType::Cartesian1D:
+      _symmetry_factor = 2.0 * M_PI;
+      break;
 
-  if (num_coupled!= _quadrature_set.totalOrder())
-    mooseError("Mismatch between the angular flux ordinates and quadrature set.");
+    case ProblemType::Cartesian2D:
+      _symmetry_factor = 2.0;
+      break;
 
-  _flux_ordinates.reserve(num_coupled);
-  for (unsigned int i = 0; i < num_coupled; ++i)
-    _flux_ordinates.emplace_back(&adCoupledValue("group_flux_ordinates", i));
+    case ProblemType::Cartesian3D:
+      _symmetry_factor = 1.0;
+      break;
+
+    default:
+      _symmetry_factor = 1.0;
+      break;
+  }
 }
 
 void
-NeutronFluxMoment::cartesianToSpherical(const RealVectorValue & ordinate,
-                                        Real & mu, Real & omega)
+ADNeutronBaseKernel::cartesianToSpherical(const RealVectorValue & ordinate,
+                                          Real & mu, Real & omega)
 {
   switch (_quadrature_set.getAxis())
   {
@@ -85,20 +81,4 @@ NeutronFluxMoment::cartesianToSpherical(const RealVectorValue & ordinate,
 
       break;
   }
-}
-
-Real
-NeutronFluxMoment::computeValue()
-{
-  Real moment, omega, mu = 0.0;
-  for (unsigned int i = 0; i < _quadrature_set.totalOrder(); ++i)
-  {
-    cartesianToSpherical(_quadrature_set.direction(i), mu, omega);
-
-    moment += RealSphericalHarmonics::evaluate(_degree, _order, mu, omega)
-              * MetaPhysicL::raw_value((* _flux_ordinates[i])[_qp])
-              * _quadrature_set.weight(i);
-  }
-
-  return moment;
 }

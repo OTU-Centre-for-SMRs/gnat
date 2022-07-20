@@ -1,15 +1,13 @@
 #pragma once
 
-#include "ADKernel.h"
-
-#include "GaussAngularQuadrature.h"
+#include "ADNeutronBaseKernel.h"
 
 // This kernel evaluates the full scattering contribution. This way the complete
 // matrix is assembled and source iteration is avoided. This kernel should only
 // be used for debugging purposes as a fully assembled matrix solve for the transport
 // equation is quite slow.
 // TODO: Finish this kernel.
-class ADNeutronScattering : public ADKernel
+class ADNeutronScattering : public ADNeutronBaseKernel
 {
 public:
   static InputParameters validParams();
@@ -19,12 +17,6 @@ public:
 protected:
   virtual ADReal computeQpResidual() override;
   ADReal computeFluxMoment(unsigned int g_prime, unsigned int l, int m);
-
-  void cartesianToSpherical(const RealVectorValue & ordinate,
-                            Real & mu, Real & omega);
-
-  const ProblemType _type;
-  Real _symmetry_factor;
 
   const unsigned int _ordinate_index; // n
   const unsigned int _group_index; // g
@@ -43,10 +35,6 @@ protected:
   * _group_flux_ordinates[0] = Psi_{2, 1}
   */
   std::vector<const VariableValue *> _group_flux_ordinates;
-
-  const MaterialProperty<std::vector<RealVectorValue>> & _directions;
-  const MaterialProperty<std::vector<Real>> & _weights;
-  const MaterialProperty<MajorAxis> & _axis;
 
   /*
   * We assume that the vector of scattering cross-sections is stored in the

@@ -7,7 +7,7 @@ registerMooseObject("GnatApp", ADNeutronMaterialSource);
 InputParameters
 ADNeutronMaterialSource::validParams()
 {
-  auto params = ADKernel::validParams();
+  auto params = ADNeutronBaseKernel::validParams();
   params.addClassDescription("Computes the source term for the "
                              "discrete ordinates neutron transport equation, "
                              "where the source moments are provided by the "
@@ -17,10 +17,6 @@ ADNeutronMaterialSource::validParams()
                              "S_{g,l,m}Y_{l,m}(\\hat{\\Omega}_{n}))$. "
                              "This kernel should not be exposed to the user, "
                              "instead being enabled through a transport action.");
-  params.addRequiredParam<MooseEnum>("dimensionality",
-                                     MooseEnum("1D_cartesian 2D_cartesian 3D_cartesian"),
-                                     "Dimensionality and the coordinate system "
-                                     "of the problem.");
   params.addRequiredRangeCheckedParam<unsigned int>("ordinate_index",
                                                     "ordinate_index >= 0",
                                                     "The discrete ordinate index "
@@ -39,59 +35,21 @@ ADNeutronMaterialSource::validParams()
 }
 
 ADNeutronMaterialSource::ADNeutronMaterialSource(const InputParameters & parameters)
-  : ADKernel(parameters)
-  , _type(getParam<MooseEnum>("dimensionality").getEnum<ProblemType>())
+  : ADNeutronBaseKernel(parameters)
   , _source_moments(getADMaterialProperty<std::vector<Real>>("source_moments"))
-  , _directions(getMaterialProperty<std::vector<RealVectorValue>>("directions"))
-  , _axis(getMaterialProperty<MajorAxis>("quadrature_axis_alignment"))
   , _anisotropy(getMaterialProperty<unsigned int>("medium_source_anisotropy"))
   , _ordinate_index(getParam<unsigned int>("ordinate_index"))
   , _group_index(getParam<unsigned int>("group_index"))
   , _num_groups(getParam<unsigned int>("num_groups"))
-  , _symmetry_factor(1.0)
 {
   if (_group_index >= _num_groups)
     mooseError("The group index exceeds the number of energy groups.");
-
-  switch (_type)
-  {
-    case ProblemType::Cartesian1D: _symmetry_factor = 2.0 * M_PI; break;
-    case ProblemType::Cartesian2D: _symmetry_factor = 2.0; break;
-    case ProblemType::Cartesian3D: _symmetry_factor = 1.0; break;
-    default: _symmetry_factor = 1.0; break;
-  }
-}
-
-void
-ADNeutronMaterialSource::cartesianToSpherical(const RealVectorValue & ordinate,
-                                              Real & mu, Real & omega)
-{
-  switch (_axis[_qp])
-  {
-    case MajorAxis::X:
-      mu = ordinate(0);
-      omega = std::acos(ordinate(1) / std::sqrt(1.0 - (mu * mu)));
-
-      break;
-
-    case MajorAxis::Y:
-      mu = ordinate(1);
-      omega = std::acos(ordinate(2) / std::sqrt(1.0 - (mu * mu)));
-
-      break;
-
-    case MajorAxis::Z:
-      mu = ordinate(2);
-      omega = std::acos(ordinate(0) / std::sqrt(1.0 - (mu * mu)));
-
-      break;
-  }
 }
 
 ADReal
 ADNeutronMaterialSource::computeQpResidual()
 {
-  if (_ordinate_index >= _directions[_qp].size())
+  if (_ordinate_index >= _quadrature_set.totalOrder())
     mooseError("The ordinates index exceeds the number of quadrature points.");
 
   // Quit early if there are no provided source moments.
@@ -107,11 +65,11 @@ ADNeutronMaterialSource::computeQpResidual()
   for (unsigned int l = 0u; l <= _anisotropy[_qp]; ++l)
   {
     // Handle different levels of dimensionality.
-    switch (_type)
+    switch (_quadrature_set.getProblemType())
     {
       // Legendre moments in 1D, looping over m is unecessary.
       case ProblemType::Cartesian1D:
-        cartesianToSpherical(MetaPhysicL::raw_value(_directions[_qp][_ordinate_index]),
+        cartesianToSpherical(_quadrature_set.direction(_ordinate_index),
                              mu, omega);
         src_l += _source_moments[_qp][moment_index]
                  * RealSphericalHarmonics::evaluate(l, 0, mu, omega);
@@ -122,7 +80,7 @@ ADNeutronMaterialSource::computeQpResidual()
       case ProblemType::Cartesian2D:
         for (int m = 0; m <= static_cast<int>(l); ++m)
         {
-          cartesianToSpherical(MetaPhysicL::raw_value(_directions[_qp][_ordinate_index]),
+          cartesianToSpherical(_quadrature_set.direction(_ordinate_index),
                                mu, omega);
           src_l += _source_moments[_qp][moment_index]
                    * RealSphericalHarmonics::evaluate(l, m, mu, omega);
@@ -134,7 +92,7 @@ ADNeutronMaterialSource::computeQpResidual()
       case ProblemType::Cartesian3D:
         for (int m = -1 * static_cast<int>(l); m <= static_cast<int>(l); ++m)
         {
-          cartesianToSpherical(MetaPhysicL::raw_value(_directions[_qp][_ordinate_index]),
+          cartesianToSpherical(_quadrature_set.direction(_ordinate_index),
                                mu, omega);
           src_l += _source_moments[_qp][moment_index]
                    * RealSphericalHarmonics::evaluate(l, m, mu, omega);

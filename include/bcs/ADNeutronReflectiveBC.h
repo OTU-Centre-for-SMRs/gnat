@@ -1,13 +1,14 @@
 #pragma once
 
-#include "ADIntegratedBC.h"
+#include "ADNeutronBaseBC.h"
 
-class ADNeutronReflectiveBC : public ADIntegratedBC
+class ADNeutronReflectiveBC : public ADNeutronBaseBC
 {
 public:
   static InputParameters validParams();
 
   ADNeutronReflectiveBC(const InputParameters & parameters);
+  
 protected:
   virtual ADReal computeQpResidual() override;
 
@@ -15,6 +16,5 @@ protected:
 
   const ADVariableValue & _u_ref;
 
-  const MaterialProperty<std::vector<RealVectorValue>> & _directions;
   const ADMaterialProperty<Real> & _albedo;
 }; // class ADNeutronReflectiveBC

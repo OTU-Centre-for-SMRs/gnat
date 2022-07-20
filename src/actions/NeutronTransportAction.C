@@ -19,7 +19,6 @@ registerMooseAction("GnatApp", NeutronTransportAction, "add_dg_kernel"); //
 registerMooseAction("GnatApp", NeutronTransportAction, "add_dirac_kernel"); //
 registerMooseAction("GnatApp", NeutronTransportAction, "add_bc"); //
 registerMooseAction("GnatApp", NeutronTransportAction, "add_ic");
-registerMooseAction("GnatApp", NeutronTransportAction, "add_material"); //
 registerMooseAction("GnatApp", NeutronTransportAction, "add_aux_variable"); //
 registerMooseAction("GnatApp", NeutronTransportAction, "add_aux_kernel"); //
 
@@ -574,67 +573,6 @@ NeutronTransportAction::addDiracKernels()
 }
 
 void
-NeutronTransportAction::addMaterials()
-{
-  // Add BaseNeutronicsMaterial.
-  {
-    auto params = _factory.getValidParams("BaseNeutronicsMaterial");
-    // Quadrature order in the polar and azimuthal axis.
-    params.set<unsigned int>("legendre_order") = 2u * _n_l;
-    params.set<unsigned int>("chebyshev_order") = 2u * _n_c;
-
-    switch (_p_type)
-    {
-      case ProblemType::Cartesian1D:
-        params.set<MooseEnum>("major_axis") = MooseEnum("x y z", "x");
-        break;
-
-      case ProblemType::Cartesian2D:
-        params.set<MooseEnum>("major_axis") = MooseEnum("x y z", "x");
-        break;
-
-      case ProblemType::Cartesian3D:
-        params.set<MooseEnum>("major_axis") = getParam<MooseEnum>("major_axis");
-        break;
-
-      default: break;
-    }
-
-    if (isParamValid("block"))
-    {
-      params.set<std::vector<SubdomainName>>("block")
-        = getParam<std::vector<SubdomainName>>("block");
-    }
-
-    auto & boundary_ids = params.set<std::vector<BoundaryName>>("boundary");
-    if (_vacuum_side_sets.size() > 0)
-    {
-      std::copy(_vacuum_side_sets.begin(),
-                _vacuum_side_sets.end(),
-                std::back_inserter(boundary_ids));
-    }
-
-    if (_source_side_sets.size() > 0)
-    {
-      std::copy(_source_side_sets.begin(),
-                _source_side_sets.end(),
-                std::back_inserter(boundary_ids));
-    }
-
-    if (_reflective_side_sets.size() > 0)
-    {
-      std::copy(_reflective_side_sets.begin(),
-                _reflective_side_sets.end(),
-                std::back_inserter(boundary_ids));
-    }
-
-    _problem->addMaterial("BaseNeutronicsMaterial",
-                          "BaseNeutronicsMaterial_quadrature_set",
-                          params);
-  } // BaseNeutronicsMaterial
-}
-
-void
 NeutronTransportAction::act()
 {
   // Setup for all actions the NeutronTransport action performs.
@@ -755,11 +693,6 @@ NeutronTransportAction::act()
       }
     }
   }
-
-  // Add materials. In this case it's just the BaseNeutronicsMaterial which
-  // handles the quadrature sets.
-  if (_current_task == "add_material")
-    addMaterials();
 
   // Add Dirac kernels (isotropic point sources). Anisotropic point sources are
   // handled separately.

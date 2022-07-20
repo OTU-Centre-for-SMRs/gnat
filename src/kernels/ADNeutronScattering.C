@@ -7,7 +7,7 @@ registerMooseObject("GnatApp", ADNeutronScattering);
 InputParameters
 ADNeutronScattering::validParams()
 {
-  auto params = ADKernel::validParams();
+  auto params = ADNeutronBaseKernel::validParams();
   params.addClassDescription("Computes the scattering term for the "
                              "current group of the discrete ordinates neutron "
                              "transport equation. The weak form is given by "
@@ -26,10 +26,6 @@ ADNeutronScattering::validParams()
                              "for production calculations.");
   params.addRequiredCoupledVar("group_flux_ordinates",
                                "The angular flux ordinates for all groups.");
-  MooseEnum dimensionality("1D_cartesian 2D_cartesian 3D_cartesian");
-  params.addRequiredParam<MooseEnum>("dimensionality", dimensionality,
-                                     "Dimensionality and the coordinate system "
-                                     "of the problem.");
   params.addRequiredRangeCheckedParam<unsigned int>("ordinate_index",
                                                     "ordinate_index >= 0",
                                                     "The discrete ordinate index "
@@ -53,76 +49,44 @@ ADNeutronScattering::validParams()
 }
 
 ADNeutronScattering::ADNeutronScattering(const InputParameters & parameters)
-  : ADKernel(parameters)
-  , _type(getParam<MooseEnum>("dimensionality").getEnum<ProblemType>())
-  , _directions(getMaterialProperty<std::vector<RealVectorValue>>("directions"))
-  , _weights(getMaterialProperty<std::vector<Real>>("direction_weights"))
-  , _axis(getMaterialProperty<MajorAxis>("quadrature_axis_alignment"))
+  : ADNeutronBaseKernel(parameters)
   , _sigma_s_g_prime_g_l(getADMaterialProperty<std::vector<Real>>("scattering_matrix"))
   , _anisotropy(getMaterialProperty<unsigned int>("medium_anisotropy"))
   , _ordinate_index(getParam<unsigned int>("ordinate_index"))
   , _group_index(getParam<unsigned int>("group_index"))
   , _num_groups(getParam<unsigned int>("num_groups"))
   , _max_anisotropy(getParam<unsigned int>("max_anisotropy"))
-  , _symmetry_factor(1.0)
 {
   if (_group_index >= _num_groups)
     mooseError("The group index exceeds the number of energy groups.");
 
+  if (_ordinate_index >= _quadrature_set.totalOrder())
+    mooseError("The ordinates index exceeds the number of quadrature points.");
+
   const unsigned int num_coupled = coupledComponents("group_flux_ordinates");
+  if (num_coupled != _quadrature_set.totalOrder())
+    mooseError("Mismatch between the angular flux ordinates and quadrature set.");
+
   _group_flux_ordinates.reserve(num_coupled);
   for (unsigned int i = 0; i < num_coupled; ++i)
     _group_flux_ordinates.emplace_back(&coupledValue("group_flux_ordinates", i));
-}
-
-void
-ADNeutronScattering::cartesianToSpherical(const RealVectorValue & ordinate,
-                                          Real & mu, Real & omega)
-{
-  switch (_axis[_qp])
-  {
-    case MajorAxis::X:
-      mu = ordinate(0);
-      omega = std::acos(ordinate(1) / std::sqrt(1.0 - (mu * mu)));
-
-      break;
-
-    case MajorAxis::Y:
-      mu = ordinate(1);
-      omega = std::acos(ordinate(2) / std::sqrt(1.0 - (mu * mu)));
-
-      break;
-
-    case MajorAxis::Z:
-      mu = ordinate(2);
-      omega = std::acos(ordinate(0) / std::sqrt(1.0 - (mu * mu)));
-
-      break;
-  }
 }
 
 ADReal
 ADNeutronScattering::computeFluxMoment(unsigned int g_prime, unsigned int l,
                                        int m)
 {
-  if (_directions[_qp].size() != _group_flux_ordinates.size()
-      || _weights[_qp].size() != _group_flux_ordinates.size())
-  {
-    mooseError("The number of flux ordiantes does not match the number of "
-               "quadrature directions and/or weights.");
-  }
-
   Real moment, omega, mu = 0.0;
-  for (unsigned int i = 0; i < _directions[_qp].size(); ++i)
+  for (unsigned int i = 0; i < _quadrature_set.totalOrder(); ++i)
   {
-    cartesianToSpherical(MetaPhysicL::raw_value(_directions[_qp][i]),
+    cartesianToSpherical(_quadrature_set.direction(i),
                          mu, omega);
 
     const unsigned int base_n = g_prime * (_group_flux_ordinates.size()
                                            / _num_groups);
     moment += RealSphericalHarmonics::evaluate(l, m, mu, omega)
-              * MetaPhysicL::raw_value((* _group_flux_ordinates[base_n + i])[_qp]
-                                       * _weights[_qp][i]);
+              * MetaPhysicL::raw_value((* _group_flux_ordinates[base_n + i])[_qp])
+              * _quadrature_set.weight(i);
   }
 
   return moment;
@@ -133,9 +97,6 @@ ADNeutronScattering::computeFluxMoment(unsigned int g_prime, unsigned int l,
 ADReal
 ADNeutronScattering::computeQpResidual()
 {
-  if (_ordinate_index >= _directions[_qp].size())
-    mooseError("The ordinates index exceeds the number of quadrature points.");
-
   // Quit early if no Legendre cross-section moments are provided.
   if (_sigma_s_g_prime_g_l[_qp].size() == 0u)
     return 0.0;
@@ -155,11 +116,11 @@ ADNeutronScattering::computeQpResidual()
     for (unsigned int l = 0; l <= max_anisotropy; ++l)
     {
       // Handle different levels of dimensionality.
-      switch (_type)
+      switch (_quadrature_set.getProblemType())
       {
         // Legendre moments in 1D, looping over m is unecessary.
         case ProblemType::Cartesian1D:
-          cartesianToSpherical(MetaPhysicL::raw_value(_directions[_qp][_ordinate_index]),
+          cartesianToSpherical(_quadrature_set.direction(_ordinate_index),
                                mu, omega);
           moment_l += computeFluxMoment(g_prime, l, 0)
                       * RealSphericalHarmonics::evaluate(l, 0, mu, omega);
@@ -169,7 +130,7 @@ ADNeutronScattering::computeQpResidual()
         case ProblemType::Cartesian2D:
           for (int m = 0; m <= static_cast<int>(l); ++m)
           {
-            cartesianToSpherical(MetaPhysicL::raw_value(_directions[_qp][_ordinate_index]),
+            cartesianToSpherical(_quadrature_set.direction(_ordinate_index),
                                  mu, omega);
             moment_l += computeFluxMoment(g_prime, l, m)
                         * RealSphericalHarmonics::evaluate(l, m, mu, omega);
@@ -180,7 +141,7 @@ ADNeutronScattering::computeQpResidual()
         case ProblemType::Cartesian3D:
           for (int m = -1 * static_cast<int>(l); m <= static_cast<int>(l); ++m)
           {
-            cartesianToSpherical(MetaPhysicL::raw_value(_directions[_qp][_ordinate_index]),
+            cartesianToSpherical(_quadrature_set.direction(_ordinate_index),
                                  mu, omega);
             moment_l += computeFluxMoment(g_prime, l, m)
                         * RealSphericalHarmonics::evaluate(l, m, mu, omega);
@@ -196,6 +157,7 @@ ADNeutronScattering::computeQpResidual()
              * _symmetry_factor;
 
       scattering_index++;
+      moment_l = 0.0;
     }
   }
 

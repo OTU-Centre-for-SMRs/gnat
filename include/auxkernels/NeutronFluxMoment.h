@@ -3,7 +3,6 @@
 #include "AuxKernel.h"
 
 #include "GaussAngularQuadrature.h"
-#include "RealSphericalHarmonics.h"
 
 class NeutronFluxMoment : public AuxKernel
 {
@@ -13,17 +12,15 @@ public:
   NeutronFluxMoment(const InputParameters & parameters);
 
 protected:
+  virtual Real computeValue() override;
+
   void cartesianToSpherical(const RealVectorValue & ordinate, Real & mu,
                             Real & omega);
 
-  virtual Real computeValue() override;
+  const GaussAngularQuadrature _quadrature_set;
 
   std::vector<const ADVariableValue *> _flux_ordinates;
 
   const unsigned int _degree;
   const int _order;
-
-  const MaterialProperty<std::vector<RealVectorValue>> & _directions;
-  const MaterialProperty<std::vector<Real>> & _weights;
-  const MaterialProperty<MajorAxis> & _axis;
 }; // class NeutronFluxMoment
