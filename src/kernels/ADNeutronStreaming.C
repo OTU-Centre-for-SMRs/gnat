@@ -33,6 +33,8 @@ ADNeutronStreaming::computeQpResidual()
   if (_ordinate_index >= _quadrature_set.totalOrder())
     mooseError("The ordinates index exceeds the number of quadrature points.");
 
-  return -1.0 * _grad_test[_i][_qp] * _quadrature_set.direction(_ordinate_index)
-         * _u[_qp];
+  ADReal res = -1.0 * _grad_test[_i][_qp] * _quadrature_set.direction(_ordinate_index)
+               * _u[_qp];
+
+  return res;
 }

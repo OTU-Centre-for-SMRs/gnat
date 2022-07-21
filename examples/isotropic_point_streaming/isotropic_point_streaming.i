@@ -2,25 +2,25 @@
 # medium and a point source at the origin.
 
 [Mesh]
-  type = GeneratedMesh
-  dim = 2
-  nx = 10
-  ny = 10
-  xmin = 0
-  xmax = 1
-  ymin = 0
-  ymax = 1
+  [domain]
+    type = CartesianMeshGenerator
+    dim = 2
+    dx = 10
+    dy = 10
+    ix = 10
+    iy = 10
+  []
 []
 
 [NeutronActivationStudy]
   [TransportSystem]
     execution_type = steady
-    family = LAGRANGE
+    family = MONOMIAL
     order = FIRST
 
     num_groups = 1
     max_anisotropy = 0
-    vacuum_boundaries = '0 1 2 3'
+    vacuum_boundaries = 'left right top bottom'
     debug_disable_scattering = true
 
     point_source_locations = '0.0 0.0 0.0'
@@ -45,7 +45,7 @@
 
 [Executioner]
   type = Steady
-  solve_type = 'PJFNK'
+  solve_type = NEWTON
 []
 
 [Outputs]

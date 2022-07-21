@@ -18,6 +18,7 @@ public:
 
 protected:
   virtual Real computeQpResidual() override;
+  virtual Real computeQpJacobian() override;
 
   const GaussAngularQuadrature _quadrature_set;
   Real _symmetry_factor;

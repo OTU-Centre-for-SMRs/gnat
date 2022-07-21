@@ -85,7 +85,15 @@ IsotropicNeutronPointSource::addPoints()
 Real
 IsotropicNeutronPointSource::computeQpResidual()
 {
-  return (-1.0 / (4.0 * M_PI)) * _test[_i][_qp]
-         * _source_intensities[_point_intensity_mapping[_current_point]]
-         * _symmetry_factor;
+  Real res = (-1.0 / (4.0 * M_PI)) * _test[_i][_qp]
+             * _source_intensities[_point_intensity_mapping[_current_point]]
+             * _symmetry_factor;
+
+  return res;
+}
+
+Real
+IsotropicNeutronPointSource::computeQpJacobian()
+{
+  return 0.0;
 }

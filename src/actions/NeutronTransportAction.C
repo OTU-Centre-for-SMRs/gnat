@@ -572,6 +572,8 @@ NeutronTransportAction::addDiracKernels()
 
         auto params = _factory.getValidParams("IsotropicNeutronPointSource");
         params.set<NonlinearVariableName>("variable") = var_name;
+        params.set<MooseEnum>("point_not_found_behavior")
+          = MooseEnum("ERROR WARNING IGNORE", "WARNING");
 
         // Apply the parameters for the quadrature rule.
         applyQuadratureParameters(params);
@@ -596,6 +598,7 @@ NeutronTransportAction::addDiracKernels()
         _problem->addDiracKernel("IsotropicNeutronPointSource",
                                  "IsotropicNeutronPointSource_" + var_name,
                                  params);
+        std::cout << "IsotropicNeutronPointSource_" + var_name + "\n";
       }
     }
   } // IsotropicNeutronPointSource
