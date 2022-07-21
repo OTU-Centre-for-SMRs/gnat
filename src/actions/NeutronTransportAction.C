@@ -20,7 +20,7 @@ registerMooseAction("GnatApp", NeutronTransportAction, "add_kernel"); //
 registerMooseAction("GnatApp", NeutronTransportAction, "add_dg_kernel"); //
 registerMooseAction("GnatApp", NeutronTransportAction, "add_dirac_kernel"); //
 registerMooseAction("GnatApp", NeutronTransportAction, "add_bc"); //
-registerMooseAction("GnatApp", NeutronTransportAction, "add_ic");
+registerMooseAction("GnatApp", NeutronTransportAction, "add_ic"); //
 registerMooseAction("GnatApp", NeutronTransportAction, "add_aux_variable"); //
 registerMooseAction("GnatApp", NeutronTransportAction, "add_aux_kernel"); //
 
@@ -126,6 +126,8 @@ NeutronTransportAction::validParams()
                         "Debug option to disable scattering evaluation.");
   params.addParam<bool>("debug_disable_source_iteration", true,
                         "Debug option to disable source iteration.");
+  params.addParam<Real>("debug_steady_state_ic", 1.0,
+                        "Debug initial guess for Newton's method.");
 
   return params;
 }
@@ -171,10 +173,10 @@ NeutronTransportAction::addVariable(const std::string & var_name)
   var_params.applySpecificParameters(_pars, {"family", "order"});
   var_params.set<std::vector<Real>>("scaling") = std::vector<Real>(getParam<Real>("scaling"));
 
-  if (!_subdomain_ids.empty())
+  if (isParamValid("block"))
   {
-    for (const SubdomainID & id : _subdomain_ids)
-      var_params.set<std::vector<SubdomainName>>("block").push_back(Moose::stringify(id));
+    var_params.set<std::vector<SubdomainName>>("block")
+      = getParam<std::vector<SubdomainName>>("block");
   }
 
   _problem->addVariable(type, var_name, var_params);
@@ -467,7 +469,18 @@ void
 NeutronTransportAction::addICs(const std::string & var_name, unsigned int g,
                                unsigned int n)
 {
+  // Set a constant initial condition for now.
+  auto params = _factory.getValidParams("ConstantIC");
+  params.set<VariableName>("variable") = var_name;
 
+  if (isParamValid("block"))
+  {
+    params.set<std::vector<SubdomainName>>("block")
+      = getParam<std::vector<SubdomainName>>("block");
+  }
+
+  params.set<Real>("value") = getParam<Real>("debug_steady_state_ic");
+  _problem->addInitialCondition("ConstantIC", "ADNeutronMatSourceBC_" + var_name, params);
 }
 
 void
@@ -598,7 +611,6 @@ NeutronTransportAction::addDiracKernels()
         _problem->addDiracKernel("IsotropicNeutronPointSource",
                                  "IsotropicNeutronPointSource_" + var_name,
                                  params);
-        std::cout << "IsotropicNeutronPointSource_" + var_name + "\n";
       }
     }
   } // IsotropicNeutronPointSource

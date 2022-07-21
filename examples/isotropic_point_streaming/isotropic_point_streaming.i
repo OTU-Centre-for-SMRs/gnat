@@ -18,14 +18,19 @@
     family = MONOMIAL
     order = FIRST
 
+    n_azimuthal = 3
+    n_polar = 3
     num_groups = 1
+
     max_anisotropy = 0
     vacuum_boundaries = 'left right top bottom'
-    debug_disable_scattering = true
 
-    point_source_locations = '0.0 0.0 0.0'
+    point_source_locations = '0.5 0.5 0.0'
     point_source_intensities = '1000.0'
     point_source_groups = '1'
+
+    debug_disable_scattering = true
+    debug_steady_state_ic = 1000.0
   []
 []
 
@@ -39,16 +44,17 @@
 []
 
 [Problem]
-  type = FEProblem # This is the "normal" type of Finite Element Problem in MOOSE
+  type = FEProblem
   coord_type = XYZ
 []
 
 [Executioner]
   type = Steady
-  solve_type = NEWTON
+  solve_type = PJFNK
+  petsc_options_iname = '-pc_type -pc_hypre_type'
+  petsc_options_value = 'hypre boomeramg'
 []
 
 [Outputs]
-  execute_on = 'timestep_end'
   exodus = true
 []

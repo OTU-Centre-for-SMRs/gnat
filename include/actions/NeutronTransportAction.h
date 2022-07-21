@@ -8,7 +8,6 @@
 #include <vector>
 
 // TODO:
-// - Fix the angular quadrature set.
 // - Complete the reflective boundary condition implementation.
 // - Initial conditions.
 class NeutronTransportAction : public Action
@@ -23,7 +22,7 @@ public:
 protected:
   using Action::addRelationshipManagers;
   void addRelationshipManagers(Moose::RelationshipManagerType when_type) override;
-  
+
   void addVariable(const std::string & var_name);
   void addKernels(const std::string & var_name, unsigned int g, unsigned int n);
   void addDGKernels(const std::string & var_name, unsigned int g, unsigned int n);
