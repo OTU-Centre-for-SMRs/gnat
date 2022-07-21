@@ -6,7 +6,7 @@ documenting the class, which includes the typical automatic documentation associ
 however, what is contained is ultimately determined by what is necessary to make the documentation
 clear for users.
 
-!syntax description /NeutronActivationStudy/NeutronTransportAction
+!syntax description /NeutronActivationStudy/TransportSystem/NeutronTransportAction
 
 ## Overview
 
@@ -16,6 +16,6 @@ clear for users.
 
 !! Describe and include an example of how to use the NeutronTransportAction action.
 
-!syntax description /NeutronActivationStudy/NeutronTransportAction
+!syntax description /NeutronActivationStudy/TransportSystem/NeutronTransportAction
 
-!syntax parameters /NeutronActivationStudy/NeutronTransportAction
+!syntax parameters /NeutronActivationStudy/TransportSystem/NeutronTransportAction

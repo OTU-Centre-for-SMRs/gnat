@@ -5,7 +5,7 @@
   type = GeneratedMesh
   dim = 2
   nx = 10
-  ny = 10 
+  ny = 10
   xmin = 0
   xmax = 1
   ymin = 0
@@ -13,17 +13,20 @@
 []
 
 [NeutronActivationStudy]
-  execution_type = steady
-  family = LAGRANGE
-  order = FIRST
+  [TransportSystem]
+    execution_type = steady
+    family = LAGRANGE
+    order = FIRST
 
-  num_groups = 1
-  max_anisotropy = 0
-  vacuum_boundaries = '0 1 2 3'
+    num_groups = 1
+    max_anisotropy = 0
+    vacuum_boundaries = '0 1 2 3'
+    debug_disable_scattering = true
 
-  point_source_locations = '0.0 0.0 0.0'
-  point_source_intensities = '1000.0'
-  point_source_groups = '1'
+    point_source_locations = '0.0 0.0 0.0'
+    point_source_intensities = '1000.0'
+    point_source_groups = '1'
+  []
 []
 
 [Materials]
@@ -41,14 +44,11 @@
 []
 
 [Executioner]
-  type = Steady # Steady state problem
-  solve_type = NEWTON # Perform a Newton solve
-
-  # Set PETSc parameters to optimize solver efficiency
-  petsc_options_iname = '-pc_type -pc_hypre_type' # PETSc option pairs with values below
-  petsc_options_value = ' hypre    boomeramg'
+  type = Steady
+  solve_type = 'PJFNK'
 []
 
 [Outputs]
-  exodus = true # Output Exodus format
+  execute_on = 'timestep_end'
+  exodus = true
 []

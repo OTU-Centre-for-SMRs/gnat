@@ -4,6 +4,8 @@
 #include "Parser.h"
 #include "NonlinearSystemBase.h"
 #include "FEProblemBase.h"
+#include "DGKernelBase.h"
+
 #include "Conversion.h"
 #include "MooseTypes.h"
 #include "FEProblem.h"
@@ -140,7 +142,24 @@ NeutronTransportAction::NeutronTransportAction(const InputParameters & params)
   , _vacuum_side_sets(getParam<std::vector<BoundaryName>>("vacuum_boundaries"))
   , _source_side_sets(getParam<std::vector<BoundaryName>>("source_boundaries"))
   , _reflective_side_sets(getParam<std::vector<BoundaryName>>("reflective_boundaries"))
+  , _var_init(false)
 { }
+
+void
+NeutronTransportAction::applyQuadratureParameters(InputParameters & params)
+{
+  // Assign dimensionality.
+  MooseEnum dimensionality("1D_cartesian 2D_cartesian 3D_cartesian");
+  dimensionality.assign(static_cast<int>(_p_type));
+  params.set<MooseEnum>("dimensionality") = dimensionality;
+
+  // Assign major axis.
+  params.set<MooseEnum>("major_axis") = getParam<MooseEnum>("major_axis");
+
+  // Assign quadrature rules.
+  params.set<unsigned int>("n_l") = 2u * _n_l;
+  params.set<unsigned int>("n_c") = 2u * _n_c;
+}
 
 void
 NeutronTransportAction::addVariable(const std::string & var_name)
@@ -191,6 +210,9 @@ NeutronTransportAction::addKernels(const std::string & var_name, unsigned int g,
     // Ordinate index is required to fetch the neutron direction.
     params.set<unsigned int>("ordinate_index") = n;
 
+    // Apply the parameters for the quadrature rule.
+    applyQuadratureParameters(params);
+
     if (isParamValid("block"))
     {
       params.set<std::vector<SubdomainName>>("block")
@@ -231,10 +253,9 @@ NeutronTransportAction::addKernels(const std::string & var_name, unsigned int g,
     params.set<unsigned int>("num_groups") = _num_groups;
     // Ordinate index is required to fetch the neutron direction.
     params.set<unsigned int>("ordinate_index") = n;
-    // Dimensionality of the problem.
-    MooseEnum dimensionality("1D_cartesian 2D_cartesian 3D_cartesian");
-    dimensionality.assign(static_cast<int>(_p_type));
-    params.set<MooseEnum>("dimensionality") = dimensionality;
+
+    // Apply the parameters for the quadrature rule.
+    applyQuadratureParameters(params);
 
     if (isParamValid("block"))
     {
@@ -269,10 +290,9 @@ NeutronTransportAction::addKernels(const std::string & var_name, unsigned int g,
         params.set<unsigned int>("num_groups") = _num_groups;
         // Ordinate index is required to fetch the neutron direction.
         params.set<unsigned int>("ordinate_index") = n;
-        // Dimensionality of the problem.
-        MooseEnum dimensionality("1D_cartesian 2D_cartesian 3D_cartesian");
-        dimensionality.assign(static_cast<int>(_p_type));
-        params.set<MooseEnum>("dimensionality") = dimensionality;
+
+        // Apply the parameters for the quadrature rule.
+        applyQuadratureParameters(params);
 
         // Copy all of the group flux moment names into the moment variable
         // parameter.
@@ -305,10 +325,9 @@ NeutronTransportAction::addKernels(const std::string & var_name, unsigned int g,
         params.set<unsigned int>("num_groups") = _num_groups;
         // Ordinate index is required to fetch the neutron direction.
         params.set<unsigned int>("ordinate_index") = n;
-        // Dimensionality of the problem.
-        MooseEnum dimensionality("1D_cartesian 2D_cartesian 3D_cartesian");
-        dimensionality.assign(static_cast<int>(_p_type));
-        params.set<MooseEnum>("dimensionality") = dimensionality;
+
+        // Apply the parameters for the quadrature rule.
+        applyQuadratureParameters(params);
 
         // Copy all of the in-group flux moment names into the moment
         // variable parameter.
@@ -339,12 +358,11 @@ NeutronTransportAction::addKernels(const std::string & var_name, unsigned int g,
         params.set<unsigned int>("num_groups") = _num_groups;
         // Ordinate index is required to fetch the neutron direction.
         params.set<unsigned int>("ordinate_index") = n;
-        // Dimensionality of the problem.
-        MooseEnum dimensionality("1D_cartesian 2D_cartesian 3D_cartesian");
-        dimensionality.assign(static_cast<int>(_p_type));
-        params.set<MooseEnum>("dimensionality") = dimensionality;
         // Maximum scattering anisotropy.
         params.set<unsigned int>("max_anisotropy") = _max_eval_anisotropy;
+
+        // Apply the parameters for the quadrature rule.
+        applyQuadratureParameters(params);
 
         // Copy all of the group flux ordinate names into the variable
         // parameter.
@@ -381,6 +399,9 @@ NeutronTransportAction::addDGKernels(const std::string & var_name,
     // Ordinate index is required to fetch the neutron direction.
     params.set<unsigned int>("ordinate_index") = n;
 
+    // Apply the parameters for the quadrature rule.
+    applyQuadratureParameters(params);
+
     if (isParamValid("block"))
     {
       params.set<std::vector<SubdomainName>>("block")
@@ -405,6 +426,9 @@ NeutronTransportAction::addBCs(const std::string & var_name, unsigned int g,
     // Ordinate index is required to fetch the neutron direction.
     params.set<unsigned int>("ordinate_index") = n;
 
+    // Apply the parameters for the quadrature rule.
+    applyQuadratureParameters(params);
+
     params.set<std::vector<BoundaryName>>("boundary") = _vacuum_side_sets;
 
     _problem->addBoundaryCondition("ADNeutronVacuumBC",
@@ -419,10 +443,9 @@ NeutronTransportAction::addBCs(const std::string & var_name, unsigned int g,
     params.set<NonlinearVariableName>("variable") = var_name;
     // Ordinate index is required to fetch the neutron direction.
     params.set<unsigned int>("ordinate_index") = n;
-    // Dimensionality of the problem.
-    MooseEnum dimensionality("1D_cartesian 2D_cartesian 3D_cartesian");
-    dimensionality.assign(static_cast<int>(_p_type));
-    params.set<MooseEnum>("dimensionality") = dimensionality;
+
+    // Apply the parameters for the quadrature rule.
+    applyQuadratureParameters(params);
 
     params.set<std::vector<BoundaryName>>("boundary") = _source_side_sets;
 
@@ -450,11 +473,19 @@ NeutronTransportAction::addICs(const std::string & var_name, unsigned int g,
 void
 NeutronTransportAction::addAuxVariables(const std::string & var_name)
 {
-  FEType fe_type(FIRST, MONOMIAL);
-  if (_subdomain_ids.empty())
-    _problem->addAuxVariable(var_name, fe_type);
-  else
-    _problem->addAuxVariable(var_name, fe_type, &_subdomain_ids);
+  auto fe_type = AddVariableAction::feType(_pars);
+  auto type_name = AddVariableAction::variableType(fe_type, false, false);
+  auto params = _factory.getValidParams(type_name);
+  params.set<MooseEnum>("order") = fe_type.order.get_order();
+  params.set<MooseEnum>("family") = Moose::stringify(fe_type.family);
+
+  if (isParamValid("block"))
+  {
+    params.set<std::vector<SubdomainName>>("block")
+      = getParam<std::vector<SubdomainName>>("block");
+  }
+
+  _problem->addAuxVariable(type_name, var_name, params);
 }
 
 void
@@ -467,13 +498,12 @@ NeutronTransportAction::addAuxKernels(const std::string & var_name,
   {
     InputParameters params = _factory.getValidParams("NeutronFluxMoment");
     params.set<AuxVariableName>("variable") = var_name;
-    // Execute flux moments on the final timestep.
-    auto execute_options = MooseUtils::getDefaultExecFlagEnum();
-    execute_options = EXEC_TIMESTEP_END;
-    params.set<ExecFlagEnum>("execute_on") = execute_options;
     // Flux moment degree and order.
     params.set<unsigned int>("degree") = l;
     params.set<int>("order") = m;
+
+    // Apply the parameters for the quadrature rule.
+    applyQuadratureParameters(params);
 
     // The flux ordinates for this group.
     params.set<std::vector<VariableName>>("group_flux_ordinates")
@@ -542,10 +572,9 @@ NeutronTransportAction::addDiracKernels()
 
         auto params = _factory.getValidParams("IsotropicNeutronPointSource");
         params.set<NonlinearVariableName>("variable") = var_name;
-        // Dimensionality of the problem.
-        MooseEnum dimensionality("1D_cartesian 2D_cartesian 3D_cartesian");
-        dimensionality.assign(static_cast<int>(_p_type));
-        params.set<MooseEnum>("dimensionality") = dimensionality;
+
+        // Apply the parameters for the quadrature rule.
+        applyQuadratureParameters(params);
 
         // Set the intensities and points for the group g.
         auto & points = params.set<std::vector<Point>>("points");
@@ -575,73 +604,79 @@ NeutronTransportAction::addDiracKernels()
 void
 NeutronTransportAction::act()
 {
-  // Setup for all actions the NeutronTransport action performs.
-  // Grab all the subdomain IDs that the neutron transport action should be
-  // applied to.
-  std::vector<SubdomainName> block_names(getParam<std::vector<SubdomainName>>("block"));
-  for (const auto & block_name : block_names)
-    _subdomain_ids.insert(_problem->mesh().getSubdomainID(block_name));
-
-  // Find out what sort of problem we're working with. Error if it's not a
-  // cartesian coordinate system.
-  for (const SubdomainID & id : _subdomain_ids)
+  if (!_var_init)
   {
-    if (_problem->getCoordSystem(id) != Moose::COORD_XYZ)
-      mooseError("Neutron transport simulations currently do not support "
-                 "non-cartesian coordinate systems.");
-  }
+    // Setup for all actions the NeutronTransport action performs.
+    // Grab all the subdomain IDs that the neutron transport action should be
+    // applied to.
+    std::vector<SubdomainName> block_names(getParam<std::vector<SubdomainName>>("block"));
+    for (const auto & block_name : block_names)
+      _subdomain_ids.insert(_problem->mesh().getSubdomainID(block_name));
 
-  // Set the enum so quadrature sets can be determined appropriately.
-  unsigned int _num_group_moments = 0u;
-  switch (_problem->mesh().getMesh().spatial_dimension())
-  {
-    case 1u:
-      _p_type = ProblemType::Cartesian1D;
-      _num_group_moments = (_max_eval_anisotropy + 1u);
-      _num_flux_ordinates = 2u * _n_l;
-      break;
-
-    case 2u:
-      _p_type = ProblemType::Cartesian2D;
-      _num_group_moments = (_max_eval_anisotropy + 1u) * (_max_eval_anisotropy + 2u) / 2u;
-      _num_flux_ordinates = 4u * _n_l * _n_c;
-      break;
-
-    case 3u:
-      _p_type = ProblemType::Cartesian3D;
-      _num_group_moments = (_max_eval_anisotropy + 1u) * (_max_eval_anisotropy + 1u);
-      _num_flux_ordinates = 8u * _n_l * _n_c;
-      break;
-
-    default:
-      mooseError("Unknown mesh dimensionality.");
-      break;
-  }
-
-  for (unsigned int g = 0; g < _num_groups; ++g)
-  {
-    // Set up variable names for the group angular fluxes.
-    _group_angular_fluxes.emplace(g, std::vector<VariableName>());
-    _group_angular_fluxes[g].reserve(_num_flux_ordinates);
-    for (unsigned int n = 1; n <= _num_flux_ordinates; ++n)
+    // Find out what sort of problem we're working with. Error if it's not a
+    // cartesian coordinate system.
+    for (const SubdomainID & id : _subdomain_ids)
     {
-      _group_angular_fluxes[g].emplace_back(_angular_flux_name + "_"
-                                           + Moose::stringify(g + 1u)  + "_"
-                                           + Moose::stringify(n));
+      if (_problem->getCoordSystem(id) != Moose::COORD_XYZ)
+        mooseError("Neutron transport simulations currently do not support "
+                   "non-cartesian coordinate systems.");
     }
-    // Set up variable names for the group flux moments.
-    _group_flux_moments.emplace(g, std::vector<VariableName>());
-    _group_flux_moments[g].reserve(_num_group_moments);
-    for (unsigned int l = 0; l <= _max_eval_anisotropy; ++l)
+
+    // Set the enum so quadrature sets can be determined appropriately.
+    unsigned int _num_group_moments = 0u;
+    switch (_mesh->dimension())
     {
-      for (int m = -1 * static_cast<int>(l); m <= static_cast<int>(l); ++m)
+      case 1u:
+        _p_type = ProblemType::Cartesian1D;
+        _num_group_moments = (_max_eval_anisotropy + 1u);
+        _num_flux_ordinates = 2u * _n_l;
+        break;
+
+      case 2u:
+        _p_type = ProblemType::Cartesian2D;
+        _num_group_moments = (_max_eval_anisotropy + 1u) * (_max_eval_anisotropy + 2u) / 2u;
+        _num_flux_ordinates = 4u * _n_l * _n_c;
+        break;
+
+      case 3u:
+        _p_type = ProblemType::Cartesian3D;
+        _num_group_moments = (_max_eval_anisotropy + 1u) * (_max_eval_anisotropy + 1u);
+        _num_flux_ordinates = 8u * _n_l * _n_c;
+        break;
+
+      default:
+        mooseError("Unknown mesh dimensionality.");
+        break;
+    }
+
+    for (unsigned int g = 0; g < _num_groups; ++g)
+    {
+      // Set up variable names for the group angular fluxes.
+      _group_angular_fluxes.emplace(g, std::vector<VariableName>());
+      _group_angular_fluxes[g].reserve(_num_flux_ordinates);
+      for (unsigned int n = 1; n <= _num_flux_ordinates; ++n)
       {
-        _group_flux_moments[g].emplace_back(_flux_moment_name + "_"
-                                            + Moose::stringify(g + 1u) + "_"
-                                            + Moose::stringify(l) + "_"
-                                            + Moose::stringify(m));
+        _group_angular_fluxes[g].emplace_back(_angular_flux_name + "_"
+                                             + Moose::stringify(g + 1u)  + "_"
+                                             + Moose::stringify(n));
+      }
+
+      // Set up variable names for the group flux moments.
+      _group_flux_moments.emplace(g, std::vector<VariableName>());
+      _group_flux_moments[g].reserve(_num_group_moments);
+      for (unsigned int l = 0; l <= _max_eval_anisotropy; ++l)
+      {
+        for (int m = -1 * static_cast<int>(l); m <= static_cast<int>(l); ++m)
+        {
+          _group_flux_moments[g].emplace_back(_flux_moment_name + "_"
+                                              + Moose::stringify(g + 1u) + "_"
+                                              + Moose::stringify(l) + "_"
+                                              + Moose::stringify(m));
+        }
       }
     }
+
+    _var_init = true;
   }
 
   // Loop over all groups.
@@ -698,4 +733,11 @@ NeutronTransportAction::act()
   // handled separately.
   if (_current_task == "add_dirac_kernel")
     addDiracKernels();
+}
+
+void
+NeutronTransportAction::addRelationshipManagers(Moose::RelationshipManagerType input_rm_type)
+{
+  auto dg_kernel_params = DGKernelBase::validParams();
+  addRelationshipManagers(input_rm_type, dg_kernel_params);
 }

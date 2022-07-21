@@ -21,6 +21,9 @@ public:
   virtual void act() override;
 
 protected:
+  using Action::addRelationshipManagers;
+  void addRelationshipManagers(Moose::RelationshipManagerType when_type) override;
+  
   void addVariable(const std::string & var_name);
   void addKernels(const std::string & var_name, unsigned int g, unsigned int n);
   void addDGKernels(const std::string & var_name, unsigned int g, unsigned int n);
@@ -32,6 +35,8 @@ protected:
                      unsigned int l, int m);
 
   void addDiracKernels();
+
+  void applyQuadratureParameters(InputParameters & params);
 
   enum class ExecutionType
   {
@@ -75,5 +80,5 @@ protected:
   // List of the names for all angular flux variables and flux moments.
   std::unordered_map<unsigned int, std::vector<VariableName>> _group_angular_fluxes;
   std::unordered_map<unsigned int, std::vector<VariableName>> _group_flux_moments;
-
+  bool _var_init;
 }; // class NeutronTransportAction

@@ -12,8 +12,23 @@ IsotropicNeutronPointSource::validParams()
                              "$-(\\psi_{j}, \\frac{S_{g,0,0}}{4\\pi})$. "
                              "This kernel should not be exposed to the user, "
                              "instead being enabled through a transport action.");
-  MooseEnum dimensionality("1D_cartesian 2D_cartesian 3D_cartesian");
-  params.addRequiredParam<MooseEnum>("dimensionality", dimensionality,
+  params.addRequiredRangeCheckedParam<unsigned int>("n_l",
+                                                    "n_l > 0",
+                                                    "Order of the polar Gauss-"
+                                                    "Legendre quadrature set.");
+  params.addRequiredRangeCheckedParam<unsigned int>("n_c",
+                                                    "n_c > 0",
+                                                    "Order of the azimuthal "
+                                                    "Gauss-Chebyshev "
+                                                    "quadrature set.");
+  params.addParam<MooseEnum>("major_axis", MooseEnum("x y z", "x"),
+                             "Major axis of the angular quadrature. Allows the "
+                             "polar angular quadrature to align with a cartesian "
+                             "axis with minimal heterogeneity. Default is the "
+                             "x-axis. This parameter is ignored for 1D and 2D "
+                             "problems.");
+  params.addRequiredParam<MooseEnum>("dimensionality",
+                                     MooseEnum("1D_cartesian 2D_cartesian 3D_cartesian"),
                                      "Dimensionality and the coordinate system of the "
                                      "problem.");
   params.addRequiredParam<std::vector<Real>>("intensities",
@@ -70,7 +85,7 @@ IsotropicNeutronPointSource::addPoints()
 Real
 IsotropicNeutronPointSource::computeQpResidual()
 {
-  return (-1.0 / M_PI) * _test[_i][_qp]
+  return (-1.0 / (4.0 * M_PI)) * _test[_i][_qp]
          * _source_intensities[_point_intensity_mapping[_current_point]]
          * _symmetry_factor;
 }

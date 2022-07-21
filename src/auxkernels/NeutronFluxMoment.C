@@ -53,7 +53,7 @@ NeutronFluxMoment::NeutronFluxMoment(const InputParameters & parameters)
 {
   const unsigned int num_coupled = coupledComponents("group_flux_ordinates");
 
-  if (num_coupled!= _quadrature_set.totalOrder())
+  if (num_coupled != _quadrature_set.totalOrder())
     mooseError("Mismatch between the angular flux ordinates and quadrature set.");
 
   _flux_ordinates.reserve(num_coupled);

@@ -26,11 +26,12 @@ Extensions:
                 Tutorials: getting_started/tutorials.md
             Documentation:
                 Gnat Source Pages: source/index.md
-                Gnat Syntax Pages: syntax/NeutronActivationStudy/index.md
+                Gnat Syntax Pages: syntax/NeutronActivationStudy/TransportSystem/index.md
                 MOOSE Source Pages: https://mooseframework.inl.gov/source/index.html
     MooseDocs.extensions.appsyntax:
         executable: ${ROOT_DIR}
         remove: !include ${MOOSE_DIR}/framework/doc/remove.yml
+        unregister: !include ${MOOSE_DIR}/framework/doc/unregister.yml
         includes:
             - include
         sources:

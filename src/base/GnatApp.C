@@ -22,7 +22,7 @@ GnatApp::~GnatApp() { }
 static void
 associateSyntaxInner(Syntax & syntax, ActionFactory & /*action_factory*/)
 {
-  registerSyntax("NeutronTransportAction", "NeutronActivationStudy");
+  registerSyntax("NeutronTransportAction", "NeutronActivationStudy/TransportSystem");
 }
 
 void

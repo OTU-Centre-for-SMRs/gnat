@@ -50,17 +50,12 @@ AbsorbingNeutronicsMaterial::AbsorbingNeutronicsMaterial(const InputParameters &
 void
 AbsorbingNeutronicsMaterial::computeQpProperties()
 {
-  // Init the properties.
-  if (_mat_v_g[_qp].size() != _num_groups)
+  _mat_v_g[_qp].resize(_num_groups, 0.0);
+  _mat_sigma_r_g[_qp].resize(_num_groups, 0.0);
+  for (unsigned int i = 0; i < _num_groups; ++i)
   {
-    _mat_v_g[_qp].resize(_num_groups, 0.0);
-    _mat_sigma_r_g[_qp].resize(_num_groups, 0.0);
-
-    for (unsigned int i = 0; i < _num_groups; ++i)
-    {
-      _mat_v_g[_qp][i] = _v_g[i];
-      _mat_sigma_r_g[_qp][i] = _sigma_r_g[i];
-    }
+    _mat_v_g[_qp][i] = _v_g[i];
+    _mat_sigma_r_g[_qp][i] = _sigma_r_g[i];
   }
 
   _mat_anisotropy[_qp] = 0u;
