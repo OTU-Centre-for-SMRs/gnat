@@ -1,5 +1,6 @@
-# isotropic_point_streaming.i: A simple test case with a purely absorbing
-# medium and a point source at the origin.
+# isotropic_point_streaming.i:
+# A simple test case with a purely absorbing medium and a point source in the
+# middle of the domain.
 
 [Mesh]
   [domain]
@@ -25,7 +26,7 @@
     max_anisotropy = 0
     vacuum_boundaries = 'left right top bottom'
 
-    point_source_locations = '0.5 0.5 0.0'
+    point_source_locations = '5.0 5.0 0.0'
     point_source_intensities = '1000.0'
     point_source_groups = '1'
 

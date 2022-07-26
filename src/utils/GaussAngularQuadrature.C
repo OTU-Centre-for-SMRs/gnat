@@ -123,6 +123,8 @@ GaussAngularQuadrature::GaussAngularQuadrature(unsigned int n_c,
           _quadrature_set_omega.erase(_quadrature_set_omega.begin() + i);
           _quadrature_set_weight.erase(_quadrature_set_weight.begin() + i);
         }
+        else
+          _quadrature_set_omega[i](2) = 0.0;
       }
       break;
 

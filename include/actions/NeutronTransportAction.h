@@ -22,17 +22,18 @@ public:
 protected:
   using Action::addRelationshipManagers;
   void addRelationshipManagers(Moose::RelationshipManagerType when_type) override;
+  
+  void debugOutput(const std::string & level0 = "",
+                   const std::string & level1 = "");
 
   void addVariable(const std::string & var_name);
   void addKernels(const std::string & var_name, unsigned int g, unsigned int n);
   void addDGKernels(const std::string & var_name, unsigned int g, unsigned int n);
   void addBCs(const std::string & var_name, unsigned int g, unsigned int n);
   void addICs(const std::string & var_name, unsigned int g, unsigned int n);
-
   void addAuxVariables(const std::string & var_name);
   void addAuxKernels(const std::string & var_name, unsigned int g,
                      unsigned int l, int m);
-
   void addDiracKernels();
 
   void applyQuadratureParameters(InputParameters & params);
@@ -43,7 +44,14 @@ protected:
     Transient = 1u
   };
 
+  enum class DebugVerbosity
+  {
+    Level0 = 0u,
+    Level1 = 1u
+  };
+
   const ExecutionType _exec_type;
+  const DebugVerbosity _debug_level;
 
   std::set<SubdomainID> _subdomain_ids;
 

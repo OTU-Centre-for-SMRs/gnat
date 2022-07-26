@@ -4,13 +4,13 @@
 #include "Parser.h"
 #include "NonlinearSystemBase.h"
 #include "FEProblemBase.h"
-#include "DGKernelBase.h"
 
 #include "Conversion.h"
 #include "MooseTypes.h"
 #include "FEProblem.h"
 
 #include "AddVariableAction.h"
+#include "ADDGNeutronStreamingUpwind.h"
 
 #include "libmesh/string_to_enum.h"
 #include "libmesh/fe_type.h"
@@ -122,6 +122,11 @@ NeutronTransportAction::validParams()
 
   //----------------------------------------------------------------------------
   // Parameters for debugging.
+  params.addParam<MooseEnum>("debug_verbosity",
+                             MooseEnum("level0 level1", "level1"),
+                             "How verbose the debug output of the transport "
+                             "system should be. level0 is fully verbose. "
+                             "level1 outputs less debuggung information.");
   params.addParam<bool>("debug_disable_scattering", false,
                         "Debug option to disable scattering evaluation.");
   params.addParam<bool>("debug_disable_source_iteration", true,
@@ -144,8 +149,47 @@ NeutronTransportAction::NeutronTransportAction(const InputParameters & params)
   , _vacuum_side_sets(getParam<std::vector<BoundaryName>>("vacuum_boundaries"))
   , _source_side_sets(getParam<std::vector<BoundaryName>>("source_boundaries"))
   , _reflective_side_sets(getParam<std::vector<BoundaryName>>("reflective_boundaries"))
+  , _debug_level(getParam<MooseEnum>("debug_verbosity").getEnum<DebugVerbosity>())
   , _var_init(false)
 { }
+
+void
+NeutronTransportAction::addRelationshipManagers(Moose::RelationshipManagerType when_type)
+{
+  auto params = ADDGNeutronStreamingUpwind::validParams();
+  addRelationshipManagers(when_type, params);
+}
+
+void
+NeutronTransportAction::debugOutput(const std::string & level0,
+                                    const std::string & level1)
+{
+  switch (_debug_level)
+  {
+    case DebugVerbosity::Level0:
+      if (level0 != "")
+      {
+        if (level0 == "\n")
+          std::cout << level0;
+        else
+          std::cout << level0 << "\n";
+      }
+      break;
+
+    case DebugVerbosity::Level1:
+      if (level1 != "")
+      {
+        if (level1 == "\n")
+          std::cout << level1;
+        else
+          std::cout << level1 << "\n";
+      }
+      break;
+
+    default:
+      break;
+  }
+}
 
 void
 NeutronTransportAction::applyQuadratureParameters(InputParameters & params)
@@ -168,18 +212,20 @@ NeutronTransportAction::addVariable(const std::string & var_name)
 {
   auto fe_type = AddVariableAction::feType(_pars);
   auto type = AddVariableAction::variableType(fe_type, false, false);
-  auto var_params = _factory.getValidParams(type);
+  auto params = _factory.getValidParams(type);
+  params.set<MooseEnum>("order") = fe_type.order.get_order();
+  params.set<MooseEnum>("family") = Moose::stringify(fe_type.family);
 
-  var_params.applySpecificParameters(_pars, {"family", "order"});
-  var_params.set<std::vector<Real>>("scaling") = std::vector<Real>(getParam<Real>("scaling"));
+  params.set<std::vector<Real>>("scaling") = std::vector<Real>(getParam<Real>("scaling"));
 
   if (isParamValid("block"))
   {
-    var_params.set<std::vector<SubdomainName>>("block")
+    params.set<std::vector<SubdomainName>>("block")
       = getParam<std::vector<SubdomainName>>("block");
   }
 
-  _problem->addVariable(type, var_name, var_params);
+  _problem->addVariable(type, var_name, params);
+  debugOutput("Adding variable " + var_name + " with type " + type + ".");
 }
 
 void
@@ -200,9 +246,11 @@ NeutronTransportAction::addKernels(const std::string & var_name, unsigned int g,
         = getParam<std::vector<SubdomainName>>("block");
     }
 
-    _problem->addKernel("NtTimeDerivative",
+    _problem->addKernel("ADNeutronTimeDerivative",
                         "ADNeutronTimeDerivative_" + var_name,
                         params);
+    debugOutput("Adding kernel ADNeutronTimeDerivative for the variable "
+                + var_name + ".");
   } // ADNeutronTimeDerivative
 
   // Add ADNeutronStreaming.
@@ -224,6 +272,8 @@ NeutronTransportAction::addKernels(const std::string & var_name, unsigned int g,
     _problem->addKernel("ADNeutronStreaming",
                         "ADNeutronStreaming_" + var_name,
                         params);
+    debugOutput("Adding kernel ADNeutronStreaming for the variable "
+                + var_name + ".");
   } // ADNeutronStreaming
 
   // Add ADNeutronRemoval.
@@ -243,6 +293,8 @@ NeutronTransportAction::addKernels(const std::string & var_name, unsigned int g,
     _problem->addKernel("ADNeutronRemoval",
                         "ADNeutronRemoval_" + var_name,
                         params);
+    debugOutput("Adding kernel ADNeutronRemoval for the variable "
+                + var_name + ".");
   } // ADNeutronRemoval
 
   // Add ADNeutronMaterialSource.
@@ -268,6 +320,8 @@ NeutronTransportAction::addKernels(const std::string & var_name, unsigned int g,
     _problem->addKernel("ADNeutronMaterialSource",
                         "ADNeutronMaterialSource_" + var_name,
                         params);
+    debugOutput("Adding kernel ADNeutronMaterialSource for the variable "
+                + var_name + ".");
   } // ADNeutronMaterialSource
 
   // Only add scattering kernels if debug doesn't disable them.
@@ -277,8 +331,8 @@ NeutronTransportAction::addKernels(const std::string & var_name, unsigned int g,
     if (!getParam<bool>("debug_disable_source_iteration"))
     {
       // Compute the scattering evaluation with source iteration.
-      mooseError("Scattering iteration currently is not supported and is a work "
-                 "in progress.");
+      mooseError("Scattering iteration is not supported and is a work in "
+                 "progress.");
 
       // Add ADNeutronGToGScattering. This kernel is only enabled if there's
       // more than one group.
@@ -315,6 +369,8 @@ NeutronTransportAction::addKernels(const std::string & var_name, unsigned int g,
         _problem->addKernel("ADNeutronGToGScattering",
                             "ADNeutronGToGScattering_" + var_name,
                             params);
+        debugOutput("Adding kernel ADNeutronGToGScattering for the variable "
+                    + var_name + ".");
       } // ADNeutronGToGScattering
 
       // Add ADNeutronInGroupScattering.
@@ -345,6 +401,8 @@ NeutronTransportAction::addKernels(const std::string & var_name, unsigned int g,
         _problem->addKernel("ADNeutronInGroupScattering",
                             "ADNeutronInGroupScattering_" + var_name,
                             params);
+        debugOutput("Adding kernel ADNeutronInGroupScattering for the variable "
+                    + var_name + ".");
       } // ADNeutronInGroupScattering
     }
     else
@@ -385,6 +443,8 @@ NeutronTransportAction::addKernels(const std::string & var_name, unsigned int g,
         _problem->addKernel("ADNeutronScattering",
                             "ADNeutronScattering_" + var_name,
                             params);
+        debugOutput("Adding kernel ADNeutronScattering for the variable "
+                    + var_name + ".");
       } // ADNeutronScattering
     }
   }
@@ -413,6 +473,8 @@ NeutronTransportAction::addDGKernels(const std::string & var_name,
     _problem->addDGKernel("ADDGNeutronStreamingUpwind",
                           "ADDGNeutronStreamingUpwind_" + var_name,
                           params);
+    debugOutput("Adding DG kernel ADDGNeutronStreamingUpwind for the variable "
+                + var_name + ".");
   } // ADDGNeutronStreamingUpwind
 }
 
@@ -436,6 +498,8 @@ NeutronTransportAction::addBCs(const std::string & var_name, unsigned int g,
     _problem->addBoundaryCondition("ADNeutronVacuumBC",
                                    "ADNeutronVacuumBC_" + var_name,
                                    params);
+    debugOutput("Adding BC ADNeutronVacuumBC for the variable "
+                + var_name + ".");
   } // ADNeutronVacuumBC
 
   // Add ADNeutronMatSourceBC.
@@ -454,6 +518,8 @@ NeutronTransportAction::addBCs(const std::string & var_name, unsigned int g,
     _problem->addBoundaryCondition("ADNeutronMatSourceBC",
                                    "ADNeutronMatSourceBC" + var_name,
                                    params);
+    debugOutput("Adding BC ADNeutronMatSourceBC for the variable "
+                + var_name + ".");
   } // ADNeutronMatSourceBC
 
   // Add ADNeutronReflectiveBC.
@@ -480,15 +546,17 @@ NeutronTransportAction::addICs(const std::string & var_name, unsigned int g,
   }
 
   params.set<Real>("value") = getParam<Real>("debug_steady_state_ic");
-  _problem->addInitialCondition("ConstantIC", "ADNeutronMatSourceBC_" + var_name, params);
+  _problem->addInitialCondition("ConstantIC", "ConstantIC_" + var_name, params);
+  debugOutput("Adding IC ConstantIC for the variable "
+              + var_name + ".");
 }
 
 void
 NeutronTransportAction::addAuxVariables(const std::string & var_name)
 {
   auto fe_type = AddVariableAction::feType(_pars);
-  auto type_name = AddVariableAction::variableType(fe_type, false, false);
-  auto params = _factory.getValidParams(type_name);
+  auto type = AddVariableAction::variableType(fe_type, false, false);
+  auto params = _factory.getValidParams(type);
   params.set<MooseEnum>("order") = fe_type.order.get_order();
   params.set<MooseEnum>("family") = Moose::stringify(fe_type.family);
 
@@ -498,7 +566,8 @@ NeutronTransportAction::addAuxVariables(const std::string & var_name)
       = getParam<std::vector<SubdomainName>>("block");
   }
 
-  _problem->addAuxVariable(type_name, var_name, params);
+  _problem->addAuxVariable(type, var_name, params);
+  debugOutput("Adding auxvariable " + var_name + " with type " + type + ".");
 }
 
 void
@@ -531,6 +600,8 @@ NeutronTransportAction::addAuxKernels(const std::string & var_name,
     _problem->addAuxKernel("NeutronFluxMoment",
                            "NeutronFluxMoment_" + var_name,
                            params);
+    debugOutput("Adding auxkernel NeutronFluxMoment for the variable "
+                + var_name + ".");
   } // NeutronFluxMoment
 }
 
@@ -611,6 +682,8 @@ NeutronTransportAction::addDiracKernels()
         _problem->addDiracKernel("IsotropicNeutronPointSource",
                                  "IsotropicNeutronPointSource_" + var_name,
                                  params);
+        debugOutput("Adding Dirac kernel IsotropicNeutronPointSource for the "
+                    "variable " + var_name + ".");
       }
     }
   } // IsotropicNeutronPointSource
@@ -621,6 +694,9 @@ NeutronTransportAction::act()
 {
   if (!_var_init)
   {
+    debugOutput("Building the angular quadrature set...",
+                "Building the angular quadrature set...");
+
     // Setup for all actions the NeutronTransport action performs.
     // Grab all the subdomain IDs that the neutron transport action should be
     // applied to.
@@ -642,18 +718,21 @@ NeutronTransportAction::act()
     switch (_mesh->dimension())
     {
       case 1u:
+        debugOutput("ProblemType::Cartesian1D");
         _p_type = ProblemType::Cartesian1D;
         _num_group_moments = (_max_eval_anisotropy + 1u);
         _num_flux_ordinates = 2u * _n_l;
         break;
 
       case 2u:
+        debugOutput("ProblemType::Cartesian2D");
         _p_type = ProblemType::Cartesian2D;
         _num_group_moments = (_max_eval_anisotropy + 1u) * (_max_eval_anisotropy + 2u) / 2u;
         _num_flux_ordinates = 4u * _n_l * _n_c;
         break;
 
       case 3u:
+        debugOutput("ProblemType::Cartesian3D");
         _p_type = ProblemType::Cartesian3D;
         _num_group_moments = (_max_eval_anisotropy + 1u) * (_max_eval_anisotropy + 1u);
         _num_flux_ordinates = 8u * _n_l * _n_c;
@@ -664,6 +743,17 @@ NeutronTransportAction::act()
         break;
     }
 
+    std::string set_info(std::string("Angular quadrature set information:\n") +
+                         std::string(" - Polar points per quadrant: ") +
+                         Moose::stringify(_n_l) +
+                         std::string("\n - Azimuthal points per quadrant: ") +
+                         Moose::stringify(_n_c) +
+                         std::string("\n - Total number of flux ordinates: ") +
+                         Moose::stringify(_num_flux_ordinates) +
+                         std::string("\n"));
+    debugOutput(set_info);
+
+    debugOutput("Determining variable names...", "Determining variable names...");
     for (unsigned int g = 0; g < _num_groups; ++g)
     {
       // Set up variable names for the group angular fluxes.
@@ -692,11 +782,15 @@ NeutronTransportAction::act()
     }
 
     _var_init = true;
+    debugOutput("Initializing flux groups...", "Initializing flux groups...");
   }
 
   // Loop over all groups.
   for (unsigned int g = 0; g < _num_groups; ++g)
   {
+    if (!_var_init)
+      debugOutput("Initializing flux ordinates...");
+
     // Loop over all the flux ordinates.
     for (unsigned int n = 0; n < _num_flux_ordinates; ++n)
     {
@@ -704,24 +798,67 @@ NeutronTransportAction::act()
 
       // Add a non-linear variable.
       if (_current_task == "add_variable")
+      {
+        if (g == 0u && n == 0u)
+          debugOutput("Adding variables...");
+
         addVariable(var_name);
+
+        if (g + 1u == _num_groups && n + 1u == _num_flux_ordinates)
+          debugOutput("\n");
+      }
 
       // Add kernels.
       if (_current_task == "add_kernel")
+      {
+        if (g == 0u && n == 0u)
+          debugOutput("Adding kernels...");
+
         addKernels(var_name, g, n);
+
+        if (g + 1u == _num_groups && n + 1u == _num_flux_ordinates)
+          debugOutput("\n");
+      }
 
       // Add DG kernels.
       if (_current_task == "add_dg_kernel")
+      {
+        if (g == 0u && n == 0u)
+          debugOutput("Adding DG kernels...");
+
         addDGKernels(var_name, g, n);
+
+        if (g + 1u == _num_groups && n + 1u == _num_flux_ordinates)
+          debugOutput("\n");
+      }
 
       // Add boundary conditions.
       if (_current_task == "add_bc")
+      {
+        if (g == 0u && n == 0u)
+          debugOutput("Adding BCs...");
+
         addBCs(var_name, g, n);
+
+        if (g + 1u == _num_groups && n + 1u == _num_flux_ordinates)
+          debugOutput("\n");
+      }
 
       // Add initial conditions.
       if (_current_task == "add_ic")
+      {
+        if (g == 0u && n == 0u)
+          debugOutput("Adding ICs...");
+
         addICs(var_name, g, n);
+
+        if (g + 1u == _num_groups && n + 1u == _num_flux_ordinates)
+          debugOutput("\n");
+      }
     }
+
+    if (!_var_init)
+      debugOutput("Initializing flux moments...");
 
     // Loop over all moments and set up auxvariables and auxkernels.
     unsigned int moment_index = 0u;
@@ -733,26 +870,44 @@ NeutronTransportAction::act()
 
         // Add auxvariables.
         if (_current_task == "add_aux_variable")
+        {
+          if (g == 0u && l == 0u && m == -1)
+            debugOutput("Adding auxvariables...");
+
           addAuxVariables(var_name);
+
+          if (g + 1u == _num_groups && l == _max_eval_anisotropy && m == static_cast<int>(l))
+            debugOutput("\n");
+        }
 
         // Add auxkernels.
         if (_current_task == "add_aux_kernel")
+        {
+          if (g == 0u && l == 0u && m == -1)
+            debugOutput("Adding auxkernels...");
+
           addAuxKernels(var_name, g, l, m);
+
+          if (g + 1u == _num_groups && l == _max_eval_anisotropy && m == static_cast<int>(l))
+            debugOutput("\n");
+        }
 
         moment_index++;
       }
     }
+
+    if (!_var_init)
+      debugOutput("\n", "\n");
   }
 
   // Add Dirac kernels (isotropic point sources). Anisotropic point sources are
   // handled separately.
   if (_current_task == "add_dirac_kernel")
-    addDiracKernels();
-}
+  {
+    debugOutput("Adding Dirac kernels...");
 
-void
-NeutronTransportAction::addRelationshipManagers(Moose::RelationshipManagerType input_rm_type)
-{
-  auto dg_kernel_params = DGKernelBase::validParams();
-  addRelationshipManagers(input_rm_type, dg_kernel_params);
+    addDiracKernels();
+
+    debugOutput("\n");
+  }
 }
