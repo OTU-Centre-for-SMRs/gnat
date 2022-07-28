@@ -10,7 +10,7 @@
 #include "FEProblem.h"
 
 #include "AddVariableAction.h"
-#include "ADDGNeutronStreamingUpwind.h"
+#include "ADDFEMUpwinding.h"
 
 #include "libmesh/string_to_enum.h"
 #include "libmesh/fe_type.h"
@@ -156,7 +156,7 @@ NeutronTransportAction::NeutronTransportAction(const InputParameters & params)
 void
 NeutronTransportAction::addRelationshipManagers(Moose::RelationshipManagerType when_type)
 {
-  auto params = ADDGNeutronStreamingUpwind::validParams();
+  auto params = ADDFEMUpwinding::validParams();
   addRelationshipManagers(when_type, params);
 }
 
@@ -232,10 +232,10 @@ void
 NeutronTransportAction::addKernels(const std::string & var_name, unsigned int g,
                                    unsigned int n)
 {
-  // Add ADNeutronTimeDerivative.
+  // Add ADDFEMTimeDerivative.
   if (_exec_type == ExecutionType::Transient)
   {
-    auto params = _factory.getValidParams("ADNeutronTimeDerivative");
+    auto params = _factory.getValidParams("ADDFEMTimeDerivative");
     params.set<NonlinearVariableName>("variable") = var_name;
     // Group index is required to fetch the group neutron velocity.
     params.set<unsigned int>("group_index") = g;
@@ -246,16 +246,16 @@ NeutronTransportAction::addKernels(const std::string & var_name, unsigned int g,
         = getParam<std::vector<SubdomainName>>("block");
     }
 
-    _problem->addKernel("ADNeutronTimeDerivative",
-                        "ADNeutronTimeDerivative_" + var_name,
+    _problem->addKernel("ADDFEMTimeDerivative",
+                        "ADDFEMTimeDerivative_" + var_name,
                         params);
-    debugOutput("Adding kernel ADNeutronTimeDerivative for the variable "
+    debugOutput("Adding kernel ADDFEMTimeDerivative for the variable "
                 + var_name + ".");
-  } // ADNeutronTimeDerivative
+  } // ADDFEMTimeDerivative
 
-  // Add ADNeutronStreaming.
+  // Add ADDFEMStreaming.
   {
-    auto params = _factory.getValidParams("ADNeutronStreaming");
+    auto params = _factory.getValidParams("ADDFEMStreaming");
     params.set<NonlinearVariableName>("variable") = var_name;
     // Ordinate index is required to fetch the neutron direction.
     params.set<unsigned int>("ordinate_index") = n;
@@ -269,16 +269,16 @@ NeutronTransportAction::addKernels(const std::string & var_name, unsigned int g,
         = getParam<std::vector<SubdomainName>>("block");
     }
 
-    _problem->addKernel("ADNeutronStreaming",
-                        "ADNeutronStreaming_" + var_name,
+    _problem->addKernel("ADDFEMStreaming",
+                        "ADDFEMStreaming_" + var_name,
                         params);
-    debugOutput("Adding kernel ADNeutronStreaming for the variable "
+    debugOutput("Adding kernel ADDFEMStreaming for the variable "
                 + var_name + ".");
-  } // ADNeutronStreaming
+  } // ADDFEMStreaming
 
-  // Add ADNeutronRemoval.
+  // Add ADSNRemoval.
   {
-    auto params = _factory.getValidParams("ADNeutronRemoval");
+    auto params = _factory.getValidParams("ADSNRemoval");
     params.set<NonlinearVariableName>("variable") = var_name;
     // Group index is required to fetch the group neutron removal
     // cross-section.
@@ -290,16 +290,16 @@ NeutronTransportAction::addKernels(const std::string & var_name, unsigned int g,
         = getParam<std::vector<SubdomainName>>("block");
     }
 
-    _problem->addKernel("ADNeutronRemoval",
-                        "ADNeutronRemoval_" + var_name,
+    _problem->addKernel("ADSNRemoval",
+                        "ADSNRemoval_" + var_name,
                         params);
-    debugOutput("Adding kernel ADNeutronRemoval for the variable "
+    debugOutput("Adding kernel ADSNRemoval for the variable "
                 + var_name + ".");
-  } // ADNeutronRemoval
+  } // ADSNRemoval
 
-  // Add ADNeutronMaterialSource.
+  // Add ADDFEMMaterialSource.
   {
-    auto params = _factory.getValidParams("ADNeutronMaterialSource");
+    auto params = _factory.getValidParams("ADDFEMMaterialSource");
     params.set<NonlinearVariableName>("variable") = var_name;
     // Group index and the number of groups are required to fetch the
     // source moments for the proper spectral energy group.
@@ -317,12 +317,12 @@ NeutronTransportAction::addKernels(const std::string & var_name, unsigned int g,
         = getParam<std::vector<SubdomainName>>("block");
     }
 
-    _problem->addKernel("ADNeutronMaterialSource",
-                        "ADNeutronMaterialSource_" + var_name,
+    _problem->addKernel("ADDFEMMaterialSource",
+                        "ADDFEMMaterialSource_" + var_name,
                         params);
-    debugOutput("Adding kernel ADNeutronMaterialSource for the variable "
+    debugOutput("Adding kernel ADDFEMMaterialSource for the variable "
                 + var_name + ".");
-  } // ADNeutronMaterialSource
+  } // ADDFEMMaterialSource
 
   // Only add scattering kernels if debug doesn't disable them.
   if (!getParam<bool>("debug_disable_scattering"))
@@ -334,11 +334,11 @@ NeutronTransportAction::addKernels(const std::string & var_name, unsigned int g,
       mooseError("Scattering iteration is not supported and is a work in "
                  "progress.");
 
-      // Add ADNeutronGToGScattering. This kernel is only enabled if there's
+      // Add ADDFEMExternalScattering. This kernel is only enabled if there's
       // more than one group.
       if (_num_groups > 1u)
       {
-        auto params = _factory.getValidParams("ADNeutronGToGScattering");
+        auto params = _factory.getValidParams("ADDFEMExternalScattering");
         params.set<NonlinearVariableName>("variable") = var_name;
         // Group index and the number of groups are required to fetch the
         // source moments for the proper spectral energy group.
@@ -366,16 +366,16 @@ NeutronTransportAction::addKernels(const std::string & var_name, unsigned int g,
             = getParam<std::vector<SubdomainName>>("block");
         }
 
-        _problem->addKernel("ADNeutronGToGScattering",
-                            "ADNeutronGToGScattering_" + var_name,
+        _problem->addKernel("ADDFEMExternalScattering",
+                            "ADDFEMExternalScattering_" + var_name,
                             params);
-        debugOutput("Adding kernel ADNeutronGToGScattering for the variable "
+        debugOutput("Adding kernel ADDFEMExternalScattering for the variable "
                     + var_name + ".");
-      } // ADNeutronGToGScattering
+      } // ADDFEMExternalScattering
 
-      // Add ADNeutronInGroupScattering.
+      // Add ADDFEMInternalScattering.
       {
-        auto params = _factory.getValidParams("ADNeutronInGroupScattering");
+        auto params = _factory.getValidParams("ADDFEMInternalScattering");
         params.set<NonlinearVariableName>("variable") = var_name;
         // Group index and the number of groups are required to fetch the
         // source moments for the proper spectral energy group.
@@ -398,19 +398,19 @@ NeutronTransportAction::addKernels(const std::string & var_name, unsigned int g,
             = getParam<std::vector<SubdomainName>>("block");
         }
 
-        _problem->addKernel("ADNeutronInGroupScattering",
-                            "ADNeutronInGroupScattering_" + var_name,
+        _problem->addKernel("ADDFEMInternalScattering",
+                            "ADDFEMInternalScattering_" + var_name,
                             params);
-        debugOutput("Adding kernel ADNeutronInGroupScattering for the variable "
+        debugOutput("Adding kernel ADDFEMInternalScattering for the variable "
                     + var_name + ".");
-      } // ADNeutronInGroupScattering
+      } // ADDFEMInternalScattering
     }
     else
     {
       // Computes the scattering evaluation without source iteration.
-      // Add ADNeutronScattering.
+      // Add ADDFEMScattering.
       {
-        auto params = _factory.getValidParams("ADNeutronScattering");
+        auto params = _factory.getValidParams("ADDFEMScattering");
         params.set<NonlinearVariableName>("variable") = var_name;
         // Group index and the number of groups are required to fetch the
         // source moments for the proper spectral energy group.
@@ -440,12 +440,12 @@ NeutronTransportAction::addKernels(const std::string & var_name, unsigned int g,
             = getParam<std::vector<SubdomainName>>("block");
         }
 
-        _problem->addKernel("ADNeutronScattering",
-                            "ADNeutronScattering_" + var_name,
+        _problem->addKernel("ADDFEMScattering",
+                            "ADDFEMScattering_" + var_name,
                             params);
-        debugOutput("Adding kernel ADNeutronScattering for the variable "
+        debugOutput("Adding kernel ADDFEMScattering for the variable "
                     + var_name + ".");
-      } // ADNeutronScattering
+      } // ADDFEMScattering
     }
   }
 }
@@ -454,9 +454,9 @@ void
 NeutronTransportAction::addDGKernels(const std::string & var_name,
                                      unsigned int g, unsigned int n)
 {
-  // Add ADDGNeutronStreamingUpwind.
+  // Add ADDFEMUpwinding.
   {
-    auto params = _factory.getValidParams("ADDGNeutronStreamingUpwind");
+    auto params = _factory.getValidParams("ADDFEMUpwinding");
     params.set<NonlinearVariableName>("variable") = var_name;
     // Ordinate index is required to fetch the neutron direction.
     params.set<unsigned int>("ordinate_index") = n;
@@ -470,22 +470,22 @@ NeutronTransportAction::addDGKernels(const std::string & var_name,
         = getParam<std::vector<SubdomainName>>("block");
     }
 
-    _problem->addDGKernel("ADDGNeutronStreamingUpwind",
-                          "ADDGNeutronStreamingUpwind_" + var_name,
+    _problem->addDGKernel("ADDFEMUpwinding",
+                          "ADDFEMUpwinding_" + var_name,
                           params);
-    debugOutput("Adding DG kernel ADDGNeutronStreamingUpwind for the variable "
+    debugOutput("Adding DG kernel ADDFEMUpwinding for the variable "
                 + var_name + ".");
-  } // ADDGNeutronStreamingUpwind
+  } // ADDFEMUpwinding
 }
 
 void
 NeutronTransportAction::addBCs(const std::string & var_name, unsigned int g,
                                unsigned int n)
 {
-  // Add ADNeutronVacuumBC.
+  // Add ADSNVacuumBC.
   if (_vacuum_side_sets.size() > 0u)
   {
-    InputParameters params = _factory.getValidParams("ADNeutronVacuumBC");
+    InputParameters params = _factory.getValidParams("ADSNVacuumBC");
     params.set<NonlinearVariableName>("variable") = var_name;
     // Ordinate index is required to fetch the neutron direction.
     params.set<unsigned int>("ordinate_index") = n;
@@ -495,17 +495,17 @@ NeutronTransportAction::addBCs(const std::string & var_name, unsigned int g,
 
     params.set<std::vector<BoundaryName>>("boundary") = _vacuum_side_sets;
 
-    _problem->addBoundaryCondition("ADNeutronVacuumBC",
-                                   "ADNeutronVacuumBC_" + var_name,
+    _problem->addBoundaryCondition("ADSNVacuumBC",
+                                   "ADSNVacuumBC_" + var_name,
                                    params);
-    debugOutput("Adding BC ADNeutronVacuumBC for the variable "
+    debugOutput("Adding BC ADSNVacuumBC for the variable "
                 + var_name + ".");
-  } // ADNeutronVacuumBC
+  } // ADSNVacuumBC
 
-  // Add ADNeutronMatSourceBC.
+  // Add ADSNMatSourceBC.
   if (_source_side_sets.size() > 0u)
   {
-    InputParameters params = _factory.getValidParams("ADNeutronMatSourceBC");
+    InputParameters params = _factory.getValidParams("ADSNMatSourceBC");
     params.set<NonlinearVariableName>("variable") = var_name;
     // Ordinate index is required to fetch the neutron direction.
     params.set<unsigned int>("ordinate_index") = n;
@@ -515,19 +515,19 @@ NeutronTransportAction::addBCs(const std::string & var_name, unsigned int g,
 
     params.set<std::vector<BoundaryName>>("boundary") = _source_side_sets;
 
-    _problem->addBoundaryCondition("ADNeutronMatSourceBC",
-                                   "ADNeutronMatSourceBC" + var_name,
+    _problem->addBoundaryCondition("ADSNMatSourceBC",
+                                   "ADSNMatSourceBC" + var_name,
                                    params);
-    debugOutput("Adding BC ADNeutronMatSourceBC for the variable "
+    debugOutput("Adding BC ADSNMatSourceBC for the variable "
                 + var_name + ".");
-  } // ADNeutronMatSourceBC
+  } // ADSNMatSourceBC
 
-  // Add ADNeutronReflectiveBC.
+  // Add ADSNReflectiveBC.
   // TODO: Complete this implementation.
   if (_reflective_side_sets.size() > 0u)
   {
     mooseError("Reflective boundary conditions are currently not supported.");
-  } // ADNeutronReflectiveBC
+  } // ADSNReflectiveBC
 }
 
 // TODO: Initial conditions.
@@ -608,7 +608,7 @@ NeutronTransportAction::addAuxKernels(const std::string & var_name,
 void
 NeutronTransportAction::addDiracKernels()
 {
-  // Add IsotropicNeutronPointSource.
+  // Add DFEMIsoPointSource.
   {
     const auto & source_locations
       = getParam<std::vector<Point>>("point_source_locations");
@@ -654,7 +654,7 @@ NeutronTransportAction::addDiracKernels()
       {
         const auto & var_name = _group_angular_fluxes[g][n];
 
-        auto params = _factory.getValidParams("IsotropicNeutronPointSource");
+        auto params = _factory.getValidParams("DFEMIsoPointSource");
         params.set<NonlinearVariableName>("variable") = var_name;
         params.set<MooseEnum>("point_not_found_behavior")
           = MooseEnum("ERROR WARNING IGNORE", "WARNING");
@@ -663,14 +663,10 @@ NeutronTransportAction::addDiracKernels()
         applyQuadratureParameters(params);
 
         // Set the intensities and points for the group g.
-        auto & points = params.set<std::vector<Point>>("points");
-        auto & intensities = params.set<std::vector<Real>>("intensities");
-        points.reserve(mapping.size());
-        intensities.reserve(mapping.size());
         for (const auto & index : mapping)
         {
-          points.emplace_back(source_locations[index]);
-          intensities.emplace_back(source_intensities[index]);
+          params.set<std::vector<Point>>("points").emplace_back(source_locations[index]);
+          params.set<std::vector<Real>>("intensities").emplace_back(source_intensities[index]);
         }
 
         if (isParamValid("block"))
@@ -679,14 +675,14 @@ NeutronTransportAction::addDiracKernels()
             = getParam<std::vector<SubdomainName>>("block");
         }
 
-        _problem->addDiracKernel("IsotropicNeutronPointSource",
-                                 "IsotropicNeutronPointSource_" + var_name,
+        _problem->addDiracKernel("DFEMIsoPointSource",
+                                 "DFEMIsoPointSource_" + var_name,
                                  params);
-        debugOutput("Adding Dirac kernel IsotropicNeutronPointSource for the "
+        debugOutput("Adding Dirac kernel DFEMIsoPointSource for the "
                     "variable " + var_name + ".");
       }
     }
-  } // IsotropicNeutronPointSource
+  } // DFEMIsoPointSource
 }
 
 void

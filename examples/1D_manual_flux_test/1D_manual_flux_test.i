@@ -44,38 +44,29 @@
 []
 
 [DGKernels]
-  [Upwinding_Left]
-    type = ADDGNeutronStreamingUpwind
-    variable = angular_flux_1_2
-    n_l = 2
-    n_c = 1
-    major_axis = x
-    dimensionality = 1D_cartesian
-    ordinate_index = 1
-  []
   [Upwinding_Right]
-    type = ADDGNeutronStreamingUpwind
+    type = ADDFEMUpwinding
     variable = angular_flux_1_1
     n_l = 2
     n_c = 1
     major_axis = x
     dimensionality = 1D_cartesian
     ordinate_index = 0
+  []
+  [Upwinding_Left]
+    type = ADDFEMUpwinding
+    variable = angular_flux_1_2
+    n_l = 2
+    n_c = 1
+    major_axis = x
+    dimensionality = 1D_cartesian
+    ordinate_index = 1
   []
 []
 
 [Kernels]
-  [Streaming_Left]
-    type = ADNeutronStreaming
-    variable = angular_flux_1_2
-    n_l = 2
-    n_c = 1
-    major_axis = x
-    dimensionality = 1D_cartesian
-    ordinate_index = 1
-  []
   [Streaming_Right]
-    type = ADNeutronStreaming
+    type = ADDFEMStreaming
     variable = angular_flux_1_1
     n_l = 2
     n_c = 1
@@ -83,23 +74,32 @@
     dimensionality = 1D_cartesian
     ordinate_index = 0
   []
-
-  [Removal_Left]
-    type = ADNeutronRemoval
+  [Streaming_Left]
+    type = ADDFEMStreaming
     variable = angular_flux_1_2
+    n_l = 2
+    n_c = 1
+    major_axis = x
+    dimensionality = 1D_cartesian
+    ordinate_index = 1
+  []
+
+  [Removal_Right]
+    type = ADSNRemoval
+    variable = angular_flux_1_1
     group_index = 0
   []
-  [Removal_Right]
-    type = ADNeutronRemoval
-    variable = angular_flux_1_1
+  [Removal_Left]
+    type = ADSNRemoval
+    variable = angular_flux_1_2
     group_index = 0
   []
 []
 
 [DiracKernels]
-  [Source_Left]
-    type = IsotropicNeutronPointSource
-    variable = angular_flux_1_2
+  [Source_Right]
+    type = DFEMIsoPointSource
+    variable = angular_flux_1_1
     n_l = 2
     n_c = 1
     major_axis = x
@@ -107,10 +107,9 @@
     intensities = '1000.0'
     points = '5.0 0.0 0.0'
   []
-
-  [Source_Right]
-    type = IsotropicNeutronPointSource
-    variable = angular_flux_1_1
+  [Source_Left]
+    type = DFEMIsoPointSource
+    variable = angular_flux_1_2
     n_l = 2
     n_c = 1
     major_axis = x
@@ -121,24 +120,24 @@
 []
 
 [BCs]
-  [Left_BC]
-    type = ADNeutronVacuumBC
-    variable = angular_flux_1_2
-    n_l = 2
-    n_c = 1
-    major_axis = x
-    dimensionality = 1D_cartesian
-    ordinate_index = 1
-    boundary = 'left right'
-  []
   [Right_BC]
-    type = ADNeutronVacuumBC
+    type = ADSNVacuumBC
     variable = angular_flux_1_1
     n_l = 2
     n_c = 1
     major_axis = x
     dimensionality = 1D_cartesian
     ordinate_index = 0
+    boundary = 'left right'
+  []
+  [Left_BC]
+    type = ADSNVacuumBC
+    variable = angular_flux_1_2
+    n_l = 2
+    n_c = 1
+    major_axis = x
+    dimensionality = 1D_cartesian
+    ordinate_index = 1
     boundary = 'left right'
   []
 []
