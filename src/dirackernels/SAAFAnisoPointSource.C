@@ -1,24 +1,20 @@
-#include "DFEMAnisoPointSource.h"
+#include "SAAFAnisoPointSource.h"
 
 #include "Function.h"
 
-registerMooseObject("GnatApp", DFEMAnisoPointSource);
+registerMooseObject("GnatApp", SAAFAnisoPointSource);
 
 InputParameters
-DFEMAnisoPointSource::validParams()
+SAAFAnisoPointSource::validParams()
 {
-  auto params = SNDiracKernelBase::validParams();
+  auto params = SAAFDiracKernelBase::validParams();
   params.addClassDescription("Computes the anisotropic point source term for the "
-                             "current group of the discrete ordinates neutron "
+                             "current group of the SAAF discrete ordinates neutron "
                              "transport equation. The weak form is given by "
-                             "$-(\\psi_{j}, S_{g}(\\hat{\\Omega}))$. "
+                             "$-(\\phi_{j} + \\tau_{g}\\vec{\\nabla}\\phi_{j}"
+                             "\\cdot\\hat{\\Omega}, S_{g}(\\hat{\\Omega}))$. "
                              "This kernel should not be exposed to the user, "
                              "instead being enabled through a transport action.");
-  params.addRequiredRangeCheckedParam<unsigned int>("ordinate_index",
-                                                    "ordinate_index >= 0",
-                                                    "The discrete ordinate index "
-                                                    "of the current angular "
-                                                    "flux.");
   params.addRequiredParam<Real>("intensity",
                                 "Intensity of the anisotropic point source.");
   params.addRequiredParam<FunctionName>("phase_function",
@@ -31,22 +27,21 @@ DFEMAnisoPointSource::validParams()
   return params;
 }
 
-DFEMAnisoPointSource::DFEMAnisoPointSource(const InputParameters & parameters)
-  : SNDiracKernelBase(parameters)
-  , _ordinate_index(getParam<unsigned int>("ordinate_index"))
+SAAFAnisoPointSource::SAAFAnisoPointSource(const InputParameters & parameters)
+  : SAAFDiracKernelBase(parameters)
   , _source_intensity(getParam<Real>("intensities"))
   , _angular_distribution(getFunction("phase_function"))
   , _source_location(getParam<Point>("points"))
 { }
 
 void
-DFEMAnisoPointSource::addPoints()
+SAAFAnisoPointSource::addPoints()
 {
   addPoint(_source_location);
 }
 
 Real
-DFEMAnisoPointSource::computeQpResidual()
+SAAFAnisoPointSource::computeQpResidual()
 {
   Point temp(_quadrature_set.direction(_ordinate_index)(0),
              _quadrature_set.direction(_ordinate_index)(1),
@@ -54,12 +49,13 @@ DFEMAnisoPointSource::computeQpResidual()
 
   // Hijacking the MOOSE function system so the user can parse in an analytical
   // phase function for this point source.
-  return (-1.0 / M_PI) * _test[_i][_qp] * _angular_distribution.value(_t, temp)
-         * _source_intensity * _symmetry_factor;
+  return (-1.0 / M_PI) * computeQPTests()
+         * _angular_distribution.value(_t, temp) * _source_intensity
+         * _symmetry_factor;
 }
 
 Real
-DFEMAnisoPointSource::computeQpJacobian()
+SAAFAnisoPointSource::computeQpJacobian()
 {
   return 0.0;
 }

@@ -1,13 +1,13 @@
-#include "ADSNBaseKernel.h"
+#include "SNDiracKernelBase.h"
 
 InputParameters
-ADSNBaseKernel::validParams()
+SNDiracKernelBase::validParams()
 {
-  auto params = ADKernel::validParams();
+  auto params = DiracKernel::validParams();
   params.addClassDescription("Provides basic functionality for neutron "
-                             "transport kernels that require angular "
+                             "transport Dirac kernels that require angular "
                              "quadrature sets. This kernel does NOT implement "
-                             "computeQpResidual().");
+                             "computeQpResidual() or computeQpJacobian().");
   params.addRequiredRangeCheckedParam<unsigned int>("n_l",
                                                     "n_l > 0",
                                                     "Order of the polar Gauss-"
@@ -27,12 +27,12 @@ ADSNBaseKernel::validParams()
                                      MooseEnum("1D_cartesian 2D_cartesian 3D_cartesian"),
                                      "Dimensionality and the coordinate system of the "
                                      "problem.");
-                                     
+
   return params;
 }
 
-ADSNBaseKernel::ADSNBaseKernel(const InputParameters & parameters)
-  : ADKernel(parameters)
+SNDiracKernelBase::SNDiracKernelBase(const InputParameters & parameters)
+  : DiracKernel(parameters)
   , _quadrature_set(getParam<unsigned int>("n_c"),
                     getParam<unsigned int>("n_l"),
                     getParam<MooseEnum>("major_axis").getEnum<MajorAxis>(),
@@ -60,8 +60,8 @@ ADSNBaseKernel::ADSNBaseKernel(const InputParameters & parameters)
 }
 
 void
-ADSNBaseKernel::cartesianToSpherical(const RealVectorValue & ordinate,
-                                     Real & mu, Real & omega)
+SNDiracKernelBase::cartesianToSpherical(const RealVectorValue & ordinate,
+                                        Real & mu, Real & omega)
 {
   switch (_quadrature_set.getAxis())
   {

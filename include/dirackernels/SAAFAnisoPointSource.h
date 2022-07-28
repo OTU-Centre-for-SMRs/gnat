@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SNDiracKernelBase.h"
+#include "SAAFDiracKernelBase.h"
 
 /*
  * This kernel assumes that the external point sources take the form:
@@ -8,12 +8,12 @@
  * integral of f_{g}(\hat{\Omega}) over the unit sphere equals 1.
 */
 // TODO: Multiple anisotropic point sources?
-class DFEMAnisoPointSource : public SNDiracKernelBase
+class SAAFAnisoPointSource : public SAAFDiracKernelBase
 {
 public:
   static InputParameters validParams();
 
-  DFEMAnisoPointSource(const InputParameters & parameters);
+  SAAFAnisoPointSource(const InputParameters & parameters);
 
   virtual void addPoints() override;
 
@@ -21,9 +21,7 @@ protected:
   virtual Real computeQpResidual() override;
   virtual Real computeQpJacobian() override;
 
-  const unsigned int _ordinate_index;
-
   const Real _source_intensity; // S_{g}
   const Function & _angular_distribution; // f_{g}(\hat{\Omega})
   const Point _source_location;
-}; // class DFEMAnisoPointSource
+}; // class SAAFAnisoPointSource

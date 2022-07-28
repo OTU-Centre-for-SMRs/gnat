@@ -1,15 +1,16 @@
-#include "DFEMIsoPointSource.h"
+#include "SAAFIsoPointSource.h"
 
-registerMooseObject("GnatApp", DFEMIsoPointSource);
+registerMooseObject("GnatApp", SAAFIsoPointSource);
 
 InputParameters
-DFEMIsoPointSource::validParams()
+SAAFIsoPointSource::validParams()
 {
-  auto params = SNDiracKernelBase::validParams();
+  auto params = SAAFDiracKernelBase::validParams();
   params.addClassDescription("Computes the isotropic point source term for "
-                             "current group of the discrete ordinates neutron "
+                             "current group of the SAAF discrete ordinates neutron "
                              "transport equation. The weak form is given by "
-                             "$-(\\psi_{j}, \\frac{S_{g,0,0}}{4\\pi})$. "
+                             "$-(\\phi_{j} + \\tau_{g}\\vec{\\nabla}\\phi_{j}"
+                             "\\cdot\\hat{\\Omega}, \\frac{S_{g,0,0}}{4\\pi})$. "
                              "This kernel should not be exposed to the user, "
                              "instead being enabled through a transport action.");
   params.addRequiredParam<std::vector<Real>>("intensities",
@@ -27,8 +28,8 @@ DFEMIsoPointSource::validParams()
   return params;
 }
 
-DFEMIsoPointSource::DFEMIsoPointSource(const InputParameters & parameters)
-  : SNDiracKernelBase(parameters)
+SAAFIsoPointSource::SAAFIsoPointSource(const InputParameters & parameters)
+  : SAAFDiracKernelBase(parameters)
   , _source_intensities(getParam<std::vector<Real>>("intensities"))
   , _source_locations(getParam<std::vector<Point>>("points"))
 {
@@ -40,7 +41,7 @@ DFEMIsoPointSource::DFEMIsoPointSource(const InputParameters & parameters)
 }
 
 void
-DFEMIsoPointSource::addPoints()
+SAAFIsoPointSource::addPoints()
 {
   _point_intensity_mapping.clear();
   for (unsigned int i = 0; i < _source_intensities.size(); ++i)
@@ -51,9 +52,9 @@ DFEMIsoPointSource::addPoints()
 }
 
 Real
-DFEMIsoPointSource::computeQpResidual()
+SAAFIsoPointSource::computeQpResidual()
 {
-  Real res = (-1.0 / (4.0 * M_PI)) * _test[_i][_qp]
+  Real res = (-1.0 / (4.0 * M_PI)) * computeQPTests()
              * _source_intensities[_point_intensity_mapping[_current_point]]
              * _symmetry_factor;
 
@@ -61,7 +62,7 @@ DFEMIsoPointSource::computeQpResidual()
 }
 
 Real
-DFEMIsoPointSource::computeQpJacobian()
+SAAFIsoPointSource::computeQpJacobian()
 {
   return 0.0;
 }
