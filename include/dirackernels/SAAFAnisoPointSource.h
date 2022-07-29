@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SAAFDiracKernelBase.h"
+#include "SAAFBaseDiracKernel.h"
 
 /*
  * This kernel assumes that the external point sources take the form:
@@ -8,7 +8,7 @@
  * integral of f_{g}(\hat{\Omega}) over the unit sphere equals 1.
 */
 // TODO: Multiple anisotropic point sources?
-class SAAFAnisoPointSource : public SAAFDiracKernelBase
+class SAAFAnisoPointSource : public SAAFBaseDiracKernel
 {
 public:
   static InputParameters validParams();

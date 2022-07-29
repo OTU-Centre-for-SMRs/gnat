@@ -1,25 +1,18 @@
 #pragma once
 
-#include "ADSNBaseKernel.h"
+#include "ADSAAFBaseKernel.h"
 
-// This kernel evaluates the full scattering contribution. This way the complete
-// matrix is assembled and source iteration is avoided. This kernel should only
-// be used for debugging purposes as a fully assembled matrix solve for the transport
-// equation is quite slow.
-// TODO: Finish this kernel.
-class ADDFEMScattering : public ADSNBaseKernel
+class ADSAAFScattering : public ADSAAFBaseKernel
 {
 public:
   static InputParameters validParams();
 
-  ADDFEMScattering(const InputParameters & parameters);
+  ADSAAFScattering(const InputParameters & parameters);
 
 protected:
   virtual ADReal computeQpResidual() override;
   ADReal computeFluxMoment(unsigned int g_prime, unsigned int l, int m);
 
-  const unsigned int _ordinate_index; // n
-  const unsigned int _group_index; // g
   const unsigned int _num_groups; // G
   const unsigned int _max_anisotropy; // L
 
@@ -63,4 +56,4 @@ protected:
   const ADMaterialProperty<std::vector<Real>> & _sigma_s_g_prime_g_l;
   // Degree of anisotropy (Legendre polynomial order L) for the medium.
   const MaterialProperty<unsigned int> & _anisotropy;
-}; // class ADDFEMScattering
+}; // class ADSAAFScattering

@@ -22,7 +22,7 @@ public:
 protected:
   using Action::addRelationshipManagers;
   void addRelationshipManagers(Moose::RelationshipManagerType when_type) override;
-  
+
   void debugOutput(const std::string & level0 = "",
                    const std::string & level1 = "");
 
@@ -38,6 +38,12 @@ protected:
 
   void applyQuadratureParameters(InputParameters & params);
 
+  enum class Scheme
+  {
+    SAAFCFEM = 0u,
+    UpwindingDFEM = 1u
+  };
+
   enum class ExecutionType
   {
     SteadySource = 0u,
@@ -50,6 +56,7 @@ protected:
     Level1 = 1u
   };
 
+  const Scheme _transport_scheme;
   const ExecutionType _exec_type;
   const DebugVerbosity _debug_level;
 

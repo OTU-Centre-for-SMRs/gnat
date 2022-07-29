@@ -1,8 +1,8 @@
 #pragma once
 
-#include "SAAFDiracKernelBase.h"
+#include "SAAFBaseDiracKernel.h"
 
-class SAAFIsoPointSource : public SAAFDiracKernelBase
+class SAAFIsoPointSource : public SAAFBaseDiracKernel
 {
 public:
   static InputParameters validParams();

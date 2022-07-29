@@ -1,40 +1,42 @@
 #pragma once
 
-#include "ADSNBaseKernel.h"
+#include "ADSAAFBaseKernel.h"
 
-// This kernel evaluates the full scattering contribution. This way the complete
-// matrix is assembled and source iteration is avoided. This kernel should only
-// be used for debugging purposes as a fully assembled matrix solve for the transport
-// equation is quite slow.
-// TODO: Finish this kernel.
-class ADDFEMScattering : public ADSNBaseKernel
+class ADSAAFInternalScattering : public ADSAAFBaseKernel
 {
 public:
   static InputParameters validParams();
 
-  ADDFEMScattering(const InputParameters & parameters);
+  ADSAAFInternalScattering(const InputParameters & parameters);
 
 protected:
   virtual ADReal computeQpResidual() override;
-  ADReal computeFluxMoment(unsigned int g_prime, unsigned int l, int m);
 
-  const unsigned int _ordinate_index; // n
-  const unsigned int _group_index; // g
   const unsigned int _num_groups; // G
-  const unsigned int _max_anisotropy; // L
 
   /*
-  * We assume that the vector of flux ordinates is stored in order of group
-  * first, direction second. An example for 2 energy groups (G = 2) and a
-  * quadrature set with 2 elements (N = 2) is given below:
-  *
-  * The flux ordinates are indexed as Psi_{g, n}:
-  * _group_flux_ordinates[0] = Psi_{1, 1}
-  * _group_flux_ordinates[0] = Psi_{1, 2}
-  * _group_flux_ordinates[0] = Psi_{2, 1}
-  * _group_flux_ordinates[0] = Psi_{2, 1}
+   * We assume that the vector of all group flux moments is stored in order of
+   * moment indices. An example for a spherical harmonics expansion of L = 2 is
+   * provided below.
+   *
+   * The within-group flux moments are indexed as Phi_{l, m}:
+   * _within_group_flux_moments[_qp][0] = Phi_{0, 0}
+   * _within_group_flux_moments[_qp][1] = Phi_{1, -1}
+   * _within_group_flux_moments[_qp][2] = Phi_{1, 0}
+   * _within_group_flux_moments[_qp][3] = Phi_{1, 1}
+   * _within_group_flux_moments[_qp][4] = Phi_{1, 1}
+   * _within_group_flux_moments[_qp][5] = Phi_{2, -2}
+   * _within_group_flux_moments[_qp][6] = Phi_{2, -1}
+   * _within_group_flux_moments[_qp][7] = Phi_{2, 0}
+   * _within_group_flux_moments[_qp][8] = Phi_{2, 1}
+   * _within_group_flux_moments[_qp][9] = Phi_{2, 2}
+   *
+   * This is a flattening of the flux moments matrix to preserve
+   * coherency in memory. The action providing the moments is expected
+   * to format them according to this arrangement.
   */
-  std::vector<const VariableValue *> _group_flux_ordinates;
+  std::vector<const VariableValue *> _within_group_flux_moments;
+  unsigned int _provided_moment_degree;
 
   /*
   * We assume that the vector of scattering cross-sections is stored in the
@@ -63,4 +65,4 @@ protected:
   const ADMaterialProperty<std::vector<Real>> & _sigma_s_g_prime_g_l;
   // Degree of anisotropy (Legendre polynomial order L) for the medium.
   const MaterialProperty<unsigned int> & _anisotropy;
-}; // class ADDFEMScattering
+}; // class ADSAAFInternalScattering

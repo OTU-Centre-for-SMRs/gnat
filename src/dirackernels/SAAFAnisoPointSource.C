@@ -7,11 +7,11 @@ registerMooseObject("GnatApp", SAAFAnisoPointSource);
 InputParameters
 SAAFAnisoPointSource::validParams()
 {
-  auto params = SAAFDiracKernelBase::validParams();
+  auto params = SAAFBaseDiracKernel::validParams();
   params.addClassDescription("Computes the anisotropic point source term for the "
                              "current group of the SAAF discrete ordinates neutron "
                              "transport equation. The weak form is given by "
-                             "$-(\\phi_{j} + \\tau_{g}\\vec{\\nabla}\\phi_{j}"
+                             "$-(\\psi_{j} + \\tau_{g}\\vec{\\nabla}\\psi_{j}"
                              "\\cdot\\hat{\\Omega}, S_{g}(\\hat{\\Omega}))$. "
                              "This kernel should not be exposed to the user, "
                              "instead being enabled through a transport action.");
@@ -28,7 +28,7 @@ SAAFAnisoPointSource::validParams()
 }
 
 SAAFAnisoPointSource::SAAFAnisoPointSource(const InputParameters & parameters)
-  : SAAFDiracKernelBase(parameters)
+  : SAAFBaseDiracKernel(parameters)
   , _source_intensity(getParam<Real>("intensities"))
   , _angular_distribution(getFunction("phase_function"))
   , _source_location(getParam<Point>("points"))

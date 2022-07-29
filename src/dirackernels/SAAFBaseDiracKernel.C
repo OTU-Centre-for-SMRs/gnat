@@ -1,9 +1,9 @@
-#include "SAAFDiracKernelBase.h"
+#include "SAAFBaseDiracKernel.h"
 
 InputParameters
-SAAFDiracKernelBase::validParams()
+SAAFBaseDiracKernel::validParams()
 {
-  auto params = SNDiracKernelBase::validParams();
+  auto params = SNBaseDiracKernel::validParams();
   params.addClassDescription("Provides stabalization parameters for SAAF "
                              "Dirac kernels, notably: $h$, $\\tau_{g}$, and "
                              "$\\phi_{j} + \\tau_{g}\\vec{\\nabla}\\phi_{j}"
@@ -24,15 +24,15 @@ SAAFDiracKernelBase::validParams()
   return params;
 }
 
-SAAFDiracKernelBase::SAAFDiracKernelBase(const InputParameters & parameters)
-  : SNDiracKernelBase(parameters)
+SAAFBaseDiracKernel::SAAFBaseDiracKernel(const InputParameters & parameters)
+  : SNBaseDiracKernel(parameters)
   , _ordinate_index(getParam<unsigned int>("ordinate_index"))
   , _group_index(getParam<unsigned int>("group_index"))
   , _sigma_r_g(getADMaterialProperty<std::vector<Real>>("removal_xs_g"))
 { }
 
 Real
-SAAFDiracKernelBase::maxVertexSeparation()
+SAAFBaseDiracKernel::maxVertexSeparation()
 {
   const unsigned int n_nodes = _current_elem->n_nodes();
 
@@ -58,7 +58,7 @@ SAAFDiracKernelBase::maxVertexSeparation()
 }
 
 Real
-SAAFDiracKernelBase::computeQPTau()
+SAAFBaseDiracKernel::computeQPTau()
 {
   if (_group_index >= _sigma_r_g[_qp].size())
   {
@@ -75,7 +75,7 @@ SAAFDiracKernelBase::computeQPTau()
 }
 
 Real
-SAAFDiracKernelBase::computeQPTests()
+SAAFBaseDiracKernel::computeQPTests()
 {
   if (_ordinate_index >= _quadrature_set.totalOrder())
     mooseError("The ordinates index exceeds the number of quadrature points.");

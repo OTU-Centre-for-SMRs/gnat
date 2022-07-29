@@ -1,13 +1,13 @@
 #pragma once
 
-#include "SNDiracKernelBase.h"
+#include "SNBaseDiracKernel.h"
 
-class SAAFDiracKernelBase : public SNDiracKernelBase
+class SAAFBaseDiracKernel : public SNBaseDiracKernel
 {
 public:
   static InputParameters validParams();
 
-  SAAFDiracKernelBase(const InputParameters & parameters);
+  SAAFBaseDiracKernel(const InputParameters & parameters);
 
 protected:
   Real maxVertexSeparation();
@@ -18,4 +18,4 @@ protected:
   const unsigned int _group_index; // g
 
   const ADMaterialProperty<std::vector<Real>> & _sigma_r_g;
-}; // class SAAFDiracKernelBase
+}; // class SAAFBaseDiracKernel

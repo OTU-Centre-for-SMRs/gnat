@@ -1,11 +1,11 @@
 #pragma once
 
-#include "SNDiracKernelBase.h"
+#include "SNBaseDiracKernel.h"
 
 #include <map>
 
 // This source is an isotopic neutron source for the current group.
-class DFEMIsoPointSource : public SNDiracKernelBase
+class DFEMIsoPointSource : public SNBaseDiracKernel
 {
 public:
   static InputParameters validParams();

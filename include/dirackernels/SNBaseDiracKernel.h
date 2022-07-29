@@ -4,12 +4,12 @@
 
 #include "GaussAngularQuadrature.h"
 
-class SNDiracKernelBase : public DiracKernel
+class SNBaseDiracKernel : public DiracKernel
 {
 public:
   static InputParameters validParams();
 
-  SNDiracKernelBase(const InputParameters & parameters);
+  SNBaseDiracKernel(const InputParameters & parameters);
 
 protected:
   void cartesianToSpherical(const RealVectorValue & ordinate, Real & mu,
@@ -17,4 +17,4 @@ protected:
 
   const GaussAngularQuadrature _quadrature_set;
   Real _symmetry_factor;
-}; // class SNDiracKernelBase
+}; // class SNBaseDiracKernel

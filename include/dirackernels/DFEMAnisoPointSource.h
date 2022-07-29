@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SNDiracKernelBase.h"
+#include "SNBaseDiracKernel.h"
 
 /*
  * This kernel assumes that the external point sources take the form:
@@ -8,7 +8,7 @@
  * integral of f_{g}(\hat{\Omega}) over the unit sphere equals 1.
 */
 // TODO: Multiple anisotropic point sources?
-class DFEMAnisoPointSource : public SNDiracKernelBase
+class DFEMAnisoPointSource : public SNBaseDiracKernel
 {
 public:
   static InputParameters validParams();

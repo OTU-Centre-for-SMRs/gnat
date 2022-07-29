@@ -1,7 +1,7 @@
-#include "SNDiracKernelBase.h"
+#include "SNBaseDiracKernel.h"
 
 InputParameters
-SNDiracKernelBase::validParams()
+SNBaseDiracKernel::validParams()
 {
   auto params = DiracKernel::validParams();
   params.addClassDescription("Provides basic functionality for neutron "
@@ -31,7 +31,7 @@ SNDiracKernelBase::validParams()
   return params;
 }
 
-SNDiracKernelBase::SNDiracKernelBase(const InputParameters & parameters)
+SNBaseDiracKernel::SNBaseDiracKernel(const InputParameters & parameters)
   : DiracKernel(parameters)
   , _quadrature_set(getParam<unsigned int>("n_c"),
                     getParam<unsigned int>("n_l"),
@@ -60,7 +60,7 @@ SNDiracKernelBase::SNDiracKernelBase(const InputParameters & parameters)
 }
 
 void
-SNDiracKernelBase::cartesianToSpherical(const RealVectorValue & ordinate,
+SNBaseDiracKernel::cartesianToSpherical(const RealVectorValue & ordinate,
                                         Real & mu, Real & omega)
 {
   switch (_quadrature_set.getAxis())

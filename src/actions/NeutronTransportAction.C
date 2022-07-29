@@ -59,6 +59,9 @@ NeutronTransportAction::validParams()
                                                     "The number of spectral "
                                                     "energy groups in the "
                                                     "problem.");
+  params.addRequiredParam<MooseEnum>("scheme", MooseEnum("saaf_cfem upwinding_dfem"),
+                                     "The discretization and stabilization "
+                                     "scheme for the transport equation.");
   params.addRequiredParam<MooseEnum>("execution_type", MooseEnum("steady transient"),
                                      "The method of execution for the problem. "
                                      "Options are steady-state source driven "
@@ -140,6 +143,7 @@ NeutronTransportAction::validParams()
 NeutronTransportAction::NeutronTransportAction(const InputParameters & params)
   : Action(params)
   , _num_groups(getParam<unsigned int>("num_groups"))
+  , _transport_scheme(getParam<MooseEnum>("scheme").getEnum<Scheme>())
   , _exec_type(getParam<MooseEnum>("execution_type").getEnum<ExecutionType>())
   , _n_l(getParam<unsigned int>("n_polar"))
   , _n_c(getParam<unsigned int>("n_azimuthal"))
@@ -152,13 +156,6 @@ NeutronTransportAction::NeutronTransportAction(const InputParameters & params)
   , _debug_level(getParam<MooseEnum>("debug_verbosity").getEnum<DebugVerbosity>())
   , _var_init(false)
 { }
-
-void
-NeutronTransportAction::addRelationshipManagers(Moose::RelationshipManagerType when_type)
-{
-  auto params = ADDFEMUpwinding::validParams();
-  addRelationshipManagers(when_type, params);
-}
 
 void
 NeutronTransportAction::debugOutput(const std::string & level0,
@@ -205,6 +202,239 @@ NeutronTransportAction::applyQuadratureParameters(InputParameters & params)
   // Assign quadrature rules.
   params.set<unsigned int>("n_l") = 2u * _n_l;
   params.set<unsigned int>("n_c") = 2u * _n_c;
+}
+
+void
+NeutronTransportAction::addRelationshipManagers(Moose::RelationshipManagerType when_type)
+{
+  if (_transport_scheme == Scheme::UpwindingDFEM)
+  {
+    auto params = ADDFEMUpwinding::validParams();
+    addRelationshipManagers(when_type, params);
+  }
+}
+
+void
+NeutronTransportAction::act()
+{
+  if (!_var_init)
+  {
+    debugOutput("Building the angular quadrature set...",
+                "Building the angular quadrature set...");
+
+    // Setup for all actions the NeutronTransport action performs.
+    // Grab all the subdomain IDs that the neutron transport action should be
+    // applied to.
+    std::vector<SubdomainName> block_names(getParam<std::vector<SubdomainName>>("block"));
+    for (const auto & block_name : block_names)
+      _subdomain_ids.insert(_problem->mesh().getSubdomainID(block_name));
+
+    // Find out what sort of problem we're working with. Error if it's not a
+    // cartesian coordinate system.
+    for (const SubdomainID & id : _subdomain_ids)
+    {
+      if (_problem->getCoordSystem(id) != Moose::COORD_XYZ)
+        mooseError("Neutron transport simulations currently do not support "
+                   "non-cartesian coordinate systems.");
+    }
+
+    // Set the enum so quadrature sets can be determined appropriately.
+    unsigned int _num_group_moments = 0u;
+    switch (_mesh->dimension())
+    {
+      case 1u:
+        debugOutput("ProblemType::Cartesian1D");
+        _p_type = ProblemType::Cartesian1D;
+        _num_group_moments = (_max_eval_anisotropy + 1u);
+        _num_flux_ordinates = 2u * _n_l;
+        break;
+
+      case 2u:
+        debugOutput("ProblemType::Cartesian2D");
+        _p_type = ProblemType::Cartesian2D;
+        _num_group_moments = (_max_eval_anisotropy + 1u) * (_max_eval_anisotropy + 2u) / 2u;
+        _num_flux_ordinates = 4u * _n_l * _n_c;
+        break;
+
+      case 3u:
+        debugOutput("ProblemType::Cartesian3D");
+        _p_type = ProblemType::Cartesian3D;
+        _num_group_moments = (_max_eval_anisotropy + 1u) * (_max_eval_anisotropy + 1u);
+        _num_flux_ordinates = 8u * _n_l * _n_c;
+        break;
+
+      default:
+        mooseError("Unknown mesh dimensionality.");
+        break;
+    }
+
+    std::string set_info(std::string("Angular quadrature set information:\n") +
+                         std::string(" - Polar points per quadrant: ") +
+                         Moose::stringify(_n_l) +
+                         std::string("\n - Azimuthal points per quadrant: ") +
+                         Moose::stringify(_n_c) +
+                         std::string("\n - Total number of flux ordinates: ") +
+                         Moose::stringify(_num_flux_ordinates) +
+                         std::string("\n"));
+    debugOutput(set_info);
+
+    debugOutput("Determining variable names...", "Determining variable names...");
+    for (unsigned int g = 0; g < _num_groups; ++g)
+    {
+      // Set up variable names for the group angular fluxes.
+      _group_angular_fluxes.emplace(g, std::vector<VariableName>());
+      _group_angular_fluxes[g].reserve(_num_flux_ordinates);
+      for (unsigned int n = 1; n <= _num_flux_ordinates; ++n)
+      {
+        _group_angular_fluxes[g].emplace_back(_angular_flux_name + "_"
+                                             + Moose::stringify(g + 1u)  + "_"
+                                             + Moose::stringify(n));
+      }
+
+      // Set up variable names for the group flux moments.
+      _group_flux_moments.emplace(g, std::vector<VariableName>());
+      _group_flux_moments[g].reserve(_num_group_moments);
+      for (unsigned int l = 0; l <= _max_eval_anisotropy; ++l)
+      {
+        for (int m = -1 * static_cast<int>(l); m <= static_cast<int>(l); ++m)
+        {
+          _group_flux_moments[g].emplace_back(_flux_moment_name + "_"
+                                              + Moose::stringify(g + 1u) + "_"
+                                              + Moose::stringify(l) + "_"
+                                              + Moose::stringify(m));
+        }
+      }
+    }
+
+    _var_init = true;
+    debugOutput("Initializing flux groups...", "Initializing flux groups...");
+  }
+
+  // Loop over all groups.
+  for (unsigned int g = 0; g < _num_groups; ++g)
+  {
+    if (!_var_init)
+      debugOutput("Initializing flux ordinates...");
+
+    // Loop over all the flux ordinates.
+    for (unsigned int n = 0; n < _num_flux_ordinates; ++n)
+    {
+      const auto & var_name = _group_angular_fluxes[g][n];
+
+      // Add a non-linear variable.
+      if (_current_task == "add_variable")
+      {
+        if (g == 0u && n == 0u)
+          debugOutput("Adding variables...");
+
+        addVariable(var_name);
+
+        if (g + 1u == _num_groups && n + 1u == _num_flux_ordinates)
+          debugOutput("\n");
+      }
+
+      // Add kernels.
+      if (_current_task == "add_kernel")
+      {
+        if (g == 0u && n == 0u)
+          debugOutput("Adding kernels...");
+
+        addKernels(var_name, g, n);
+
+        if (g + 1u == _num_groups && n + 1u == _num_flux_ordinates)
+          debugOutput("\n");
+      }
+
+      // Add DG kernels.
+      if (_current_task == "add_dg_kernel")
+      {
+        if (g == 0u && n == 0u)
+          debugOutput("Adding DG kernels...");
+
+        addDGKernels(var_name, g, n);
+
+        if (g + 1u == _num_groups && n + 1u == _num_flux_ordinates)
+          debugOutput("\n");
+      }
+
+      // Add boundary conditions.
+      if (_current_task == "add_bc")
+      {
+        if (g == 0u && n == 0u)
+          debugOutput("Adding BCs...");
+
+        addBCs(var_name, g, n);
+
+        if (g + 1u == _num_groups && n + 1u == _num_flux_ordinates)
+          debugOutput("\n");
+      }
+
+      // Add initial conditions.
+      if (_current_task == "add_ic")
+      {
+        if (g == 0u && n == 0u)
+          debugOutput("Adding ICs...");
+
+        addICs(var_name, g, n);
+
+        if (g + 1u == _num_groups && n + 1u == _num_flux_ordinates)
+          debugOutput("\n");
+      }
+    }
+
+    if (!_var_init)
+      debugOutput("Initializing flux moments...");
+
+    // Loop over all moments and set up auxvariables and auxkernels.
+    unsigned int moment_index = 0u;
+    for (unsigned int l = 0; l <= _max_eval_anisotropy; ++l)
+    {
+      for (int m = -1 * static_cast<int>(l); m <= static_cast<int>(l); ++m)
+      {
+        const auto & var_name = _group_flux_moments[g][moment_index];
+
+        // Add auxvariables.
+        if (_current_task == "add_aux_variable")
+        {
+          if (g == 0u && l == 0u && m == -1)
+            debugOutput("Adding auxvariables...");
+
+          addAuxVariables(var_name);
+
+          if (g + 1u == _num_groups && l == _max_eval_anisotropy && m == static_cast<int>(l))
+            debugOutput("\n");
+        }
+
+        // Add auxkernels.
+        if (_current_task == "add_aux_kernel")
+        {
+          if (g == 0u && l == 0u && m == -1)
+            debugOutput("Adding auxkernels...");
+
+          addAuxKernels(var_name, g, l, m);
+
+          if (g + 1u == _num_groups && l == _max_eval_anisotropy && m == static_cast<int>(l))
+            debugOutput("\n");
+        }
+
+        moment_index++;
+      }
+    }
+
+    if (!_var_init)
+      debugOutput("\n", "\n");
+  }
+
+  // Add Dirac kernels (isotropic point sources). Anisotropic point sources are
+  // handled separately.
+  if (_current_task == "add_dirac_kernel")
+  {
+    debugOutput("Adding Dirac kernels...");
+
+    addDiracKernels();
+
+    debugOutput("\n");
+  }
 }
 
 void
@@ -683,227 +913,4 @@ NeutronTransportAction::addDiracKernels()
       }
     }
   } // DFEMIsoPointSource
-}
-
-void
-NeutronTransportAction::act()
-{
-  if (!_var_init)
-  {
-    debugOutput("Building the angular quadrature set...",
-                "Building the angular quadrature set...");
-
-    // Setup for all actions the NeutronTransport action performs.
-    // Grab all the subdomain IDs that the neutron transport action should be
-    // applied to.
-    std::vector<SubdomainName> block_names(getParam<std::vector<SubdomainName>>("block"));
-    for (const auto & block_name : block_names)
-      _subdomain_ids.insert(_problem->mesh().getSubdomainID(block_name));
-
-    // Find out what sort of problem we're working with. Error if it's not a
-    // cartesian coordinate system.
-    for (const SubdomainID & id : _subdomain_ids)
-    {
-      if (_problem->getCoordSystem(id) != Moose::COORD_XYZ)
-        mooseError("Neutron transport simulations currently do not support "
-                   "non-cartesian coordinate systems.");
-    }
-
-    // Set the enum so quadrature sets can be determined appropriately.
-    unsigned int _num_group_moments = 0u;
-    switch (_mesh->dimension())
-    {
-      case 1u:
-        debugOutput("ProblemType::Cartesian1D");
-        _p_type = ProblemType::Cartesian1D;
-        _num_group_moments = (_max_eval_anisotropy + 1u);
-        _num_flux_ordinates = 2u * _n_l;
-        break;
-
-      case 2u:
-        debugOutput("ProblemType::Cartesian2D");
-        _p_type = ProblemType::Cartesian2D;
-        _num_group_moments = (_max_eval_anisotropy + 1u) * (_max_eval_anisotropy + 2u) / 2u;
-        _num_flux_ordinates = 4u * _n_l * _n_c;
-        break;
-
-      case 3u:
-        debugOutput("ProblemType::Cartesian3D");
-        _p_type = ProblemType::Cartesian3D;
-        _num_group_moments = (_max_eval_anisotropy + 1u) * (_max_eval_anisotropy + 1u);
-        _num_flux_ordinates = 8u * _n_l * _n_c;
-        break;
-
-      default:
-        mooseError("Unknown mesh dimensionality.");
-        break;
-    }
-
-    std::string set_info(std::string("Angular quadrature set information:\n") +
-                         std::string(" - Polar points per quadrant: ") +
-                         Moose::stringify(_n_l) +
-                         std::string("\n - Azimuthal points per quadrant: ") +
-                         Moose::stringify(_n_c) +
-                         std::string("\n - Total number of flux ordinates: ") +
-                         Moose::stringify(_num_flux_ordinates) +
-                         std::string("\n"));
-    debugOutput(set_info);
-
-    debugOutput("Determining variable names...", "Determining variable names...");
-    for (unsigned int g = 0; g < _num_groups; ++g)
-    {
-      // Set up variable names for the group angular fluxes.
-      _group_angular_fluxes.emplace(g, std::vector<VariableName>());
-      _group_angular_fluxes[g].reserve(_num_flux_ordinates);
-      for (unsigned int n = 1; n <= _num_flux_ordinates; ++n)
-      {
-        _group_angular_fluxes[g].emplace_back(_angular_flux_name + "_"
-                                             + Moose::stringify(g + 1u)  + "_"
-                                             + Moose::stringify(n));
-      }
-
-      // Set up variable names for the group flux moments.
-      _group_flux_moments.emplace(g, std::vector<VariableName>());
-      _group_flux_moments[g].reserve(_num_group_moments);
-      for (unsigned int l = 0; l <= _max_eval_anisotropy; ++l)
-      {
-        for (int m = -1 * static_cast<int>(l); m <= static_cast<int>(l); ++m)
-        {
-          _group_flux_moments[g].emplace_back(_flux_moment_name + "_"
-                                              + Moose::stringify(g + 1u) + "_"
-                                              + Moose::stringify(l) + "_"
-                                              + Moose::stringify(m));
-        }
-      }
-    }
-
-    _var_init = true;
-    debugOutput("Initializing flux groups...", "Initializing flux groups...");
-  }
-
-  // Loop over all groups.
-  for (unsigned int g = 0; g < _num_groups; ++g)
-  {
-    if (!_var_init)
-      debugOutput("Initializing flux ordinates...");
-
-    // Loop over all the flux ordinates.
-    for (unsigned int n = 0; n < _num_flux_ordinates; ++n)
-    {
-      const auto & var_name = _group_angular_fluxes[g][n];
-
-      // Add a non-linear variable.
-      if (_current_task == "add_variable")
-      {
-        if (g == 0u && n == 0u)
-          debugOutput("Adding variables...");
-
-        addVariable(var_name);
-
-        if (g + 1u == _num_groups && n + 1u == _num_flux_ordinates)
-          debugOutput("\n");
-      }
-
-      // Add kernels.
-      if (_current_task == "add_kernel")
-      {
-        if (g == 0u && n == 0u)
-          debugOutput("Adding kernels...");
-
-        addKernels(var_name, g, n);
-
-        if (g + 1u == _num_groups && n + 1u == _num_flux_ordinates)
-          debugOutput("\n");
-      }
-
-      // Add DG kernels.
-      if (_current_task == "add_dg_kernel")
-      {
-        if (g == 0u && n == 0u)
-          debugOutput("Adding DG kernels...");
-
-        addDGKernels(var_name, g, n);
-
-        if (g + 1u == _num_groups && n + 1u == _num_flux_ordinates)
-          debugOutput("\n");
-      }
-
-      // Add boundary conditions.
-      if (_current_task == "add_bc")
-      {
-        if (g == 0u && n == 0u)
-          debugOutput("Adding BCs...");
-
-        addBCs(var_name, g, n);
-
-        if (g + 1u == _num_groups && n + 1u == _num_flux_ordinates)
-          debugOutput("\n");
-      }
-
-      // Add initial conditions.
-      if (_current_task == "add_ic")
-      {
-        if (g == 0u && n == 0u)
-          debugOutput("Adding ICs...");
-
-        addICs(var_name, g, n);
-
-        if (g + 1u == _num_groups && n + 1u == _num_flux_ordinates)
-          debugOutput("\n");
-      }
-    }
-
-    if (!_var_init)
-      debugOutput("Initializing flux moments...");
-
-    // Loop over all moments and set up auxvariables and auxkernels.
-    unsigned int moment_index = 0u;
-    for (unsigned int l = 0; l <= _max_eval_anisotropy; ++l)
-    {
-      for (int m = -1 * static_cast<int>(l); m <= static_cast<int>(l); ++m)
-      {
-        const auto & var_name = _group_flux_moments[g][moment_index];
-
-        // Add auxvariables.
-        if (_current_task == "add_aux_variable")
-        {
-          if (g == 0u && l == 0u && m == -1)
-            debugOutput("Adding auxvariables...");
-
-          addAuxVariables(var_name);
-
-          if (g + 1u == _num_groups && l == _max_eval_anisotropy && m == static_cast<int>(l))
-            debugOutput("\n");
-        }
-
-        // Add auxkernels.
-        if (_current_task == "add_aux_kernel")
-        {
-          if (g == 0u && l == 0u && m == -1)
-            debugOutput("Adding auxkernels...");
-
-          addAuxKernels(var_name, g, l, m);
-
-          if (g + 1u == _num_groups && l == _max_eval_anisotropy && m == static_cast<int>(l))
-            debugOutput("\n");
-        }
-
-        moment_index++;
-      }
-    }
-
-    if (!_var_init)
-      debugOutput("\n", "\n");
-  }
-
-  // Add Dirac kernels (isotropic point sources). Anisotropic point sources are
-  // handled separately.
-  if (_current_task == "add_dirac_kernel")
-  {
-    debugOutput("Adding Dirac kernels...");
-
-    addDiracKernels();
-
-    debugOutput("\n");
-  }
 }

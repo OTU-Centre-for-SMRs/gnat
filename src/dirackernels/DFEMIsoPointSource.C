@@ -5,7 +5,7 @@ registerMooseObject("GnatApp", DFEMIsoPointSource);
 InputParameters
 DFEMIsoPointSource::validParams()
 {
-  auto params = SNDiracKernelBase::validParams();
+  auto params = SNBaseDiracKernel::validParams();
   params.addClassDescription("Computes the isotropic point source term for "
                              "current group of the discrete ordinates neutron "
                              "transport equation. The weak form is given by "
@@ -28,7 +28,7 @@ DFEMIsoPointSource::validParams()
 }
 
 DFEMIsoPointSource::DFEMIsoPointSource(const InputParameters & parameters)
-  : SNDiracKernelBase(parameters)
+  : SNBaseDiracKernel(parameters)
   , _source_intensities(getParam<std::vector<Real>>("intensities"))
   , _source_locations(getParam<std::vector<Point>>("points"))
 {

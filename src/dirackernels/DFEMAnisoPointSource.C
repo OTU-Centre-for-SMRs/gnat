@@ -7,7 +7,7 @@ registerMooseObject("GnatApp", DFEMAnisoPointSource);
 InputParameters
 DFEMAnisoPointSource::validParams()
 {
-  auto params = SNDiracKernelBase::validParams();
+  auto params = SNBaseDiracKernel::validParams();
   params.addClassDescription("Computes the anisotropic point source term for the "
                              "current group of the discrete ordinates neutron "
                              "transport equation. The weak form is given by "
@@ -32,7 +32,7 @@ DFEMAnisoPointSource::validParams()
 }
 
 DFEMAnisoPointSource::DFEMAnisoPointSource(const InputParameters & parameters)
-  : SNDiracKernelBase(parameters)
+  : SNBaseDiracKernel(parameters)
   , _ordinate_index(getParam<unsigned int>("ordinate_index"))
   , _source_intensity(getParam<Real>("intensities"))
   , _angular_distribution(getFunction("phase_function"))
