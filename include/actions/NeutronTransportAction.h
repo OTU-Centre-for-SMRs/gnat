@@ -23,20 +23,37 @@ protected:
   using Action::addRelationshipManagers;
   void addRelationshipManagers(Moose::RelationshipManagerType when_type) override;
 
+  // Helper member function for debug output.
   void debugOutput(const std::string & level0 = "",
                    const std::string & level1 = "");
+  // Helper member function to initialize SN quadrature parameters.
+  void applyQuadratureParameters(InputParameters & params);
 
+  // Member function to initialize common scheme parameters.
+  void initializeCommon();
+
+  // Individual act functions for each scheme.
+  void actSAAFCFEM();
+  void actUpwindDFEM();
+
+  // Member functions to initialize the MOOSE objects required for all schemes.
   void addVariable(const std::string & var_name);
-  void addKernels(const std::string & var_name, unsigned int g, unsigned int n);
-  void addDGKernels(const std::string & var_name, unsigned int g, unsigned int n);
   void addBCs(const std::string & var_name, unsigned int g, unsigned int n);
   void addICs(const std::string & var_name, unsigned int g, unsigned int n);
   void addAuxVariables(const std::string & var_name);
   void addAuxKernels(const std::string & var_name, unsigned int g,
                      unsigned int l, int m);
-  void addDiracKernels();
 
-  void applyQuadratureParameters(InputParameters & params);
+  // Member functions to initialize the MOOSE objects required for the
+  // CGFEM-SAAF scheme.
+  void addSAAFKernels(const std::string & var_name, unsigned int g, unsigned int n);
+  void addSAAFDiracKernels();
+
+  // Member functions to initialize the MOOSE objects required for the
+  // DGFEM-upwinding scheme.
+  void addDGFEMKernels(const std::string & var_name, unsigned int g, unsigned int n);
+  void addDGFEMDGKernels(const std::string & var_name, unsigned int g, unsigned int n);
+  void addDGFEMDiracKernels();
 
   enum class Scheme
   {

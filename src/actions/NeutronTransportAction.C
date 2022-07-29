@@ -158,6 +158,33 @@ NeutronTransportAction::NeutronTransportAction(const InputParameters & params)
 { }
 
 void
+NeutronTransportAction::addRelationshipManagers(Moose::RelationshipManagerType when_type)
+{
+  if (_transport_scheme == Scheme::UpwindingDFEM)
+  {
+    auto params = ADDFEMUpwinding::validParams();
+    addRelationshipManagers(when_type, params);
+  }
+}
+
+void
+NeutronTransportAction::act()
+{
+  // Initialize common members.
+  initializeCommon();
+
+  switch (_transport_scheme)
+  {
+    case Scheme::SAAFCFEM: actSAAFCFEM(); break;
+    case Scheme::UpwindingDFEM: actUpwindDFEM(); break;
+    default: break;
+  }
+}
+
+//------------------------------------------------------------------------------
+// Function for debug output.
+//------------------------------------------------------------------------------
+void
 NeutronTransportAction::debugOutput(const std::string & level0,
                                     const std::string & level1)
 {
@@ -187,7 +214,11 @@ NeutronTransportAction::debugOutput(const std::string & level0,
       break;
   }
 }
+//------------------------------------------------------------------------------
 
+//------------------------------------------------------------------------------
+// Function to initialize SN quadrature parameters.
+//------------------------------------------------------------------------------
 void
 NeutronTransportAction::applyQuadratureParameters(InputParameters & params)
 {
@@ -203,19 +234,13 @@ NeutronTransportAction::applyQuadratureParameters(InputParameters & params)
   params.set<unsigned int>("n_l") = 2u * _n_l;
   params.set<unsigned int>("n_c") = 2u * _n_c;
 }
+//------------------------------------------------------------------------------
 
+//------------------------------------------------------------------------------
+// Function to initialize common parameters for all schemes.
+//------------------------------------------------------------------------------
 void
-NeutronTransportAction::addRelationshipManagers(Moose::RelationshipManagerType when_type)
-{
-  if (_transport_scheme == Scheme::UpwindingDFEM)
-  {
-    auto params = ADDFEMUpwinding::validParams();
-    addRelationshipManagers(when_type, params);
-  }
-}
-
-void
-NeutronTransportAction::act()
+NeutronTransportAction::initializeCommon()
 {
   if (!_var_init)
   {
@@ -333,30 +358,6 @@ NeutronTransportAction::act()
           debugOutput("\n");
       }
 
-      // Add kernels.
-      if (_current_task == "add_kernel")
-      {
-        if (g == 0u && n == 0u)
-          debugOutput("Adding kernels...");
-
-        addKernels(var_name, g, n);
-
-        if (g + 1u == _num_groups && n + 1u == _num_flux_ordinates)
-          debugOutput("\n");
-      }
-
-      // Add DG kernels.
-      if (_current_task == "add_dg_kernel")
-      {
-        if (g == 0u && n == 0u)
-          debugOutput("Adding DG kernels...");
-
-        addDGKernels(var_name, g, n);
-
-        if (g + 1u == _num_groups && n + 1u == _num_flux_ordinates)
-          debugOutput("\n");
-      }
-
       // Add boundary conditions.
       if (_current_task == "add_bc")
       {
@@ -424,6 +425,61 @@ NeutronTransportAction::act()
     if (!_var_init)
       debugOutput("\n", "\n");
   }
+}
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+// Initialize the CGFEM-SAAF scheme.
+//------------------------------------------------------------------------------
+void
+NeutronTransportAction::actSAAFCFEM()
+{
+  mooseError("CGFEM-SAAF schemes currently are not supported.");
+}
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+// Initialize the DGFEM-upwinding scheme.
+//------------------------------------------------------------------------------
+void
+NeutronTransportAction::actUpwindDFEM()
+{
+  // Loop over all groups.
+  for (unsigned int g = 0; g < _num_groups; ++g)
+  {
+    // Loop over all the flux ordinates.
+    for (unsigned int n = 0; n < _num_flux_ordinates; ++n)
+    {
+      const auto & var_name = _group_angular_fluxes[g][n];
+
+      // Add kernels.
+      if (_current_task == "add_kernel")
+      {
+        if (g == 0u && n == 0u)
+          debugOutput("Adding kernels...");
+
+        addDGFEMKernels(var_name, g, n);
+
+        if (g + 1u == _num_groups && n + 1u == _num_flux_ordinates)
+          debugOutput("\n");
+      }
+
+      // Add DG kernels.
+      if (_current_task == "add_dg_kernel")
+      {
+        if (g == 0u && n == 0u)
+          debugOutput("Adding DG kernels...");
+
+        addDGFEMDGKernels(var_name, g, n);
+
+        if (g + 1u == _num_groups && n + 1u == _num_flux_ordinates)
+          debugOutput("\n");
+      }
+    }
+
+    if (!_var_init)
+      debugOutput("\n", "\n");
+  }
 
   // Add Dirac kernels (isotropic point sources). Anisotropic point sources are
   // handled separately.
@@ -431,12 +487,16 @@ NeutronTransportAction::act()
   {
     debugOutput("Adding Dirac kernels...");
 
-    addDiracKernels();
+    addDGFEMDiracKernels();
 
     debugOutput("\n");
   }
 }
+//------------------------------------------------------------------------------
 
+//------------------------------------------------------------------------------
+// Functions to add MOOSE objects common to all schemes.
+//------------------------------------------------------------------------------
 void
 NeutronTransportAction::addVariable(const std::string & var_name)
 {
@@ -459,8 +519,156 @@ NeutronTransportAction::addVariable(const std::string & var_name)
 }
 
 void
-NeutronTransportAction::addKernels(const std::string & var_name, unsigned int g,
-                                   unsigned int n)
+NeutronTransportAction::addBCs(const std::string & var_name, unsigned int g,
+                               unsigned int n)
+{
+  // Add ADSNVacuumBC.
+  if (_vacuum_side_sets.size() > 0u)
+  {
+    InputParameters params = _factory.getValidParams("ADSNVacuumBC");
+    params.set<NonlinearVariableName>("variable") = var_name;
+    // Ordinate index is required to fetch the neutron direction.
+    params.set<unsigned int>("ordinate_index") = n;
+
+    // Apply the parameters for the quadrature rule.
+    applyQuadratureParameters(params);
+
+    params.set<std::vector<BoundaryName>>("boundary") = _vacuum_side_sets;
+
+    _problem->addBoundaryCondition("ADSNVacuumBC",
+                                   "ADSNVacuumBC_" + var_name,
+                                   params);
+    debugOutput("Adding BC ADSNVacuumBC for the variable "
+                + var_name + ".");
+  } // ADSNVacuumBC
+
+  // Add ADSNMatSourceBC.
+  if (_source_side_sets.size() > 0u)
+  {
+    InputParameters params = _factory.getValidParams("ADSNMatSourceBC");
+    params.set<NonlinearVariableName>("variable") = var_name;
+    // Ordinate index is required to fetch the neutron direction.
+    params.set<unsigned int>("ordinate_index") = n;
+
+    // Apply the parameters for the quadrature rule.
+    applyQuadratureParameters(params);
+
+    params.set<std::vector<BoundaryName>>("boundary") = _source_side_sets;
+
+    _problem->addBoundaryCondition("ADSNMatSourceBC",
+                                   "ADSNMatSourceBC" + var_name,
+                                   params);
+    debugOutput("Adding BC ADSNMatSourceBC for the variable "
+                + var_name + ".");
+  } // ADSNMatSourceBC
+
+  // Add ADSNReflectiveBC.
+  // TODO: Complete this implementation.
+  if (_reflective_side_sets.size() > 0u)
+  {
+    mooseError("Reflective boundary conditions are currently not supported.");
+  } // ADSNReflectiveBC
+}
+
+// TODO: Initial conditions.
+void
+NeutronTransportAction::addICs(const std::string & var_name, unsigned int g,
+                               unsigned int n)
+{
+  // Set a constant initial condition for now.
+  auto params = _factory.getValidParams("ConstantIC");
+  params.set<VariableName>("variable") = var_name;
+
+  if (isParamValid("block"))
+  {
+    params.set<std::vector<SubdomainName>>("block")
+      = getParam<std::vector<SubdomainName>>("block");
+  }
+
+  params.set<Real>("value") = getParam<Real>("debug_steady_state_ic");
+  _problem->addInitialCondition("ConstantIC", "ConstantIC_" + var_name, params);
+  debugOutput("Adding IC ConstantIC for the variable "
+              + var_name + ".");
+}
+
+void
+NeutronTransportAction::addAuxVariables(const std::string & var_name)
+{
+  auto fe_type = AddVariableAction::feType(_pars);
+  auto type = AddVariableAction::variableType(fe_type, false, false);
+  auto params = _factory.getValidParams(type);
+  params.set<MooseEnum>("order") = fe_type.order.get_order();
+  params.set<MooseEnum>("family") = Moose::stringify(fe_type.family);
+
+  if (isParamValid("block"))
+  {
+    params.set<std::vector<SubdomainName>>("block")
+      = getParam<std::vector<SubdomainName>>("block");
+  }
+
+  _problem->addAuxVariable(type, var_name, params);
+  debugOutput("Adding auxvariable " + var_name + " with type " + type + ".");
+}
+
+void
+NeutronTransportAction::addAuxKernels(const std::string & var_name,
+                                      unsigned int g,
+                                      unsigned int l,
+                                      int m)
+{
+  // Add NeutronFluxMoment.
+  {
+    InputParameters params = _factory.getValidParams("NeutronFluxMoment");
+    params.set<AuxVariableName>("variable") = var_name;
+    // Flux moment degree and order.
+    params.set<unsigned int>("degree") = l;
+    params.set<int>("order") = m;
+
+    // Apply the parameters for the quadrature rule.
+    applyQuadratureParameters(params);
+
+    // The flux ordinates for this group.
+    params.set<std::vector<VariableName>>("group_flux_ordinates")
+      = _group_angular_fluxes[g];
+
+    if (isParamValid("block"))
+    {
+      params.set<std::vector<SubdomainName>>("block")
+        = getParam<std::vector<SubdomainName>>("block");
+    }
+
+    _problem->addAuxKernel("NeutronFluxMoment",
+                           "NeutronFluxMoment_" + var_name,
+                           params);
+    debugOutput("Adding auxkernel NeutronFluxMoment for the variable "
+                + var_name + ".");
+  } // NeutronFluxMoment
+}
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+// Functions to add MOOSE objects for the CGFEM-SAAF scheme.
+//------------------------------------------------------------------------------
+void
+NeutronTransportAction::addSAAFKernels(const std::string & var_name,
+                                       unsigned int g, unsigned int n)
+{
+
+}
+
+void
+NeutronTransportAction::addSAAFDiracKernels()
+{
+
+}
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+// Functions to add MOOSE objects for the DGFEM-upwinding scheme.
+//------------------------------------------------------------------------------
+void
+NeutronTransportAction::addDGFEMKernels(const std::string & var_name, unsigned int g,
+                                        unsigned int n)
 {
   // Add ADDFEMTimeDerivative.
   if (_exec_type == ExecutionType::Transient)
@@ -681,8 +889,8 @@ NeutronTransportAction::addKernels(const std::string & var_name, unsigned int g,
 }
 
 void
-NeutronTransportAction::addDGKernels(const std::string & var_name,
-                                     unsigned int g, unsigned int n)
+NeutronTransportAction::addDGFEMDGKernels(const std::string & var_name,
+                                          unsigned int g, unsigned int n)
 {
   // Add ADDFEMUpwinding.
   {
@@ -709,134 +917,7 @@ NeutronTransportAction::addDGKernels(const std::string & var_name,
 }
 
 void
-NeutronTransportAction::addBCs(const std::string & var_name, unsigned int g,
-                               unsigned int n)
-{
-  // Add ADSNVacuumBC.
-  if (_vacuum_side_sets.size() > 0u)
-  {
-    InputParameters params = _factory.getValidParams("ADSNVacuumBC");
-    params.set<NonlinearVariableName>("variable") = var_name;
-    // Ordinate index is required to fetch the neutron direction.
-    params.set<unsigned int>("ordinate_index") = n;
-
-    // Apply the parameters for the quadrature rule.
-    applyQuadratureParameters(params);
-
-    params.set<std::vector<BoundaryName>>("boundary") = _vacuum_side_sets;
-
-    _problem->addBoundaryCondition("ADSNVacuumBC",
-                                   "ADSNVacuumBC_" + var_name,
-                                   params);
-    debugOutput("Adding BC ADSNVacuumBC for the variable "
-                + var_name + ".");
-  } // ADSNVacuumBC
-
-  // Add ADSNMatSourceBC.
-  if (_source_side_sets.size() > 0u)
-  {
-    InputParameters params = _factory.getValidParams("ADSNMatSourceBC");
-    params.set<NonlinearVariableName>("variable") = var_name;
-    // Ordinate index is required to fetch the neutron direction.
-    params.set<unsigned int>("ordinate_index") = n;
-
-    // Apply the parameters for the quadrature rule.
-    applyQuadratureParameters(params);
-
-    params.set<std::vector<BoundaryName>>("boundary") = _source_side_sets;
-
-    _problem->addBoundaryCondition("ADSNMatSourceBC",
-                                   "ADSNMatSourceBC" + var_name,
-                                   params);
-    debugOutput("Adding BC ADSNMatSourceBC for the variable "
-                + var_name + ".");
-  } // ADSNMatSourceBC
-
-  // Add ADSNReflectiveBC.
-  // TODO: Complete this implementation.
-  if (_reflective_side_sets.size() > 0u)
-  {
-    mooseError("Reflective boundary conditions are currently not supported.");
-  } // ADSNReflectiveBC
-}
-
-// TODO: Initial conditions.
-void
-NeutronTransportAction::addICs(const std::string & var_name, unsigned int g,
-                               unsigned int n)
-{
-  // Set a constant initial condition for now.
-  auto params = _factory.getValidParams("ConstantIC");
-  params.set<VariableName>("variable") = var_name;
-
-  if (isParamValid("block"))
-  {
-    params.set<std::vector<SubdomainName>>("block")
-      = getParam<std::vector<SubdomainName>>("block");
-  }
-
-  params.set<Real>("value") = getParam<Real>("debug_steady_state_ic");
-  _problem->addInitialCondition("ConstantIC", "ConstantIC_" + var_name, params);
-  debugOutput("Adding IC ConstantIC for the variable "
-              + var_name + ".");
-}
-
-void
-NeutronTransportAction::addAuxVariables(const std::string & var_name)
-{
-  auto fe_type = AddVariableAction::feType(_pars);
-  auto type = AddVariableAction::variableType(fe_type, false, false);
-  auto params = _factory.getValidParams(type);
-  params.set<MooseEnum>("order") = fe_type.order.get_order();
-  params.set<MooseEnum>("family") = Moose::stringify(fe_type.family);
-
-  if (isParamValid("block"))
-  {
-    params.set<std::vector<SubdomainName>>("block")
-      = getParam<std::vector<SubdomainName>>("block");
-  }
-
-  _problem->addAuxVariable(type, var_name, params);
-  debugOutput("Adding auxvariable " + var_name + " with type " + type + ".");
-}
-
-void
-NeutronTransportAction::addAuxKernels(const std::string & var_name,
-                                      unsigned int g,
-                                      unsigned int l,
-                                      int m)
-{
-  // Add NeutronFluxMoment.
-  {
-    InputParameters params = _factory.getValidParams("NeutronFluxMoment");
-    params.set<AuxVariableName>("variable") = var_name;
-    // Flux moment degree and order.
-    params.set<unsigned int>("degree") = l;
-    params.set<int>("order") = m;
-
-    // Apply the parameters for the quadrature rule.
-    applyQuadratureParameters(params);
-
-    // The flux ordinates for this group.
-    params.set<std::vector<VariableName>>("group_flux_ordinates")
-      = _group_angular_fluxes[g];
-
-    if (isParamValid("block"))
-    {
-      params.set<std::vector<SubdomainName>>("block")
-        = getParam<std::vector<SubdomainName>>("block");
-    }
-
-    _problem->addAuxKernel("NeutronFluxMoment",
-                           "NeutronFluxMoment_" + var_name,
-                           params);
-    debugOutput("Adding auxkernel NeutronFluxMoment for the variable "
-                + var_name + ".");
-  } // NeutronFluxMoment
-}
-
-void
-NeutronTransportAction::addDiracKernels()
+NeutronTransportAction::addDGFEMDiracKernels()
 {
   // Add DFEMIsoPointSource.
   {
@@ -914,3 +995,4 @@ NeutronTransportAction::addDiracKernels()
     }
   } // DFEMIsoPointSource
 }
+//------------------------------------------------------------------------------

@@ -13,6 +13,7 @@
 
 [NeutronActivationStudy]
   [TransportSystem]
+    scheme = upwinding_dfem
     execution_type = steady
     num_groups = 1
 
