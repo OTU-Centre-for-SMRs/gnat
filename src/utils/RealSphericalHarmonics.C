@@ -22,10 +22,10 @@ normalizationConstant(unsigned int degree, int order)
 Real
 RealSphericalHarmonics::evaluateCoefficient(unsigned int degree, int order)
 {
-  if (0 < order <= static_cast<int>(degree))
+  if (0 < order && order <= static_cast<int>(degree))
     return std::sqrt(2.0) * normalizationConstant(degree, order);
 
-  if (order == 0 && 0 <= static_cast<int>(degree))
+  if (order == 0 && 0u <= static_cast<int>(degree))
     return normalizationConstant(degree, 0);
 
   if (-1 * static_cast<int>(degree) <= order < 0)
@@ -38,15 +38,15 @@ Real
 RealSphericalHarmonics::evaluate(unsigned int degree, int order,
                                  const Real & mu, const Real & omega)
 {
-  if (0 < order <= static_cast<int>(degree))
+  if (0 < order && order <= static_cast<int>(degree))
     return std::sqrt(2.0) * normalizationConstant(degree, order)
            * std::assoc_legendre(degree, static_cast<unsigned int>(order), mu)
            * std::cos(static_cast<Real>(std::abs(order)) * omega);
 
-  if (order == 0 && 0 <= static_cast<int>(degree))
+  if (order == 0 && 0u <= static_cast<int>(degree))
     return normalizationConstant(degree, 0) * std::assoc_legendre(degree, 0u, mu);
 
-  if (-1 * static_cast<int>(degree) <= order < 0)
+  if (-1 * static_cast<int>(degree) <= order && order < 0)
     return std::sqrt(2.0) * normalizationConstant(degree, order)
            * std::assoc_legendre(degree, static_cast<unsigned int>(order), mu)
            * std::sin(static_cast<Real>(std::abs(order)) * omega);

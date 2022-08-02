@@ -173,6 +173,7 @@ NeutronTransportAction::act()
   // Initialize common members.
   initializeCommon();
 
+  // Act functions for different schemes.
   switch (_transport_scheme)
   {
     case Scheme::SAAFCFEM: actSAAFCFEM(); break;
@@ -434,7 +435,7 @@ NeutronTransportAction::initializeCommon()
 void
 NeutronTransportAction::actSAAFCFEM()
 {
-  mooseError("CGFEM-SAAF schemes currently are not supported.");
+  mooseError("The CGFEM-SAAF scheme currently isn't supported.");
 }
 //------------------------------------------------------------------------------
 
@@ -444,6 +445,8 @@ NeutronTransportAction::actSAAFCFEM()
 void
 NeutronTransportAction::actUpwindDFEM()
 {
+  mooseWarning("The DGFEM-Upwinding scheme currently doesn't work as intended.");
+
   // Loop over all groups.
   for (unsigned int g = 0; g < _num_groups; ++g)
   {

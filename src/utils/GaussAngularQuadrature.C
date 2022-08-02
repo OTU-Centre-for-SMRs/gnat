@@ -111,6 +111,7 @@ GaussAngularQuadrature::GaussAngularQuadrature(unsigned int n_c,
       for (unsigned int i = 1; i <= _n_l; ++i)
       {
         _quadrature_set_omega.emplace_back(RealVectorValue(_polar_quadrature.root(i - 1u), 0.0, 0.0));
+        _quadrature_set_omega.back() /= _quadrature_set_omega.back().norm();
         _quadrature_set_weight.emplace_back(_polar_quadrature.weight(i - 1u));
       }
       break;
@@ -124,7 +125,10 @@ GaussAngularQuadrature::GaussAngularQuadrature(unsigned int n_c,
           _quadrature_set_weight.erase(_quadrature_set_weight.begin() + i);
         }
         else
+        {
           _quadrature_set_omega[i](2) = 0.0;
+          _quadrature_set_omega[i] /= _quadrature_set_omega[i].norm();
+        }
       }
       break;
 

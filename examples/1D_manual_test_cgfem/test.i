@@ -7,7 +7,7 @@
     type = CartesianMeshGenerator
     dim = 1
     dx = 10
-    ix = 10
+    ix = 1000
   []
 []
 
@@ -40,6 +40,7 @@
     dimensionality = 1D_cartesian
     degree = 0
     order = 0
+    normalize_output = true
   []
 []
 
@@ -138,7 +139,6 @@
 
 [Problem]
   type = FEProblem
-  coord_type = XYZ
 []
 
 [Executioner]

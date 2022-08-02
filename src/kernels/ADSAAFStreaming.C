@@ -32,7 +32,7 @@ ADSAAFStreaming::computeQpResidual()
   const auto & r_g = _sigma_r_g[_qp][_group_index];
   const auto omega = _quadrature_set.direction(_ordinate_index);
 
-  ADReal res = tau * omega * _grad_u[_qp] + (tau * r_g - 1.0) * _u[_qp];
+  ADReal res = tau * omega * _grad_u[_qp] - (1.0 - tau * r_g) * _u[_qp];
 
   return _grad_test[_i][_qp] * omega * res;
 }

@@ -34,7 +34,7 @@ ADSNVacuumBC::computeQpResidual()
 
   ADReal res = 0.0;
   ADReal n_dot_omega = _quadrature_set.direction(_ordinate_index) * _normals[_qp];
-  if (n_dot_omega > 0.0)
+  if (n_dot_omega >= 0.0)
     res += _u[_qp] * n_dot_omega * _test[_i][_qp];
 
   return res;

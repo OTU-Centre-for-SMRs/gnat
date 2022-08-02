@@ -38,6 +38,9 @@ NeutronFluxMoment::validParams()
   params.addRequiredParam<unsigned int>("degree", "Degree of this angular flux "
                                         "moment.");
   params.addRequiredParam<int>("order", "Order of this angular flux moment.");
+  params.addParam<bool>("normalize_output", false,
+                        "Divide the flux moment by the spherical harmonics "
+                        "weights.");
 
   return params;
 }
@@ -50,6 +53,8 @@ NeutronFluxMoment::NeutronFluxMoment(const InputParameters & parameters)
                     getParam<MooseEnum>("dimensionality").getEnum<ProblemType>())
   , _degree(getParam<unsigned int>("degree"))
   , _order(getParam<int>("order"))
+  , _apply_symmetry(getParam<bool>("normalize_output"))
+  , _symmetry_factor(1.0)
 {
   const unsigned int num_coupled = coupledComponents("group_flux_ordinates");
 
@@ -59,6 +64,25 @@ NeutronFluxMoment::NeutronFluxMoment(const InputParameters & parameters)
   _flux_ordinates.reserve(num_coupled);
   for (unsigned int i = 0; i < num_coupled; ++i)
     _flux_ordinates.emplace_back(&adCoupledValue("group_flux_ordinates", i));
+
+  switch (_quadrature_set.getProblemType())
+  {
+    case ProblemType::Cartesian1D:
+      _symmetry_factor = 2.0;
+      break;
+
+    case ProblemType::Cartesian2D:
+      _symmetry_factor = 2.0 * M_PI;
+      break;
+
+    case ProblemType::Cartesian3D:
+      _symmetry_factor = 4.0 * M_PI;
+      break;
+
+    default:
+      _symmetry_factor = 1.0;
+      break;
+  }
 }
 
 void
@@ -100,5 +124,5 @@ NeutronFluxMoment::computeValue()
               * _quadrature_set.weight(i);
   }
 
-  return moment;
+  return _apply_symmetry ? (moment / _symmetry_factor) : moment;
 }
