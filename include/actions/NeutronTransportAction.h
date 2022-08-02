@@ -41,8 +41,10 @@ protected:
   void addBCs(const std::string & var_name, unsigned int g, unsigned int n);
   void addICs(const std::string & var_name, unsigned int g, unsigned int n);
   void addAuxVariables(const std::string & var_name);
+  // is_output = true as a default parameter.
+  // TODO: Fix this for scattering moments.
   void addAuxKernels(const std::string & var_name, unsigned int g,
-                     unsigned int l, int m);
+                     unsigned int l, int m, bool is_output = true);
 
   // Member functions to initialize the MOOSE objects required for the
   // CGFEM-SAAF scheme.
@@ -54,24 +56,6 @@ protected:
   void addDGFEMKernels(const std::string & var_name, unsigned int g, unsigned int n);
   void addDGFEMDGKernels(const std::string & var_name, unsigned int g, unsigned int n);
   void addDGFEMDiracKernels();
-
-  enum class Scheme
-  {
-    SAAFCFEM = 0u,
-    UpwindingDFEM = 1u
-  };
-
-  enum class ExecutionType
-  {
-    SteadySource = 0u,
-    Transient = 1u
-  };
-
-  enum class DebugVerbosity
-  {
-    Level0 = 0u,
-    Level1 = 1u
-  };
 
   const Scheme _transport_scheme;
   const ExecutionType _exec_type;

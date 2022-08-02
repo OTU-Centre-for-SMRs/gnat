@@ -15,23 +15,25 @@
 
 [NeutronActivationStudy]
   [TransportSystem]
+    scheme = saaf_cfem
     execution_type = steady
-    family = MONOMIAL
+    num_groups = 1
+
     order = FIRST
+    family = LAGRANGE
 
     n_azimuthal = 3
     n_polar = 3
-    num_groups = 1
 
     max_anisotropy = 0
     vacuum_boundaries = 'left right top bottom'
 
     point_source_locations = '5.0 5.0 0.0'
-    point_source_intensities = '1000.0'
+    point_source_intensities = '100000.0'
     point_source_groups = '1'
 
+    #debug_verbosity = level0
     debug_disable_scattering = true
-    debug_steady_state_ic = 1000.0
   []
 []
 
@@ -46,7 +48,6 @@
 
 [Problem]
   type = FEProblem
-  coord_type = XYZ
 []
 
 [Executioner]

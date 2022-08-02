@@ -17,3 +17,21 @@ enum class ProblemType
   Cartesian2D = 1u,
   Cartesian3D = 2u
 }; // enum class ProblemType
+
+enum class Scheme
+{
+  SAAFCFEM = 0u,
+  UpwindingDFEM = 1u
+}; // enum class Scheme
+
+enum class ExecutionType
+{
+  SteadySource = 0u,
+  Transient = 1u
+}; // enum class ExecutionType
+
+enum class DebugVerbosity
+{
+  Level0 = 0u,
+  Level1 = 1u
+}; // Enum class DebugVerbosity

@@ -27,7 +27,7 @@ GnatApp::~GnatApp() { }
 static void
 associateSyntaxInner(Syntax & syntax, ActionFactory & /*action_factory*/)
 {
-  registerSyntax("NeutronTransportAction", "NeutronActivationStudy/TransportSystem");
+  syntax.registerActionSyntax("NeutronTransportAction", "NeutronActivationStudy/TransportSystem");
 }
 
 void
@@ -36,9 +36,9 @@ GnatApp::registerAll(Factory & f, ActionFactory & af, Syntax & syntax)
   ModulesApp::registerAll(f, af, syntax);
   Registry::registerObjectsTo(f, {"GnatApp"});
   Registry::registerActionsTo(af, {"GnatApp"});
-  associateSyntaxInner(syntax, af);
 
   /* register custom execute flags, action syntax, etc. here */
+  associateSyntaxInner(syntax, af);
 }
 
 void

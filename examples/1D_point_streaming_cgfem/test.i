@@ -13,12 +13,12 @@
 
 [NeutronActivationStudy]
   [TransportSystem]
-    scheme = upwinding_dfem
+    scheme = saaf_cfem
     execution_type = steady
     num_groups = 1
 
     order = FIRST
-    family = MONOMIAL
+    family = LAGRANGE
 
     n_azimuthal = 1
     n_polar = 1
@@ -46,7 +46,6 @@
 
 [Problem]
   type = FEProblem
-  coord_type = XYZ
 []
 
 [Executioner]
