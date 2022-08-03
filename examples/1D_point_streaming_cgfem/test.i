@@ -30,8 +30,8 @@
     point_source_intensities = '1000.0'
     point_source_groups = '1'
 
-    #debug_verbosity = level0
     debug_disable_scattering = true
+    #debug_verbosity = level0
   []
 []
 
@@ -40,7 +40,7 @@
     type = AbsorbingNeutronicsMaterial
     num_groups = 1
     group_removal = 1.0
-    group_speeds = 1.0
+    group_speeds = 2200.0
   []
 []
 
@@ -53,8 +53,4 @@
   solve_type = PJFNK
   petsc_options_iname = '-pc_type -pc_hypre_type'
   petsc_options_value = 'hypre boomeramg'
-[]
-
-[Outputs]
-  exodus = true
 []

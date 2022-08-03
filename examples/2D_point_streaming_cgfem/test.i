@@ -8,8 +8,8 @@
     dim = 2
     dx = 10
     dy = 10
-    ix = 10
-    iy = 10
+    ix = 100
+    iy = 100
   []
 []
 
@@ -32,7 +32,7 @@
     point_source_intensities = '100000.0'
     point_source_groups = '1'
 
-    #debug_verbosity = level0
+    debug_verbosity = level0
     debug_disable_scattering = true
   []
 []
@@ -55,8 +55,4 @@
   solve_type = PJFNK
   petsc_options_iname = '-pc_type -pc_hypre_type'
   petsc_options_value = 'hypre boomeramg'
-[]
-
-[Outputs]
-  exodus = true
 []

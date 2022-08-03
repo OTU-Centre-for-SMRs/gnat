@@ -120,9 +120,9 @@ NeutronFluxMoment::computeValue()
     cartesianToSpherical(_quadrature_set.direction(i), mu, omega);
 
     moment += RealSphericalHarmonics::evaluate(_degree, _order, mu, omega)
-              * MetaPhysicL::raw_value((* _flux_ordinates[i])[_qp])
+              * std::max(MetaPhysicL::raw_value((* _flux_ordinates[i])[_qp]), 0.0)
               * _quadrature_set.weight(i);
   }
-
+  
   return _apply_symmetry ? (moment / _symmetry_factor) : moment;
 }

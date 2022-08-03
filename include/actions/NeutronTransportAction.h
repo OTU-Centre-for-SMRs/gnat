@@ -9,7 +9,11 @@
 
 // TODO:
 // - Complete the reflective boundary condition implementation.
-// - Initial conditions.
+// - Finish function and file initial conditions.
+// - Fix negative fluxes in the SAAF implementation.
+//   - Tempoary fix through maxing the angular flux while computing flux moments.
+// - Fix the DGFEM implementation. Issue probably arises in the upwinding DG
+//   upwinding kernel.
 class NeutronTransportAction : public Action
 {
 public:
@@ -37,6 +41,7 @@ protected:
   void actUpwindDFEM();
 
   // Member functions to initialize the MOOSE objects required for all schemes.
+  void addOutputs();
   void addVariable(const std::string & var_name);
   void addBCs(const std::string & var_name, unsigned int g, unsigned int n);
   void addICs(const std::string & var_name, unsigned int g, unsigned int n);
