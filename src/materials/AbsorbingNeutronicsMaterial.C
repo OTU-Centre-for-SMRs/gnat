@@ -50,6 +50,13 @@ AbsorbingNeutronicsMaterial::AbsorbingNeutronicsMaterial(const InputParameters &
 void
 AbsorbingNeutronicsMaterial::computeQpProperties()
 {
+  _mat_anisotropy[_qp] = 0u;
+  _mat_src_anisotropy[_qp] = 0u;
+
+  // SAAF stabilization properties.
+  _mat_saaf_eta[_qp] = _saaf_eta;
+  _mat_saaf_c[_qp] = _saaf_c;
+
   _mat_v_g[_qp].resize(_num_groups, 0.0);
   _mat_sigma_r_g[_qp].resize(_num_groups, 0.0);
   for (unsigned int i = 0; i < _num_groups; ++i)
@@ -57,7 +64,4 @@ AbsorbingNeutronicsMaterial::computeQpProperties()
     _mat_v_g[_qp][i] = _v_g[i];
     _mat_sigma_r_g[_qp][i] = _sigma_r_g[i];
   }
-
-  _mat_anisotropy[_qp] = 0u;
-  _mat_src_anisotropy[_qp] = 0u;
 }

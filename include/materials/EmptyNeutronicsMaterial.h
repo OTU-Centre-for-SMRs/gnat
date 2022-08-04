@@ -22,4 +22,10 @@ protected:
   MaterialProperty<unsigned int> & _mat_anisotropy;
   ADMaterialProperty<std::vector<Real>> & _mat_source_moments;
   MaterialProperty<unsigned int> & _mat_src_anisotropy;
+
+  // SAAF stabilization parameters.
+  ADMaterialProperty<Real> & _mat_saaf_eta;
+  Real _saaf_eta;
+  ADMaterialProperty<Real> & _mat_saaf_c;
+  Real _saaf_c;
 }; // class EmptyNeutronicsMaterial

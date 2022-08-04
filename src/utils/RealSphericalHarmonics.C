@@ -28,7 +28,7 @@ RealSphericalHarmonics::evaluateCoefficient(unsigned int degree, int order)
   if (order == 0 && 0u <= static_cast<int>(degree))
     return normalizationConstant(degree, 0);
 
-  if (-1 * static_cast<int>(degree) <= order < 0)
+  if (-1 * static_cast<int>(degree) <= order && order < 0)
     return std::sqrt(2.0) * normalizationConstant(degree, order);
 
   return 0.0;

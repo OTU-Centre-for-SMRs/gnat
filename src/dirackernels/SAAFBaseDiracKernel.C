@@ -29,6 +29,8 @@ SAAFBaseDiracKernel::SAAFBaseDiracKernel(const InputParameters & parameters)
   , _ordinate_index(getParam<unsigned int>("ordinate_index"))
   , _group_index(getParam<unsigned int>("group_index"))
   , _sigma_r_g(getADMaterialProperty<std::vector<Real>>("removal_xs_g"))
+  , _saaf_eta(getADMaterialProperty<Real>("saaf_eta"))
+  , _saaf_c(getADMaterialProperty<Real>("saaf_c"))
 { }
 
 Real
@@ -67,9 +69,12 @@ SAAFBaseDiracKernel::computeQPTau()
   }
 
   auto h = maxVertexSeparation();
-  Real tau = 2.0 * h;
-  if (MetaPhysicL::raw_value(_sigma_r_g[_qp][_group_index]) * h >= 0.5)
-    tau = 1.0 / MetaPhysicL::raw_value(_sigma_r_g[_qp][_group_index]);
+  Real tau = 0.0;
+  if (MetaPhysicL::raw_value(_sigma_r_g[_qp][_group_index] * _saaf_c[_qp]) * h
+      >= MetaPhysicL::raw_value(_saaf_eta[_qp]))
+    tau = 1.0 / MetaPhysicL::raw_value(_sigma_r_g[_qp][_group_index] * _saaf_c[_qp]);
+  else
+    tau = h / MetaPhysicL::raw_value(_saaf_eta[_qp]);
 
   return tau;
 }

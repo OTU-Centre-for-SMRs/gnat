@@ -23,6 +23,5 @@ protected:
 
   const unsigned int _degree;
   const int _order;
-  const bool _apply_symmetry;
   Real _symmetry_factor;
 }; // class NeutronFluxMoment

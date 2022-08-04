@@ -717,8 +717,7 @@ void
 NeutronTransportAction::addAuxKernels(const std::string & var_name,
                                       unsigned int g,
                                       unsigned int l,
-                                      int m,
-                                      bool is_output)
+                                      int m)
 {
   // Add NeutronFluxMoment.
   {
@@ -727,7 +726,6 @@ NeutronTransportAction::addAuxKernels(const std::string & var_name,
     // Flux moment degree and order.
     params.set<unsigned int>("degree") = l;
     params.set<int>("order") = m;
-    params.set<bool>("normalize_output") = is_output;
 
     // Apply the parameters for the quadrature rule.
     applyQuadratureParameters(params);

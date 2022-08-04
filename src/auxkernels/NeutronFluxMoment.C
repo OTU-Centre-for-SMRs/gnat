@@ -53,7 +53,6 @@ NeutronFluxMoment::NeutronFluxMoment(const InputParameters & parameters)
                     getParam<MooseEnum>("dimensionality").getEnum<ProblemType>())
   , _degree(getParam<unsigned int>("degree"))
   , _order(getParam<int>("order"))
-  , _apply_symmetry(getParam<bool>("normalize_output"))
   , _symmetry_factor(1.0)
 {
   const unsigned int num_coupled = coupledComponents("group_flux_ordinates");
@@ -114,15 +113,16 @@ NeutronFluxMoment::cartesianToSpherical(const RealVectorValue & ordinate,
 Real
 NeutronFluxMoment::computeValue()
 {
-  Real moment, omega, mu = 0.0;
+  Real moment = 0.0;
+  Real omega = 0.0;
+  Real mu = 0.0;
   for (unsigned int i = 0; i < _quadrature_set.totalOrder(); ++i)
   {
     cartesianToSpherical(_quadrature_set.direction(i), mu, omega);
-
     moment += RealSphericalHarmonics::evaluate(_degree, _order, mu, omega)
               * std::max(MetaPhysicL::raw_value((* _flux_ordinates[i])[_qp]), 0.0)
               * _quadrature_set.weight(i);
   }
-  
-  return _apply_symmetry ? (moment / _symmetry_factor) : moment;
+
+  return moment;
 }

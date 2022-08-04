@@ -8,8 +8,8 @@
     dim = 2
     dx = 10
     dy = 10
-    ix = 100
-    iy = 100
+    ix = 10
+    iy = 10
   []
 []
 
@@ -42,7 +42,7 @@
     type = AbsorbingNeutronicsMaterial
     num_groups = 1
     group_removal = 1.0
-    group_speeds = 1.0
+    group_speeds = 2200.0
   []
 []
 
