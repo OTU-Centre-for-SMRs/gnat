@@ -1,0 +1,7 @@
+[Tests]
+  [./saaf_1D_steady_manual]
+    type = 'Exodiff'
+    input = 'saaf_cgfem_steady.i'
+    exodiff = 'saaf_cgfem_steady_out.e'
+  [../]
+[]

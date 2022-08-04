@@ -7,25 +7,25 @@
     type = CartesianMeshGenerator
     dim = 1
     dx = 10
-    ix = 10
+    ix = 1000
   []
 []
 
 [Variables]
   [angular_flux_1_1] # n = 0, Flux_Right
     order = FIRST
-    family = MONOMIAL
+    family = LAGRANGE
   []
   [angular_flux_1_2] # n = 1, Flux_Left
     order = FIRST
-    family = MONOMIAL
+    family = LAGRANGE
   []
 []
 
 [AuxVariables]
   [flux_moment_1_0_0]
     order = FIRST
-    family = MONOMIAL
+    family = LAGRANGE
   []
 []
 
@@ -40,48 +40,30 @@
     dimensionality = 1D_cartesian
     degree = 0
     order = 0
-  []
-[]
-
-[DGKernels]
-  [Upwinding_Right]
-    type = ADDFEMUpwinding
-    variable = angular_flux_1_1
-    n_l = 2
-    n_c = 1
-    major_axis = x
-    dimensionality = 1D_cartesian
-    ordinate_index = 0
-  []
-  [Upwinding_Left]
-    type = ADDFEMUpwinding
-    variable = angular_flux_1_2
-    n_l = 2
-    n_c = 1
-    major_axis = x
-    dimensionality = 1D_cartesian
-    ordinate_index = 1
+    normalize_output = true
   []
 []
 
 [Kernels]
   [Streaming_Right]
-    type = ADDFEMStreaming
+    type = ADSAAFStreaming
     variable = angular_flux_1_1
     n_l = 2
     n_c = 1
     major_axis = x
     dimensionality = 1D_cartesian
     ordinate_index = 0
+    group_index = 0
   []
   [Streaming_Left]
-    type = ADDFEMStreaming
+    type = ADSAAFStreaming
     variable = angular_flux_1_2
     n_l = 2
     n_c = 1
     major_axis = x
     dimensionality = 1D_cartesian
     ordinate_index = 1
+    group_index = 0
   []
 
   [Removal_Right]
@@ -98,22 +80,26 @@
 
 [DiracKernels]
   [Source_Right]
-    type = DFEMIsoPointSource
+    type = SAAFIsoPointSource
     variable = angular_flux_1_1
     n_l = 2
     n_c = 1
     major_axis = x
     dimensionality = 1D_cartesian
+    ordinate_index = 0
+    group_index = 0
     intensities = '1000.0'
     points = '5.0 0.0 0.0'
   []
   [Source_Left]
-    type = DFEMIsoPointSource
+    type = SAAFIsoPointSource
     variable = angular_flux_1_2
     n_l = 2
     n_c = 1
     major_axis = x
     dimensionality = 1D_cartesian
+    ordinate_index = 1
+    group_index = 0
     intensities = '1000.0'
     points = '5.0 0.0 0.0'
   []
@@ -146,14 +132,13 @@
   [Domain]
     type = AbsorbingNeutronicsMaterial
     num_groups = 1
-    group_removal = 1.0
+    group_absorption = 1.0
     group_speeds = 1.0
   []
 []
 
 [Problem]
   type = FEProblem
-  coord_type = XYZ
 []
 
 [Executioner]

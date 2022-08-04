@@ -7,13 +7,13 @@
     type = CartesianMeshGenerator
     dim = 1
     dx = 10
-    ix = 100
+    ix = 10
   []
 []
 
 [NeutronActivationStudy]
   [TransportSystem]
-    scheme = saaf_cfem
+    scheme = upwinding_dfem
     execution_type = steady
     num_groups = 1
     output_angular_fluxes = true
@@ -42,7 +42,6 @@
     num_groups = 1
     group_absorption = 1.0
     group_speeds = 2200.0
-    saaf_eta = 0.0
   []
 []
 

@@ -40,9 +40,8 @@
   [Domain]
     type = AbsorbingNeutronicsMaterial
     num_groups = 1
-    group_absorption = 1.0
+    group_absorption = 0.0
     group_speeds = 2200.0
-    saaf_eta = 0.0
   []
 []
 

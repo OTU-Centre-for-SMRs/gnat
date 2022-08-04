@@ -13,5 +13,5 @@ protected:
   virtual void computeQpProperties() override;
 
   std::vector<Real> _v_g;
-  std::vector<Real> _sigma_r_g;
+  std::vector<Real> _sigma_a_g;
 }; // class AbsorbingNeutronicsMaterial

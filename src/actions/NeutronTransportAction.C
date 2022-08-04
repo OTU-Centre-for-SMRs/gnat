@@ -146,7 +146,7 @@ NeutronTransportAction::validParams()
                              MooseEnum("level0 level1", "level1"),
                              "How verbose the debug output of the transport "
                              "system should be. level0 is fully verbose. "
-                             "level1 outputs less debuggung information.");
+                             "level1 outputs less debugging information.");
   params.addParam<bool>("debug_disable_scattering", false,
                         "Debug option to disable scattering evaluation.");
   params.addParam<bool>("debug_disable_source_iteration", true,
@@ -260,6 +260,25 @@ NeutronTransportAction::initializeCommon()
 {
   if (!_var_init)
   {
+    // Warn the user about issues with certain schemes.
+    switch (_transport_scheme)
+    {
+      case Scheme::SAAFCFEM:
+        mooseWarning("The CGFEM-SAAF scheme currently has issues with negative "
+                     "fluxes.");
+
+      break;
+
+      case Scheme::UpwindingDFEM:
+        //
+        mooseWarning("The DGFEM-Upwinding scheme currently doesn't work as "
+                     "intended.");
+
+        break;
+
+      default: break;
+    }
+
     debugOutput("Transport System Initialization: ",
                 "Transport System Initialization: ");
 
@@ -446,9 +465,6 @@ NeutronTransportAction::initializeCommon()
 void
 NeutronTransportAction::actSAAFCFEM()
 {
-  if (!_var_init)
-    mooseWarning("The CGFEM-SAAF scheme currently has issues with negative fluxes.");
-
   // Loop over all groups.
   for (unsigned int g = 0; g < _num_groups; ++g)
   {
@@ -489,9 +505,6 @@ NeutronTransportAction::actSAAFCFEM()
 void
 NeutronTransportAction::actUpwindDFEM()
 {
-  if (!_var_init)
-    mooseWarning("The DGFEM-Upwinding scheme currently doesn't work as intended.");
-
   // Loop over all groups.
   for (unsigned int g = 0; g < _num_groups; ++g)
   {

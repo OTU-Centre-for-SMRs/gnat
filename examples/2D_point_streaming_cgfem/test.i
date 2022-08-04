@@ -8,8 +8,8 @@
     dim = 2
     dx = 10
     dy = 10
-    ix = 10
-    iy = 10
+    ix = 100
+    iy = 100
   []
 []
 
@@ -18,6 +18,7 @@
     scheme = saaf_cfem
     execution_type = steady
     num_groups = 1
+    output_angular_fluxes = true
 
     order = FIRST
     family = LAGRANGE
@@ -29,7 +30,7 @@
     vacuum_boundaries = 'left right top bottom'
 
     point_source_locations = '5.0 5.0 0.0'
-    point_source_intensities = '100000.0'
+    point_source_intensities = '1000.0'
     point_source_groups = '1'
 
     debug_verbosity = level0
@@ -41,7 +42,7 @@
   [Domain]
     type = AbsorbingNeutronicsMaterial
     num_groups = 1
-    group_removal = 1.0
+    group_absorption = 1.0
     group_speeds = 2200.0
   []
 []
