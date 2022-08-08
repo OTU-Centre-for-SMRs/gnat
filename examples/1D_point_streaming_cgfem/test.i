@@ -1,5 +1,4 @@
-# 1D_point_streaming.i:
-# A 1D simple test case with a purely absorbing medium and a point source in the
+# A simple test case with a purely absorbing medium and a point source in the
 # middle of the domain.
 
 [Mesh]
@@ -40,9 +39,9 @@
   [Domain]
     type = AbsorbingNeutronicsMaterial
     num_groups = 1
-    group_absorption = 1.0
+    group_absorption = 0.0
     group_speeds = 2200.0
-    saaf_eta = 0.0
+    #saaf_eta = 0.0
   []
 []
 
@@ -52,7 +51,5 @@
 
 [Executioner]
   type = Steady
-  solve_type = PJFNK
-  petsc_options_iname = '-pc_type -pc_hypre_type'
-  petsc_options_value = 'hypre boomeramg'
+  solve_type = NEWTON
 []

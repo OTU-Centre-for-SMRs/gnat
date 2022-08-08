@@ -4,4 +4,10 @@
     input = 'saaf_cgfem_steady.i'
     exodiff = 'saaf_cgfem_steady_out.e'
   [../]
+
+  [./upwind_1D_steady_manual]
+    type = 'Exodiff'
+    input = 'upwind_dgfem_steady.i'
+    exodiff = 'upwind_dgfem_steady_out.e'
+  [../]
 []

@@ -36,3 +36,6 @@ Extensions:
             - include
         sources:
             - src
+        inputs:
+            - examples
+            - tests

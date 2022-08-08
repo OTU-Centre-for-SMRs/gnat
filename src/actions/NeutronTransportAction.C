@@ -271,8 +271,8 @@ NeutronTransportAction::initializeCommon()
 
       case Scheme::UpwindingDFEM:
         //
-        mooseWarning("The DGFEM-Upwinding scheme currently doesn't work as "
-                     "intended.");
+        mooseWarning("The DGFEM-Upwinding scheme currently has issues with "
+                     "negative fluxes.");
 
         break;
 
@@ -551,12 +551,6 @@ NeutronTransportAction::actUpwindDFEM()
 //------------------------------------------------------------------------------
 // Functions to add MOOSE objects common to all schemes.
 //------------------------------------------------------------------------------
-/*
-params.addParam<bool>("output_angular_fluxes", false,
-                      "Whether the angular flux ordinates should be written "
-                      "to the exodus file or not");
-                      (const auto & [g, mapping] : group_map)
-*/
 void
 NeutronTransportAction::addOutputs()
 {
@@ -724,8 +718,6 @@ NeutronTransportAction::addAuxVariables(const std::string & var_name)
   debugOutput("      - Adding auxvariable " + var_name + ".");
 }
 
-// is_output = true as a default parameter.
-// TODO: Fix this for scattering moments.
 void
 NeutronTransportAction::addAuxKernels(const std::string & var_name,
                                       unsigned int g,

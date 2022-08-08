@@ -110,8 +110,6 @@ make -j{NUM_PROCESSES}
 
 Where `{NUM_PROCESSES}` is the number of concurrent processes you want building
 both Gnat and the MOOSE framework.
-
-!alert note
 You may also compile a debug version of Gnat by running `METHOD=dbg make
 -j{NUM_PROCESSES}`.
 

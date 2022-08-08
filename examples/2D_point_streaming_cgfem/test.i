@@ -1,4 +1,3 @@
-# isotropic_point_streaming.i:
 # A simple test case with a purely absorbing medium and a point source in the
 # middle of the domain.
 
@@ -23,8 +22,8 @@
     order = FIRST
     family = LAGRANGE
 
-    n_azimuthal = 3
-    n_polar = 3
+    n_azimuthal = 1
+    n_polar = 1
 
     max_anisotropy = 0
     vacuum_boundaries = 'left right top bottom'
@@ -42,7 +41,7 @@
   [Domain]
     type = AbsorbingNeutronicsMaterial
     num_groups = 1
-    group_absorption = 1.0
+    group_absorption = 0.0
     group_speeds = 2200.0
   []
 []
@@ -54,6 +53,8 @@
 [Executioner]
   type = Steady
   solve_type = PJFNK
-  petsc_options_iname = '-pc_type -pc_hypre_type'
-  petsc_options_value = 'hypre boomeramg'
+  petsc_options_iname = '-pc_type -pc_hypre_type -ksp_gmres_restart'
+  petsc_options_value = 'hypre boomeramg 10'
+  l_max_its = 50
+  nl_rel_tol = 1e-12
 []

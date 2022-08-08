@@ -1,7 +1,3 @@
-# isotropic_point_streaming.i:
-# A simple test case with a purely absorbing medium and a point source in the
-# middle of the domain.
-
 [Mesh]
   [domain]
     type = CartesianMeshGenerator
@@ -21,7 +17,7 @@
     output_angular_fluxes = true
 
     order = FIRST
-    family = LAGRANGE
+    family = MONOMIAL
 
     n_azimuthal = 1
     n_polar = 1
@@ -53,7 +49,5 @@
 
 [Executioner]
   type = Steady
-  solve_type = PJFNK
-  petsc_options_iname = '-pc_type -pc_hypre_type'
-  petsc_options_value = 'hypre boomeramg'
+  solve_type = NEWTON
 []

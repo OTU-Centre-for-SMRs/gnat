@@ -1,7 +1,3 @@
-# isotropic_point_streaming.i:
-# A simple test case with a purely absorbing medium and a point source in the
-# middle of the domain.
-
 [Mesh]
   [domain]
     type = CartesianMeshGenerator

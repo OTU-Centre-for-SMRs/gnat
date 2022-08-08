@@ -1,0 +1,13 @@
+[Tests]
+  [./upwind_1D_steady]
+    type = 'Exodiff'
+    input = 'test_1D_steady.i'
+    exodiff = 'test_1D_steady_t_out.e'
+  [../]
+
+  [./upwind_2D_steady]
+    type = 'Exodiff'
+    input = 'test_2D_steady.i'
+    exodiff = 'test_2D_steady_t_out.e'
+  [../]
+[]

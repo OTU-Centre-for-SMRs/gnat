@@ -55,45 +55,25 @@ ADDFEMUpwinding::computeQpResidual(Moose::DGResidualType type)
   if (_ordinate_index >= _quadrature_set.totalOrder())
     mooseError("The ordinates index exceeds the number of quadrature points.");
 
-  ADReal res = 0.0;
+  ADReal res = 0;
   ADReal n_dot_omega = _normals[_qp] * _quadrature_set.direction(_ordinate_index);
 
-  if (n_dot_omega >= 0.0)
+  switch (type)
   {
-    // Neighbor is upwind, current element is downwind.
-    switch (type)
-    {
-      // Add the continuous residual contribution from the current element.
-      // Addition because n_dot_omega is positive.
-      case Moose::Element:
+    case Moose::Element:
+      if (n_dot_omega >= 0)
         res += n_dot_omega * _u[_qp] * _test[_i][_qp];
-        break;
-
-      // Remove the continuous residual contribution from the neighboring element.
-      // Subtraction because n_dot_omega is positive.
-      case Moose::Neighbor:
-        res -= n_dot_omega * _u[_qp] * _test_neighbor[_i][_qp];
-        break;
-    }
-  }
-  else
-  {
-    // Neighbor is downwind, current element is upwind.
-    switch (type)
-    {
-      // Remove the continuous residual contribution from the current element.
-      // Addition because n_dot_omega is negative (net result is a removal).
-      case Moose::Element:
+      else
         res += n_dot_omega * _u_neighbor[_qp] * _test[_i][_qp];
-        break;
+      break;
 
-      // Add the continuous residual contribution from the neighboring element.
-      // Subtraction because n_dot_omega is negative (net result is an addition).
-      case Moose::Neighbor:
+    case Moose::Neighbor:
+      if (n_dot_omega >= 0)
+        res -= n_dot_omega * _u[_qp] * _test_neighbor[_i][_qp];
+      else
         res -= n_dot_omega * _u_neighbor[_qp] * _test_neighbor[_i][_qp];
-        break;
-    }
+      break;
   }
-
+  
   return res;
 }
