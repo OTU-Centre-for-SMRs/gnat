@@ -49,13 +49,23 @@ NeutronTransportAction::validParams()
   params.addParam<Real>("scaling", 1.0,
                         "Specifies a scaling factor to apply to "
                         "this variable.");
-  params.addParam<std::vector<SubdomainName>>("block",
-                                              "The list of blocks (ids or "
-                                              "names) that this variable will "
-                                              "be applied.");
+  params.addParam<std::string>("angular_flux_names",
+                               "angular_flux",
+                               "Variable names for the angular flux. The output "
+                               "format for the group angular fluxes will be of "
+                               "the form {angular_flux_names}_g_n.");
+  params.addParam<std::string>("flux_moment_names",
+                               "flux_moment",
+                               "Variable names for the moments of the angular "
+                               "flux. The output format for the group flux "
+                               "moments will be of the form "
+                               "{flux_moment_names}_g_l_m.");
   params.addParam<bool>("output_angular_fluxes", false,
                         "Whether the angular flux ordinates should be written "
                         "to the exodus file or not");
+  params.addParamNamesToGroup("scaling angular_flux_names "
+                              "flux_moment_names output_angular_fluxes",
+                              "Variable");
 
   //----------------------------------------------------------------------------
   // Basic parameters for the neutron transport simulation.
@@ -64,13 +74,26 @@ NeutronTransportAction::validParams()
                                                     "The number of spectral "
                                                     "energy groups in the "
                                                     "problem.");
-  params.addRequiredParam<MooseEnum>("scheme", MooseEnum("saaf_cfem upwinding_dfem"),
+  params.addRequiredParam<MooseEnum>("scheme",
+                                     MooseEnum("saaf_cfem upwinding_dfem"),
                                      "The discretization and stabilization "
                                      "scheme for the transport equation.");
-  params.addRequiredParam<MooseEnum>("execution_type", MooseEnum("steady transient"),
+  params.addRequiredParam<MooseEnum>("execution_type",
+                                     MooseEnum("steady transient"),
                                      "The method of execution for the problem. "
                                      "Options are steady-state source driven "
                                      "problems and transient source problems.");
+  params.addParam<unsigned int>("max_anisotropy", 0,
+                                "The maximum degree of anisotropy to evaluate. "
+                                "Defaults to 0 for isotropic scattering.");
+  params.addParam<std::vector<SubdomainName>>("block",
+                                              "The list of blocks (ids or "
+                                              "names) that this variable will "
+                                              "be applied.");
+  params.addParamNamesToGroup("max_anisotropy block", "Simulation");
+
+  //----------------------------------------------------------------------------
+  // Quadrature parameters.
   params.addRangeCheckedParam<unsigned int>("n_polar", 3, "n_polar > 0",
                                             "Number of Legendre polar "
                                             "quadrature points in a single "
@@ -87,20 +110,8 @@ NeutronTransportAction::validParams()
                              "axis with minimal heterogeneity. Default is the "
                              "x-axis. This parameter is only applied in 3D "
                              "cartesian problems.");
-  params.addParam<unsigned int>("max_anisotropy", 0,
-                                "The maximum degree of anisotropy to evaluate. "
-                                "Defaults to 0 for isotropic scattering.");
-  params.addParam<std::string>("angular_flux_names",
-                               "angular_flux",
-                               "Variable names for the angular flux. The output "
-                               "format for the group angular fluxes will be of "
-                               "the form {angular_flux_names}_g_n.");
-  params.addParam<std::string>("flux_moment_names",
-                               "flux_moment",
-                               "Variable names for the moments of the angular "
-                               "flux. The output format for the group flux "
-                               "moments will be of the form "
-                               "{flux_moment_names}_g_l_m.");
+  params.addParamNamesToGroup("n_polar n_azimuthal major_axis",
+                              "Quadrature");
 
   //----------------------------------------------------------------------------
   // Boundary conditions.
@@ -113,6 +124,8 @@ NeutronTransportAction::validParams()
   params.addParam<std::vector<BoundaryName>>("reflective_boundaries",
                                              "The boundaries to apply reflective "
                                              "boundary conditions.");
+  params.addParamNamesToGroup("vacuum_boundaries source_boundaries "
+                              "reflective_boundaries", "Boundary Condition");
 
   //----------------------------------------------------------------------------
   // Isotropic point sources.
@@ -127,6 +140,8 @@ NeutronTransportAction::validParams()
                                              "The spectral energy groups each "
                                              "isotropic point source emits "
                                              "into.");
+  params.addParamNamesToGroup("point_source_locations point_source_intensities "
+                              "point_source_groups", "Isotropic Point Source");
 
   //----------------------------------------------------------------------------
   // Initial conditions.
@@ -136,7 +151,9 @@ NeutronTransportAction::validParams()
                              "multiple are provided). Defaults to constant "
                              "initial conditions.");
   params.addParam<std::vector<Real>>("constant_ic", std::vector<Real>(0.0),
-                         "A constant initial condition for the angular fluxes.");
+                                     "A constant initial condition for the "
+                                     "angular fluxes.");
+  params.addParamNamesToGroup("ic_type constant_ic", "Initial Condition");
   // TODO: Init from function.
   // TODO: Init from file.
 
@@ -151,6 +168,11 @@ NeutronTransportAction::validParams()
                         "Debug option to disable scattering evaluation.");
   params.addParam<bool>("debug_disable_source_iteration", true,
                         "Debug option to disable source iteration.");
+  params.addParamNamesToGroup("debug_verbosity debug_disable_scattering "
+                              "debug_disable_source_iteration", "Debugging");
+
+  params.addParamNamesToGroup("family order num_groups execution_type scheme",
+                              "Required");
 
   return params;
 }

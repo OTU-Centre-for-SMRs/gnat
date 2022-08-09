@@ -30,11 +30,14 @@ ADSAAFTimeDerivative::validParams()
 ADSAAFTimeDerivative::ADSAAFTimeDerivative(const InputParameters & parameters)
   : ADSAAFBaseKernel(parameters)
   , _u_dot(_var.adUDot())
-  , _v_g(getADMaterialProperty<std::vector<Real>>("group_speeds"))
+  , _v_g(getADMaterialProperty<std::vector<Real>>("v_g"))
 { }
 
 ADReal
 ADSAAFTimeDerivative::computeQpResidual()
 {
+  if (_group_index >= _v_g[_qp].size())
+    mooseError("The group index exceeds the number of provided neutron speeds.");
+
   return computeQPTests() * (1.0 / _v_g[_qp][_group_index]) * _u_dot[_qp];
 }

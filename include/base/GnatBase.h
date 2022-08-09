@@ -18,20 +18,25 @@ enum class ProblemType
   Cartesian3D = 2u
 }; // enum class ProblemType
 
+// An enum for schemes. Either SAAF with CGFEM or Upwinding with DGFEM.
 enum class Scheme
 {
   SAAFCFEM = 0u,
   UpwindingDFEM = 1u
 }; // enum class Scheme
 
+// An enum for the execution type of the problem. Either steady-state or
+// transient.
 enum class ExecutionType
 {
   SteadySource = 0u,
   Transient = 1u
 }; // enum class ExecutionType
 
+// An enum to determine the level of debug output verbosity. Level0 is fully
+// verbose. Level1 is minimal.
 enum class DebugVerbosity
 {
   Level0 = 0u,
   Level1 = 1u
-}; // Enum class DebugVerbosity
+}; // enum class DebugVerbosity

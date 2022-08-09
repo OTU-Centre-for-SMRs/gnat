@@ -16,7 +16,7 @@ ADDFEMTimeDerivative::validParams()
   params.addRequiredRangeCheckedParam<unsigned int>("group_index",
                                                     "group_index >= 0",
                                                     "The energy group index "
-                                                    "$g$ of the current "
+                                                    "of the current "
                                                     "angular flux.");
   return params;
 }
@@ -24,8 +24,10 @@ ADDFEMTimeDerivative::validParams()
 ADDFEMTimeDerivative::ADDFEMTimeDerivative(const InputParameters & parameters)
   : ADTimeDerivative(parameters)
   , _group_index(getParam<unsigned int>("group_index"))
-  , _v_g(getADMaterialProperty<std::vector<Real>>("group_speeds"))
-{ }
+  , _v_g(getADMaterialProperty<std::vector<Real>>("v_g"))
+{
+  std::cout << _group_index << std::endl;
+}
 
 ADReal
 ADDFEMTimeDerivative::precomputeQpResidual()
