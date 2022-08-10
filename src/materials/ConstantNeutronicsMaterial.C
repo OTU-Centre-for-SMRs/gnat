@@ -10,19 +10,16 @@ ConstantNeutronicsMaterial::validParams()
                              "neutron group absorption cross-section "
                              "($\\Sigma_{a,g}$), and the scattering cross-"
                              "section moments "
-                             "($\\Sigma_{s,g'\\rightarrow g, l}$) for simple "
+                             "($\\Sigma_{s, g', g, l}$) for simple "
                              "transport problems. "
                              "The properties must be listed in decreasing "
-                             "order by energy. The scattering cross-section "
-                             "moments must be organized according to the "
-                             "material's documentation page.");
+                             "order by energy.");
   params.addRequiredParam<std::vector<Real>>("group_scattering",
                                              "The group-to-group scattering "
                                              "cross-section moments for all "
                                              "energy groups.");
-  params.addRangeCheckedParam<unsigned int>("anisotropy", 0u, "anisotropy >= 0"
-                                            "The scattering anisotropy "
-                                            "of the medium.");
+  params.addParam<unsigned int>("anisotropy", 0u,
+                                "The scattering anisotropy of the medium.");
 
   return params;
 }
@@ -31,10 +28,10 @@ ConstantNeutronicsMaterial::ConstantNeutronicsMaterial(const InputParameters & p
   : AbsorbingNeutronicsMaterial(parameters)
   , _sigma_s_g_prime_g_l(getParam<std::vector<Real>>("group_scattering"))
   , _anisotropy(getParam<unsigned int>("anisotropy"))
-  , _max_moments(_anisotropy * _num_groups * _num_groups)
+  , _max_moments((_anisotropy + 1u) * _num_groups * _num_groups)
 {
   // Warn the user if more parameters have been provided than required.
-  if (_sigma_s_g_prime_g_l.size() >= _max_moments)
+  if (_sigma_s_g_prime_g_l.size() > _max_moments)
   {
     mooseWarning("More scattering moments have been provided than possibly "
                  "supported with the given maximum anisotropy and number of "
@@ -64,9 +61,6 @@ ConstantNeutronicsMaterial::ConstantNeutronicsMaterial(const InputParameters & p
   {
     for (unsigned int g_prime = 0u; g_prime < _num_groups; ++g_prime)
     {
-      if (g == g_prime)
-        continue;
-
       auto index = g_prime * _num_groups * _anisotropy + g * _anisotropy;
       _sigma_s_out[g] += _sigma_s_g_prime_g_l[index];
     }

@@ -63,7 +63,7 @@ ADSAAFScattering::ADSAAFScattering(const InputParameters & parameters)
 
 ADReal
 ADSAAFScattering::computeFluxMoment(unsigned int g_prime, unsigned int l,
-                                       int m)
+                                    int m)
 {
   Real moment, omega, mu = 0.0;
   for (unsigned int i = 0; i < _quadrature_set.totalOrder(); ++i)
@@ -74,7 +74,7 @@ ADSAAFScattering::computeFluxMoment(unsigned int g_prime, unsigned int l,
     const unsigned int base_n = g_prime * (_group_flux_ordinates.size()
                                            / _num_groups);
     moment += RealSphericalHarmonics::evaluate(l, m, mu, omega)
-              * MetaPhysicL::raw_value((* _group_flux_ordinates[base_n + i])[_qp])
+              * std::max(MetaPhysicL::raw_value((* _group_flux_ordinates[base_n + i])[_qp]), 0.0)
               * _quadrature_set.weight(i);
   }
 
