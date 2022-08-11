@@ -5,6 +5,18 @@
     exodiff = 'test_1D_steady_t_out.e'
   [../]
 
+  [./upwind_1D_transient]
+    type = 'Exodiff'
+    input = 'test_1D_transient.i'
+    exodiff = 'test_1D_transient_t_out.e'
+  [../]
+
+  [./upwind_1D_steady_scattering]
+    type = 'Exodiff'
+    input = 'test_1D_scattering_steady.i'
+    exodiff = 'test_1D_scattering_steady_t_out.e'
+  [../]
+
   [./upwind_2D_steady]
     type = 'Exodiff'
     input = 'test_2D_steady.i'

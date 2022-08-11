@@ -92,9 +92,10 @@ ADDFEMInternalScattering::computeQpResidual()
   if (_sigma_s_g_prime_g_l[_qp].size() == 0u)
     return 0.0;
 
-  ADReal res, moment_l = 0.0;
-  Real omega, mu = 0.0;
-
+  ADReal moment_l = 0.0;
+  ADReal res = 0.0;
+  Real omega = 0.0;
+  Real mu = 0.0;
   const unsigned int scattering_index = _group_index * _num_groups
                                         * _anisotropy[_qp]
                                         + _group_index * _anisotropy[_qp];

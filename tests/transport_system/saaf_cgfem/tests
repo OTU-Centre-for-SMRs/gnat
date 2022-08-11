@@ -11,6 +11,18 @@
     exodiff = 'test_1D_steady_void_t_out.e'
   [../]
 
+  [./saaf_1D_transient]
+    type = 'Exodiff'
+    input = 'test_1D_transient.i'
+    exodiff = 'test_1D_transient_t_out.e'
+  [../]
+
+  [./saaf_1D_steady_scattering]
+    type = 'Exodiff'
+    input = 'test_1D_scattering_steady.i'
+    exodiff = 'test_1D_scattering_steady_t_out.e'
+  [../]
+
   [./saaf_2D_steady]
     type = 'Exodiff'
     input = 'test_2D_steady.i'

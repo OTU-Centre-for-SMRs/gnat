@@ -76,7 +76,9 @@ ADReal
 ADDFEMScattering::computeFluxMoment(unsigned int g_prime, unsigned int l,
                                        int m)
 {
-  Real moment, omega, mu = 0.0;
+  ADReal moment = 0.0;
+  Real mu = 0.0;
+  Real omega = 0.0;
   for (unsigned int i = 0; i < _quadrature_set.totalOrder(); ++i)
   {
     cartesianToSpherical(_quadrature_set.direction(i),
@@ -101,9 +103,10 @@ ADDFEMScattering::computeQpResidual()
   if (_sigma_s_g_prime_g_l[_qp].size() == 0u)
     return 0.0;
 
-  ADReal res, moment_l = 0.0;
-  Real omega, mu = 0.0;
-
+  ADReal moment_l = 0.0;
+  ADReal res = 0.0;
+  Real omega = 0.0;
+  Real mu = 0.0;
   unsigned int scattering_index = 0u;
   for (unsigned int g_prime = 0; g_prime < _num_groups; ++g_prime)
   {

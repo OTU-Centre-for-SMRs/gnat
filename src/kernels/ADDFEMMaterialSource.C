@@ -58,9 +58,10 @@ ADDFEMMaterialSource::computeQpResidual()
 
   const unsigned int num_group_moments = _source_moments[_qp].size() / _num_groups;
 
-  ADReal res, src_l = 0.0;
-  Real omega, mu = 0.0;
-
+  ADReal src_l = 0.0;
+  ADReal res = 0.0;
+  Real mu = 0.0;
+  Real omega = 0.0;
   unsigned int moment_index = _group_index * num_group_moments;
   for (unsigned int l = 0u; l <= _anisotropy[_qp]; ++l)
   {

@@ -92,9 +92,10 @@ ADDFEMExternalScattering::computeQpResidual()
   if (_sigma_s_g_prime_g_l[_qp].size() == 0u)
     return 0.0;
 
-  ADReal res, moment_l = 0.0;
-  Real omega, mu = 0.0;
-
+  ADReal moment_l = 0.0;
+  ADReal res = 0.0;
+  Real omega = 0.0;
+  Real mu = 0.0;
   unsigned int num_moments;
   switch (_quadrature_set.getProblemType())
   {

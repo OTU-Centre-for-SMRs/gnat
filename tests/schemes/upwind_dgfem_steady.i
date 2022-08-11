@@ -3,7 +3,7 @@
     type = CartesianMeshGenerator
     dim = 1
     dx = 10
-    ix = 100
+    ix = 1000
   []
 []
 

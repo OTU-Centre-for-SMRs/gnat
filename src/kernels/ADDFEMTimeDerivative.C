@@ -25,9 +25,7 @@ ADDFEMTimeDerivative::ADDFEMTimeDerivative(const InputParameters & parameters)
   : ADTimeDerivative(parameters)
   , _group_index(getParam<unsigned int>("group_index"))
   , _v_g(getADMaterialProperty<std::vector<Real>>("v_g"))
-{
-  std::cout << _group_index << std::endl;
-}
+{ }
 
 ADReal
 ADDFEMTimeDerivative::precomputeQpResidual()

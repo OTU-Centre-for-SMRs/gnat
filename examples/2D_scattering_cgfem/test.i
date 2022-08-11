@@ -4,9 +4,11 @@
 [Mesh]
   [domain]
     type = CartesianMeshGenerator
-    dim = 1
+    dim = 2
     dx = 10
+    dy = 10
     ix = 100
+    iy = 100
   []
 []
 
@@ -20,13 +22,13 @@
     order = FIRST
     family = LAGRANGE
 
-    n_azimuthal = 1
-    n_polar = 1
+    n_azimuthal = 2
+    n_polar = 2
 
     max_anisotropy = 0
-    vacuum_boundaries = 'left right'
+    vacuum_boundaries = 'left right top bottom'
 
-    point_source_locations = '5.0 0.0 0.0'
+    point_source_locations = '5.0 5.0 0.0'
     point_source_intensities = '1000.0'
     point_source_groups = '1'
 
@@ -52,7 +54,6 @@
 [Executioner]
   type = Steady
   solve_type = PJFNK
-  line_search = default
   petsc_options_iname = '-pc_type -pc_hypre_type -ksp_gmres_restart'
   petsc_options_value = 'hypre boomeramg 10'
   l_max_its = 50
