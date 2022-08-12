@@ -34,9 +34,8 @@
 
 [Materials]
   [Domain]
-    type = AbsorbingNeutronicsMaterial
+    type = VoidNeutronicsMaterial
     num_groups = 1
-    group_absorption = 0.0
     group_speeds = 2200.0
   []
 []

@@ -135,4 +135,7 @@ GaussAngularQuadrature::GaussAngularQuadrature(unsigned int n_c,
     default:
       break;
   }
+  
+  _quadrature_set_omega.shrink_to_fit();
+  _quadrature_set_weight.shrink_to_fit();
 }
