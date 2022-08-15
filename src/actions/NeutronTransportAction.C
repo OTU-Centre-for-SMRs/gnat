@@ -661,10 +661,27 @@ NeutronTransportAction::addBCs(const std::string & var_name, unsigned int g,
   } // ADSNMatSourceBC
 
   // Add ADSNReflectiveBC.
-  // TODO: Complete this implementation.
   if (_reflective_side_sets.size() > 0u)
   {
-    mooseError("Reflective boundary conditions are currently not supported.");
+    auto params = _factory.getValidParams("ADSNReflectiveBC");
+    params.set<NonlinearVariableName>("variable") = var_name;
+    // Ordinate index is required to fetch the neutron direction.
+    params.set<unsigned int>("ordinate_index") = n;
+
+    // The flux ordinates for this group.
+    params.set<std::vector<VariableName>>("psi_ref")
+      = _group_angular_fluxes[g];
+
+    // Apply the parameters for the quadrature rule.
+    applyQuadratureParameters(params);
+
+    params.set<std::vector<BoundaryName>>("boundary") = _reflective_side_sets;
+
+    _problem->addBoundaryCondition("ADSNReflectiveBC",
+                                   "ADSNReflectiveBC" + var_name,
+                                   params);
+    debugOutput("Adding BC ADSNReflectiveBC for the variable "
+                + var_name + ".");
   } // ADSNReflectiveBC
 }
 

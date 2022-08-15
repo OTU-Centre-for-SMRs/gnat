@@ -11,10 +11,10 @@ public:
 
 protected:
   virtual ADReal computeQpResidual() override;
+  unsigned int findReflectedOrdinate();
 
   const unsigned int _ordinate_index; // n
 
-  const ADVariableValue & _u_ref;
-
-  const ADMaterialProperty<Real> & _albedo;
+  // All angular fluxes in the current group.
+  std::vector<const VariableValue *> _flux_ordinates;
 }; // class ADSNReflectiveBC

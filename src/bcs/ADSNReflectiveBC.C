@@ -26,22 +26,50 @@ ADSNReflectiveBC::validParams()
 ADSNReflectiveBC::ADSNReflectiveBC(const InputParameters & parameters)
   : ADSNBaseBC(parameters)
   , _ordinate_index(getParam<unsigned int>("ordinate_index"))
-  , _u_ref(adCoupledValue("psi_ref"))
-  , _albedo(getADMaterialProperty<Real>("boundary_albedo"))
-{ }
+{
+  if (_ordinate_index >= _quadrature_set.totalOrder())
+    mooseError("The ordinates index exceeds the number of quadrature points.");
+
+  const unsigned int num_coupled = coupledComponents("psi_ref");
+  if (num_coupled != _quadrature_set.totalOrder())
+    mooseError("Mismatch between the angular flux ordinates and quadrature set.");
+
+  _flux_ordinates.reserve(num_coupled);
+  for (unsigned int i = 0; i < num_coupled; ++i)
+    _flux_ordinates.emplace_back(&coupledValue("psi_ref", i));
+}
+
+unsigned int
+ADSNReflectiveBC::findReflectedOrdinate()
+{
+  auto dir = _quadrature_set.direction(_ordinate_index);
+  auto refl_dir = dir - (2.0 * dir * _normals[_qp]) * _normals[_qp];
+
+  for (unsigned int i = 0u; i < _quadrature_set.totalOrder(); ++i)
+  {
+    auto x_diff = std::abs(_quadrature_set.direction(i)(0) - refl_dir(0));
+    auto y_diff = std::abs(_quadrature_set.direction(i)(1) - refl_dir(1));
+    auto z_diff = std::abs(_quadrature_set.direction(i)(2) - refl_dir(2));
+
+    if (x_diff < 0.0001 && y_diff < 0.0001 && z_diff < 0.0001)
+      return i;
+  }
+
+  mooseError("Reflected direction is not in the quadrature set.");
+  return 0u;
+}
 
 ADReal
 ADSNReflectiveBC::computeQpResidual()
 {
-  if (_ordinate_index >= _quadrature_set.totalOrder())
-    mooseError("The ordinates index exceeds the number of quadrature points.");
+  auto & u_ref = (*_flux_ordinates[findReflectedOrdinate()]);
 
   ADReal res = 0.0;
   ADReal n_dot_omega = _quadrature_set.direction(_ordinate_index) * _normals[_qp];
   if (n_dot_omega > 0.0)
     res += _u[_qp] * n_dot_omega * _test[_i][_qp];
   else
-    res += _albedo[_qp] * _u_ref[_qp] * n_dot_omega * _test[_i][_qp];
+    res += u_ref[_qp] * n_dot_omega * _test[_i][_qp];
 
   return res;
 }
