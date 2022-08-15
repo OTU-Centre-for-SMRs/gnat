@@ -5,6 +5,12 @@
     exodiff = 'test_1D_steady_t_out.e'
   [../]
 
+  [./upwind_1D_reflected_boundary]
+    type = 'Exodiff'
+    input = 'test_1D_reflected_boundary.i'
+    exodiff = 'test_1D_reflected_boundary_t_out.e'
+  [../]
+
   [./upwind_1D_transient]
     type = 'Exodiff'
     input = 'test_1D_transient.i'

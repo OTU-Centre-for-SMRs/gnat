@@ -74,7 +74,7 @@ ADDFEMScattering::ADDFEMScattering(const InputParameters & parameters)
 
 ADReal
 ADDFEMScattering::computeFluxMoment(unsigned int g_prime, unsigned int l,
-                                       int m)
+                                    int m)
 {
   ADReal moment = 0.0;
   Real mu = 0.0;
