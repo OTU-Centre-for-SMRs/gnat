@@ -64,7 +64,7 @@ ADDFEMScattering::ADDFEMScattering(const InputParameters & parameters)
     mooseError("The ordinates index exceeds the number of quadrature points.");
 
   const unsigned int num_coupled = coupledComponents("group_flux_ordinates");
-  if (num_coupled != _quadrature_set.totalOrder())
+  if (num_coupled != _quadrature_set.totalOrder() * _num_groups)
     mooseError("Mismatch between the angular flux ordinates and quadrature set.");
 
   _group_flux_ordinates.reserve(num_coupled);
