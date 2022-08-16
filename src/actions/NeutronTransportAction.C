@@ -29,7 +29,7 @@ registerMooseAction("GnatApp", NeutronTransportAction, "add_output");
 InputParameters
 NeutronTransportAction::validParams()
 {
-  auto params = Action::validParams();
+  auto params = GnatBaseAction::validParams();
   params.addClassDescription("This action adds all of the required variables, "
                              "kernels, boundary conditions, initial conditions "
                              "and auxiliary systems required to solve "
@@ -69,27 +69,10 @@ NeutronTransportAction::validParams()
 
   //----------------------------------------------------------------------------
   // Basic parameters for the neutron transport simulation.
-  params.addRequiredRangeCheckedParam<unsigned int>("num_groups",
-                                                    "num_groups > 0",
-                                                    "The number of spectral "
-                                                    "energy groups in the "
-                                                    "problem.");
   params.addRequiredParam<MooseEnum>("scheme",
                                      MooseEnum("saaf_cfem upwinding_dfem"),
                                      "The discretization and stabilization "
                                      "scheme for the transport equation.");
-  params.addRequiredParam<MooseEnum>("execution_type",
-                                     MooseEnum("steady transient"),
-                                     "The method of execution for the problem. "
-                                     "Options are steady-state source driven "
-                                     "problems and transient source problems.");
-  params.addParam<unsigned int>("max_anisotropy", 0,
-                                "The maximum degree of anisotropy to evaluate. "
-                                "Defaults to 0 for isotropic scattering.");
-  params.addParam<std::vector<SubdomainName>>("block",
-                                              "The list of blocks (ids or "
-                                              "names) that this variable will "
-                                              "be applied.");
   params.addParamNamesToGroup("max_anisotropy block", "Simulation");
 
   //----------------------------------------------------------------------------
@@ -178,19 +161,14 @@ NeutronTransportAction::validParams()
 }
 
 NeutronTransportAction::NeutronTransportAction(const InputParameters & params)
-  : Action(params)
-  , _num_groups(getParam<unsigned int>("num_groups"))
+  : GnatBaseAction(params)
   , _transport_scheme(getParam<MooseEnum>("scheme").getEnum<Scheme>())
-  , _exec_type(getParam<MooseEnum>("execution_type").getEnum<ExecutionType>())
   , _n_l(getParam<unsigned int>("n_polar"))
   , _n_c(getParam<unsigned int>("n_azimuthal"))
-  , _max_eval_anisotropy(getParam<unsigned int>("max_anisotropy"))
   , _angular_flux_name(getParam<std::string>("angular_flux_names"))
-  , _flux_moment_name(getParam<std::string>("flux_moment_names"))
   , _vacuum_side_sets(getParam<std::vector<BoundaryName>>("vacuum_boundaries"))
   , _source_side_sets(getParam<std::vector<BoundaryName>>("source_boundaries"))
   , _reflective_side_sets(getParam<std::vector<BoundaryName>>("reflective_boundaries"))
-  , _debug_level(getParam<MooseEnum>("debug_verbosity").getEnum<DebugVerbosity>())
   , _var_init(false)
 { }
 
@@ -218,41 +196,6 @@ NeutronTransportAction::act()
     default: break;
   }
 }
-
-//------------------------------------------------------------------------------
-// Function for debug output.
-//------------------------------------------------------------------------------
-void
-NeutronTransportAction::debugOutput(const std::string & level0,
-                                    const std::string & level1)
-{
-  switch (_debug_level)
-  {
-    case DebugVerbosity::Level0:
-      if (level0 != "")
-      {
-        if (level0 == "\n")
-          _console << std::endl;
-        else
-          _console << level0 << std::endl;
-      }
-      break;
-
-    case DebugVerbosity::Level1:
-      if (level1 != "")
-      {
-        if (level1 == "\n")
-          _console << std::endl;
-        else
-          _console << level1 << std::endl;
-      }
-      break;
-
-    default:
-      break;
-  }
-}
-//------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
 // Function to initialize SN quadrature parameters.
@@ -318,40 +261,20 @@ NeutronTransportAction::initializeCommon()
                 "  - Building the angular quadrature set...");
 
     // Setup for all actions the NeutronTransport action performs.
-    // Grab all the subdomain IDs that the neutron transport action should be
-    // applied to.
-    std::vector<SubdomainName> block_names(getParam<std::vector<SubdomainName>>("block"));
-    for (const auto & block_name : block_names)
-      _subdomain_ids.insert(_problem->mesh().getSubdomainID(block_name));
+    // Initialize base neutron activation action parameters.
+    initializeBase();
 
-    // Find out what sort of problem we're working with. Error if it's not a
-    // cartesian coordinate system.
-    for (const SubdomainID & id : _subdomain_ids)
+    switch (_p_type)
     {
-      if (_problem->getCoordSystem(id) != Moose::COORD_XYZ)
-        mooseError("Neutron transport simulations currently do not support "
-                   "non-cartesian coordinate systems.");
-    }
-
-    // Set the enum so quadrature sets can be determined appropriately.
-    unsigned int _num_group_moments = 0u;
-    switch (_mesh->dimension())
-    {
-      case 1u:
-        _p_type = ProblemType::Cartesian1D;
-        _num_group_moments = (_max_eval_anisotropy + 1u);
+      case ProblemType::Cartesian1D:
         _num_flux_ordinates = 2u * _n_l;
         break;
 
-      case 2u:
-        _p_type = ProblemType::Cartesian2D;
-        _num_group_moments = (_max_eval_anisotropy + 1u) * (_max_eval_anisotropy + 2u) / 2u;
+      case ProblemType::Cartesian2D:
         _num_flux_ordinates = 4u * _n_l * _n_c;
         break;
 
-      case 3u:
-        _p_type = ProblemType::Cartesian3D;
-        _num_group_moments = (_max_eval_anisotropy + 1u) * (_max_eval_anisotropy + 1u);
+      case ProblemType::Cartesian3D:
         _num_flux_ordinates = 8u * _n_l * _n_c;
         break;
 
@@ -381,20 +304,6 @@ NeutronTransportAction::initializeCommon()
         _group_angular_fluxes[g].emplace_back(_angular_flux_name + "_"
                                              + Moose::stringify(g + 1u)  + "_"
                                              + Moose::stringify(n));
-      }
-
-      // Set up variable names for the group flux moments.
-      _group_flux_moments.emplace(g, std::vector<VariableName>());
-      _group_flux_moments[g].reserve(_num_group_moments);
-      for (unsigned int l = 0; l <= _max_eval_anisotropy; ++l)
-      {
-        for (int m = -1 * static_cast<int>(l); m <= static_cast<int>(l); ++m)
-        {
-          _group_flux_moments[g].emplace_back(_flux_moment_name + "_"
-                                              + Moose::stringify(g + 1u) + "_"
-                                              + Moose::stringify(l) + "_"
-                                              + Moose::stringify(m));
-        }
       }
     }
 

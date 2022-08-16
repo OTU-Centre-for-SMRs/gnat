@@ -14,8 +14,4 @@ documentation clear for users.
 
 !! Describe and include an example of how to use the NeutronActivationStudy system.
 
-!syntax list /NeutronActivationStudy objects=True actions=False subsystems=False
-
-!syntax list /NeutronActivationStudy objects=False actions=False subsystems=True
-
-!syntax list /NeutronActivationStudy objects=False actions=True subsystems=False
+!syntax list /NeutronActivationStudy objects=True actions=True subsystems=True

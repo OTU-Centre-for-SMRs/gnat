@@ -28,6 +28,7 @@ static void
 associateSyntaxInner(Syntax & syntax, ActionFactory & /*action_factory*/)
 {
   syntax.registerActionSyntax("NeutronTransportAction", "NeutronActivationStudy/TransportSystem");
+  syntax.registerActionSyntax("CommonGnatAction", "NeutronActivationStudy");
 }
 
 void
