@@ -2,17 +2,16 @@
 
 ## Discrete Ordinates
 
-The discontinuous weak form of the neutron transport equation ([!eqref](equations.md#nte)) is
+The weak form of the neutron transport equation ([!eqref](equations.md#nte)) is
 discretized in the angular dimension with the use of the discrete ordinates (+S@n@+)
 method. The NTE is solved for a collection of discrete ordinates (directions) $\hat{\Omega}_{n}$,
 and a suitable integration method is used to compute the angular integral using
-the solutions along the ordinates. The +S@n@+ discontinuous weak form of the NTE
+the solutions along the ordinates. The +S@n@+ weak form of the NTE
 is given with the following:
 
 !equation id=nte_wf_sn
 \underbrace{\Big( \psi_{j},\, \frac{\partial}{\partial t}\frac{\Psi^{k}_{g,n}}{v_{g}} \Big)_{D^{k}}}_{\text{Time Kernel}}
-+ \underbrace{\sum_{i} \Big\langle \psi_{j},\, \hat{n}\cdot\hat{\Omega}\Psi^{h}_{g,n}\Big|_{F^{k}_{\mathcal{I},\,i}-} \Big\rangle_{F^{k}_{\mathcal{I},\,i}}
-+ \sum_{i} \Big\langle \psi_{j},\, \hat{n}\cdot\hat{\Omega}\Psi^{h}_{g,n}\Big|_{F^{k}_{\mathcal{O},\,i}+} \Big\rangle_{F^{k}_{\mathcal{O},\,i}}}_{\text{Discontinuous Galerkin Streaming Kernel}}
++ \underbrace{+ \Big\langle \phi_{j},\, \hat{n}\cdot\hat{\Omega}\Psi^{h}_{g,n} \Big\rangle_{\Gamma}}_{\text{Implicit Boundary Conditions}}
 - \underbrace{\Big( \vec{\nabla}\psi_{j}\cdot\hat{\Omega},\, \Psi^{k}_{g,n} \Big)_{D^{k}}}_{\text{Streaming Kernel}}\\
 + \underbrace{\Big( \psi_{j},\, \Sigma_{r,\,g}\Psi^{k}_{g,n} \Big)_{D^{k}}}_{\text{Removal Kernel}}
 - \underbrace{\Big( \psi_{j},\, \sum_{g' = 1}^{G}\int_{4\pi}\Sigma_{s,\, g'\rightarrow g}f_{g'\rightarrow g}\Psi^{k}_{g'}\, d\hat{\Omega}' \Big)_{D^{k}}}_{\text{Scattering Kernel}}
@@ -67,14 +66,7 @@ Substituting [!eqref](scat_exp) into the scattering kernel yields the following:
 \Big( \psi_{j},\, \sum_{g' = 1}^{G}\int_{4\pi}\Sigma_{s,\, g'\rightarrow g}f_{g'\rightarrow g}\Psi^{k}_{g'}\, d\hat{\Omega}' \Big)_{D^{k}} \approx
 \underbrace{\Big( \psi_{j},\, \sum_{g' = 1}^{G}\Sigma_{s,\, g'\rightarrow g}\sum_{l = 0}^{L}\frac{2l + 1}{4\pi} f_{g'\rightarrow g,\, l}\sum_{m = -l}^{l}Y_{l,m}(\hat{\Omega}_{n})\Phi_{g',l,m} \Big)_{D^{k}}}_{\text{Anisotropic Scattering Kernel}}
 
-The kernel can be simplified with a maximum degree of the Legendre expansion of 0,
-corresponding to isotropic scattering:
-
-!equation id=iso_scat_kernel
-\Big( \psi_{j},\, \sum_{g' = 1}^{G}\int_{4\pi}\Sigma_{s,\, g'\rightarrow g}f_{g'\rightarrow g}\Psi^{k}_{g'}\, d\hat{\Omega}' \Big)_{D^{k}} \approx
-\underbrace{\Big( \psi_{j},\, \sum_{g' = 1}^{G}\Sigma_{s,\, g'\rightarrow g}\frac{1}{4\pi}\Phi_{g',0,0} \Big)_{D^{k}}}_{\text{Isotropic Scattering Kernel}}
-
-where $\Phi_{g',0,0}$ is the scalar neutron flux. In general the degree of the
+In general the degree of the
 Legendre expansion corresponds to the degree of anisotropy in the medium.
 
 ## Evaluating Flux Moments

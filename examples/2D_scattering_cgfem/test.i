@@ -13,10 +13,14 @@
 []
 
 [NeutronActivationStudy]
+  execution_type = steady
+  num_groups = 1
+  max_anisotropy = 0
+
+  debug_verbosity = level0
+
   [TransportSystem]
     scheme = saaf_cfem
-    execution_type = steady
-    num_groups = 1
     output_angular_fluxes = true
 
     order = FIRST
@@ -25,14 +29,11 @@
     n_azimuthal = 2
     n_polar = 2
 
-    max_anisotropy = 0
     vacuum_boundaries = 'left right top bottom'
 
     point_source_locations = '5.0 5.0 0.0'
     point_source_intensities = '1000.0'
     point_source_groups = '1'
-
-    debug_verbosity = level0
   []
 []
 

@@ -1,12 +1,6 @@
 # A simple test case with a purely absorbing medium and a point source in the
 # middle of the domain.
 
-[GlobalParams]
-  num_groups = 2
-  max_anisotropy = 0
-  anisotropy = 0
-[]
-
 [Mesh]
   [domain]
     type = CartesianMeshGenerator
@@ -19,9 +13,12 @@
 []
 
 [NeutronActivationStudy]
+  execution_type = steady
+  num_groups = 2
+  max_anisotropy = 0
+
   [TransportSystem]
     scheme = saaf_cfem
-    execution_type = steady
     output_angular_fluxes = false
 
     order = FIRST
@@ -41,6 +38,7 @@
 [Materials]
   [Domain]
     type = ConstantNeutronicsMaterial
+    anisotropy = 0
     group_absorption = '0.1 1.0'
     group_scattering = '0.5 1.0 0.0 0.0'
     group_speeds = '220000.0 220000.0'

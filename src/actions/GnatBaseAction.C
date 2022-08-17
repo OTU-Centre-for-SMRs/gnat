@@ -39,6 +39,8 @@ GnatBaseAction::validParams()
                                               "names) that this variable will "
                                               "be applied.");
 
+  params.addParamNamesToGroup("num_groups execution_type", "Required");
+
   return params;
 }
 

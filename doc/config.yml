@@ -17,16 +17,17 @@ Extensions:
         name: Gnat
         repo: https://github.com/nuclearkevin/gnat
         menu:
-            About:
-                Governing Equations: about/equations.md
-                Angular Approach: about/angular_approach.md
-                Cross-Section Generation: about/cross_sections.md
             Getting Started:
                 Installation: getting_started/installation.md
                 Tutorials: getting_started/tutorials.md
+            About:
+                Governing Equations: about/equations.md
+                Angular Approach: about/angular_approach.md
+                FEM Stabilization: about/stabilization.md
+                Implementation in Moose: about/implementation.md
             Documentation:
-                Gnat Source Pages: source/index.md
                 Gnat Syntax Pages: syntax/NeutronActivationStudy/index.md
+                Gnat Source Pages: source/index.md
                 MOOSE Source Pages: https://mooseframework.inl.gov/source/index.html
     MooseDocs.extensions.appsyntax:
         executable: ${ROOT_DIR}

@@ -13,6 +13,7 @@
 [NeutronActivationStudy]
   num_groups = 1
   execution_type = steady
+  debug_verbosity = level0
 
   [TransportSystem]
     scheme = saaf_cfem

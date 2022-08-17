@@ -49,13 +49,12 @@ The discontinuous weak form of [!eqref](nte) is given by the following (with fun
 notation omitted for brevity):
 
 !equation id=nte_wf
-\underbrace{\Big( \psi_{j},\, \frac{\partial}{\partial t}\frac{\Psi^{k}_{g}}{v_{g}} \Big)_{D^{k}}}_{\text{Time Kernel}}
-+ \underbrace{\sum_{i} \Big\langle \psi_{j},\, \hat{n}\cdot\hat{\Omega}\Psi^{h}_{g}\Big|_{F^{k}_{\mathcal{I},\,i}-} \Big\rangle_{F^{k}_{\mathcal{I},\,i}}
-+ \sum_{i} \Big\langle \psi_{j},\, \hat{n}\cdot\hat{\Omega}\Psi^{h}_{g}\Big|_{F^{k}_{\mathcal{O},\,i}+} \Big\rangle_{F^{k}_{\mathcal{O},\,i}}}_{\text{Discontinuous Galerkin Streaming Kernel}}
-- \underbrace{\Big( \vec{\nabla}\psi_{j}\cdot\hat{\Omega},\, \Psi^{k}_{g} \Big)_{D^{k}}}_{\text{Streaming Kernel}}\\
-+ \underbrace{\Big( \psi_{j},\, \Sigma_{r,\,g}\Psi^{k}_{g} \Big)_{D^{k}}}_{\text{Removal Kernel}}
-- \underbrace{\Big( \psi_{j},\, \sum_{g' = 1}^{G}\int_{4\pi}\Sigma_{s,\, g'\rightarrow g}f_{g'\rightarrow g}\Psi^{k}_{g'}\, d\hat{\Omega}' \Big)_{D^{k}}}_{\text{Scattering Kernel}}
-- \underbrace{\Big( \psi_{j},\, S_{g} \Big)_{D^{k}}}_{\text{Source Kernel}} = 0
+\Big( \phi_{j},\, \frac{\partial}{\partial t}\frac{\Psi^{h}_{g}}{v_{g}} \Big)_{V}
++ \Big\langle \phi_{j},\, \hat{n}\cdot\hat{\Omega}\Psi^{h}_{g} \Big\rangle_{\Gamma}
+- \Big( \vec{\nabla}\phi_{j}\cdot\hat{\Omega},\, \Psi^{h}_{g} \Big)_{V}\\
++ \Big( \phi_{j},\, \Sigma_{r,\,g}\Psi^{h}_{g} \Big)_{V}
+- \Big( \phi_{j},\, \sum_{g' = 1}^{G}\int_{4\pi}\Sigma_{s,\, g'\rightarrow g}f_{g'\rightarrow g}(\hat{\Omega}'\cdot\hat{\Omega})\Psi_{g'}(\hat{\Omega}')\, d\hat{\Omega}' \Big)_{V}
+- \Big( \phi_{j},\, S_{g} \Big)_{V} = 0
 
 The weak forms of [!eqref](nte_bc) are given by the following (with functional notation omitted for brevity):
 
@@ -83,5 +82,7 @@ The discrete ordiantes (+S@n@+) method is used to discretize the angular variabl
 [!eqref](nte_wf), [!eqref](nte_bc_wf_r), and [!eqref](nte_bc_wf_i). The scattering kernel is expanded in Legendre
 polynomials to yield a spherical harmonics representation for anisotropic scattering.
 These methods are discussed in the [angular approach section](angular_approach.md).
+
+[!eqref](nte_wf) is known to be numerically unstable when solved using the finite element method, and therefore must be artificially stabilized. This is accomplished with two different options. The first is the self-adjoint angular flux (SAAF) method. The second is the upwinding method with discontinuous finite elements. Both of these approaches are discussed in the [stabilization section](stabilization.md).
 
 ## Mass Transport and Activation
