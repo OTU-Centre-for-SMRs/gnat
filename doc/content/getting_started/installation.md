@@ -141,5 +141,5 @@ mpirun -n{NUM_THREADS} ./gnat-opt -i input-file.i
 
 Where `{NUM_THREADS}` is the number of threads you want executing the input deck.
 
-Now that Gnat has been successfully installed and tested, feel free to visit the
-[tutorials](tutorials.md) to learn how to write a Gnat input deck.
+Now that Gnat has been successfully installed and tested, feel free to check out
+the [examples](other_examples.md) to learn how to write a Gnat input deck.

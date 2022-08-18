@@ -81,7 +81,7 @@ is the vacuum boundary condition.
 The discrete ordiantes (+S@n@+) method is used to discretize the angular variable in
 [!eqref](nte_wf), [!eqref](nte_bc_wf_r), and [!eqref](nte_bc_wf_i). The scattering kernel is expanded in Legendre
 polynomials to yield a spherical harmonics representation for anisotropic scattering.
-These methods are discussed in the [angular approach section](angular_approach.md).
+These methods are discussed in the [angular approach section](nte_angular_approach.md).
 
 [!eqref](nte_wf) is known to be numerically unstable when solved using the finite element method, and therefore must be artificially stabilized. This is accomplished with two different options. The first is the self-adjoint angular flux (SAAF) method. The second is the upwinding method with discontinuous finite elements. Both of these approaches are discussed in the [stabilization section](stabilization.md).
 

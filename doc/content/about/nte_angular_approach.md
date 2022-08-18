@@ -64,7 +64,7 @@ Substituting [!eqref](scat_exp) into the scattering kernel yields the following:
 
 !equation id=ani_scat_kernel
 \Big( \psi_{j},\, \sum_{g' = 1}^{G}\int_{4\pi}\Sigma_{s,\, g'\rightarrow g}f_{g'\rightarrow g}\Psi^{k}_{g'}\, d\hat{\Omega}' \Big)_{D^{k}} \approx
-\underbrace{\Big( \psi_{j},\, \sum_{g' = 1}^{G}\Sigma_{s,\, g'\rightarrow g}\sum_{l = 0}^{L}\frac{2l + 1}{4\pi} f_{g'\rightarrow g,\, l}\sum_{m = -l}^{l}Y_{l,m}(\hat{\Omega}_{n})\Phi_{g',l,m} \Big)_{D^{k}}}_{\text{Anisotropic Scattering Kernel}}
+\underbrace{\Big( \psi_{j},\, \sum_{g' = 1}^{G}\Sigma_{s,\, g'\rightarrow g}\sum_{l = 0}^{L}\frac{2l + 1}{4\pi} f_{g'\rightarrow g,\, l}\sum_{m = -l}^{l}Y_{l,m}(\hat{\Omega}_{n})\Phi_{g',l,m} \Big)_{D^{k}}}_{\text{Scattering Kernel}}
 
 In general the degree of the
 Legendre expansion corresponds to the degree of anisotropy in the medium.

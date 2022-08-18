@@ -19,11 +19,11 @@ Extensions:
         menu:
             Getting Started:
                 Installation: getting_started/installation.md
-                Tutorials: getting_started/tutorials.md
+                Other Tutorials: getting_started/other_examples.md
             About:
                 Governing Equations: about/equations.md
-                Angular Approach: about/angular_approach.md
                 FEM Stabilization: about/stabilization.md
+                NTE Angular Approach: about/nte_angular_approach.md
                 Implementation in Moose: about/implementation.md
             Documentation:
                 Gnat Syntax Pages: syntax/NeutronActivationStudy/index.md
