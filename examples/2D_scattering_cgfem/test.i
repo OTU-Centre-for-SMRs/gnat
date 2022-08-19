@@ -44,7 +44,7 @@
     anisotropy = 0
     group_absorption = 1.0
     group_scattering = 1.0
-    group_speeds = 2200.0
+    group_speeds = 220000.0
   []
 []
 

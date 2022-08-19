@@ -12,7 +12,7 @@ equation and ending with the convection-diffusion equations.
 
 Gnat provides two stabilization schemes for the neutron transport equation, both being described below.
 
-### 1. The Self-Adjoint Angular Flux Method
+### 1. The Self-Adjoint Angular Flux Method id=saaf
 
 The first approached implemented is the self-adjoint angular flux (SAAF) method
 derived by (TODO: REFERENCE HERE). We can write the transport equation where
@@ -43,7 +43,7 @@ algebraically simplified to yield the SAAF weak form of the neutron transport eq
 + \Big\langle \phi_{j},\, \hat{n}\cdot\hat{\Omega}\Psi^{h}_{g} \Big\rangle_{\Gamma}
 + \Big( \vec{\nabla}\phi_{j}\cdot\hat{\Omega},\, \frac{1}{\Sigma_{r,\,g}}\hat{\Omega}\cdot\vec{\nabla}\Psi_{g}^{h}\Big)_{V}
 + \Big( \phi_{j},\, \Sigma_{r,\,g}\Psi^{h}_{g} \Big)_{V}\\
-- \Big( \phi_{j} + \frac{1}{\Sigma_{r,\,g}}\vec{\nabla}\phi_{j}\cdot\hat{\Omega},\, \sum_{g' 1}^{G}\int_{\mathcal{S}}\Sigma_{s,\, g'\rightarrow g}f_{g'\rightarrow g}\Psi^{h}_{g'}\, d\Omega' \Big)_{V}
+- \Big( \phi_{j} + \frac{1}{\Sigma_{r,\,g}}\vec{\nabla}\phi_{j}\cdot\hat{\Omega},\, \sum_{g' 1}^{G}\int_{4\pi}\Sigma_{s,\, g'\rightarrow g}f_{g'\rightarrow g}\Psi^{h}_{g'}\, d\Omega' \Big)_{V}
 - \Big( \phi_{j} + \frac{1}{\Sigma_{r,\,g}}\vec{\nabla}\phi_{j}\cdot\hat{\Omega},\, S_{g} \Big)_{V} = 0
 
 [!eqref](saaf_wf_no_void) is second order and therefore stable for
@@ -54,7 +54,7 @@ angular flux equation is proposed by (TODO: REFERENCE HERE):
 
 !equation id=afe_void
 \Psi_{g} = \Big(1 - \tau_{g}\Sigma_{r,\, g}\Big)\Psi_{g} +
-\tau_{g}\Big(\sum_{g' = 1}^{G}\int_{\mathcal{S}}\Sigma_{s,\, g'\rightarrow g}f_{g'\rightarrow g}\Psi_{g'}\, d\Omega'
+\tau_{g}\Big(\sum_{g' = 1}^{G}\int_{4\pi}\Sigma_{s,\, g'\rightarrow g}f_{g'\rightarrow g}\Psi_{g'}\, d\Omega'
 + S_{g}
 - \frac{\partial}{\partial t}\frac{\Psi_{g}}{v_{g}}
 - \hat{\Omega}\cdot\vec{\nabla}\Psi_{g}\Big)
@@ -78,10 +78,10 @@ $\zeta = 0$ collapses [!eqref](afe_void) into [!eqref](afe). Substituting
 + \Big\langle \phi_{j},\, \hat{n}\cdot\hat{\Omega}\Psi^{h}_{g} \Big\rangle_{\Gamma}
 + \Big( \vec{\nabla}\phi_{j}\cdot\hat{\Omega},\, \tau_{g}\hat{\Omega}\cdot\vec{\nabla}\Psi_{g}^{h} + (\tau_{g}\Sigma_{r,\, g} - 1)\Psi_{g}^{h} \Big)_{V}\\
 + \Big( \phi_{j},\, \Sigma_{r,\,g}\Psi^{h}_{g} \Big)_{V}
-- \Big( \phi_{j} + \tau_{g}\vec{\nabla}\phi_{j}\cdot\hat{\Omega},\, \sum_{g' = 1}^{G}\int_{\mathcal{S}}\Sigma_{s,\, g'\rightarrow g}f_{g'\rightarrow g}\Psi^{h}_{g'}\, d\Omega' \Big)_{V}
+- \Big( \phi_{j} + \tau_{g}\vec{\nabla}\phi_{j}\cdot\hat{\Omega},\, \sum_{g' = 1}^{G}\int_{4\pi}\Sigma_{s,\, g'\rightarrow g}f_{g'\rightarrow g}\Psi^{h}_{g'}\, d\Omega' \Big)_{V}
 - \Big( \phi_{j} + \tau_{g}\vec{\nabla}\phi_{j}\cdot\hat{\Omega},\, S_{g} \Big)_{V} = 0
 
-### 2. The Upwinding Method
+### 2. The Upwinding Method id=upwind
 
 The upwinding approach for the neutron transport equation follows from the
 discontinuous weak form of the neutron transport equation:
@@ -91,7 +91,7 @@ discontinuous weak form of the neutron transport equation:
 + \Big\langle \phi_{j},\, \hat{n}\cdot\hat{\Omega}\mathcal{F}^{*}_{g} \Big\rangle_{F^{k}}
 - \Big( \vec{\nabla}\phi_{j}\cdot\hat{\Omega},\, \Psi^{k}_{g} \Big)_{D^{k}}\\
 + \Big( \phi_{j},\, \Sigma_{r,\,g}\Psi^{k}_{g} \Big)_{D^{k}}
-- \Big( \phi_{j},\, \sum_{g' = 1}^{G}\int_{\mathcal{S}}\Sigma_{s,\, g'\rightarrow g}f_{g'\rightarrow g}\Psi^{k}_{g'}\,d\Omega' \Big)_{D^{k}}
+- \Big( \phi_{j},\, \sum_{g' = 1}^{G}\int_{4\pi}\Sigma_{s,\, g'\rightarrow g}f_{g'\rightarrow g}\Psi^{k}_{g'}\,d\Omega' \Big)_{D^{k}}
 - \Big( \phi_{j},\, S_{g} \Big)_{D^{k}} = 0
 
 where:

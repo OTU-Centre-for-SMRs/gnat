@@ -1,6 +1,6 @@
 # Angular Discretization
 
-## Discrete Ordinates
+## Discrete Ordinates id=sn_disc
 
 The weak form of the neutron transport equation ([!eqref](equations.md#nte)) is
 discretized in the angular dimension with the use of the discrete ordinates (+S@n@+)
@@ -22,7 +22,7 @@ where:
 - $\Psi^{k}_{g,n} = \Psi^{k}_{g}(\vec{r}, \hat{\Omega}_{n}, t)$.
 - $S_{g, n}(\vec{r}, t) = S_{g}(\vec{r}, \hat{\Omega}_{n}, t)$.
 
-## Scattering Treatment
+## Scattering Treatment id=scattering
 
 The scattering cross-section and phase function can be expanded in Legendre polynomials $P_{l}$:
 
@@ -48,7 +48,7 @@ $P_{l}(\hat{\Omega}'\cdot\hat{\Omega})$:
 \sum_{g' = 1}^{G}\int_{4\pi}\Sigma_{s,\, g'\rightarrow g}f_{g'\rightarrow g}\Psi_{g'}\, d\hat{\Omega}' \approx
 \sum_{g' = 1}^{G}\Sigma_{s,\, g'\rightarrow g}(\vec{r})\sum_{l = 0}^{L}\frac{2l + 1}{4\pi} f_{g'\rightarrow g,\, l}(\vec{r})\sum_{m = -l}^{l}Y_{l,m}(\hat{\Omega})\Phi_{g',l,m}(\vec{r}, t)
 
-!equation
+!equation id=flux_moments
 \Phi_{g,l,m}(\vec{r}, t) = \int_{4\pi} Y_{l,m}(\hat{\Omega}') \Psi_{g}(\vec{r}, \hat{\Omega}', t)\, d\hat{\Omega}'
 
 where:

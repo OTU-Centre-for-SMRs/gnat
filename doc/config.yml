@@ -19,8 +19,12 @@ Extensions:
         menu:
             Getting Started:
                 Installation: getting_started/installation.md
-                Other Tutorials: getting_started/other_examples.md
-            About:
+                Example 1: getting_started/example_1.md
+                Example 2: getting_started/example_2.md
+                Example 3: getting_started/example_3.md
+                Example 4: getting_started/example_4.md
+                Other Examples: getting_started/other_examples.md
+            Theory and Implementation:
                 Governing Equations: about/equations.md
                 FEM Stabilization: about/stabilization.md
                 NTE Angular Approach: about/nte_angular_approach.md

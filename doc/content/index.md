@@ -19,20 +19,21 @@ materials. Moose provides several advantages for Gnat: scalability to machines
 from single-digit core counts to tens of thousands of cores, continuous
 open-source framework improvements, semi-automatic software quality assurance
 (to NQA-1), and additional physics modules (such as finite volume and finite
-  element fluid mechanics).
+element fluid mechanics).
 
 !row!
 !col! small=12 medium=6 large=6 icon=device_hub
 
 ### Design and Theory class=center style=font-weight:200;
 
-Familiarize yourself with the [design](syntax/NeutronActivationStudy/index.md)
-of Gnat and the governing equations implemented:
+Familiarize yourself with the design of Gnat and the governing equations
+implemented:
 
 - [Governing Equations](about/equations.md)
 - [Equation Stabilization](about/stabilization.md)
 - [Neutron Transport Angular Discretization](about/nte_angular_approach.md)
 - [Numerical Implementation in Moose](about/implementation.md)
+- [Gnat Syntax](syntax/NeutronActivationStudy/index.md)
 
 !col-end!
 
@@ -44,10 +45,10 @@ Get started with Gnat by installing the application and working through the
 tutorials and example problems:
 
 - [Installation](getting_started/installation.md)
-- Tutorial 1: A Simple Neutron Transport Simulation
-- Tutorial 2: The Duct Leg Problem
-- Tutorial 3: Isotope Mass Transport
-- Tutorial 4: Conjugate Neutron Transport and Activation
+- [Example 1](getting_started/example_1.md): A Simple Neutron Transport Simulation
+- [Example 2](getting_started/example_2.md): The Duct Leg Problem
+- [Example 3](getting_started/example_3.md): Isotope Mass Transport
+- [Example 4](getting_started/example_4.md): Coupled Neutron Transport and Activation
 - [Other Examples](getting_started/other_examples.md)
 
 !col-end!
