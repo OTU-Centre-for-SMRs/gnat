@@ -37,6 +37,9 @@ public:
   ChebyshevPolynomial getAzimuthalChebyshev() const { return _azimuthal_quadrature; }
 
 private:
+  // Generate a weight-ordinate pair for 1-3 dimensional problems.
+  void generateWeightOrdiantePair(const unsigned int i, const unsigned int j);
+
   // Number of Chebyshev quadrature points and number of Legendre quadrature
   // points, respectively.
   const unsigned int _n_c;

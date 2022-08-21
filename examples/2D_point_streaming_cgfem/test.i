@@ -13,17 +13,17 @@
 []
 
 [NeutronActivationStudy]
+  execution_type = steady
+  num_groups = 1
+
   [TransportSystem]
     scheme = saaf_cfem
-    execution_type = steady
-    num_groups = 1
-    output_angular_fluxes = true
 
     order = FIRST
     family = LAGRANGE
 
-    n_azimuthal = 2
-    n_polar = 2
+    n_azimuthal = 4
+    n_polar = 4
 
     max_anisotropy = 0
     vacuum_boundaries = 'left right top bottom'
@@ -32,7 +32,6 @@
     point_source_intensities = '1000.0'
     point_source_groups = '1'
 
-    debug_verbosity = level0
     debug_disable_scattering = true
   []
 []

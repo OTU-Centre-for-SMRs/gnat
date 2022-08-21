@@ -13,16 +13,17 @@
 []
 
 [NeutronActivationStudy]
+  execution_type = steady
+  num_groups = 1
+
   [TransportSystem]
     scheme = upwinding_dfem
-    execution_type = steady
-    num_groups = 1
 
     order = FIRST
-    family = MONOMIAL
+    family = LAGRANGE
 
-    n_azimuthal = 3
-    n_polar = 3
+    n_azimuthal = 4
+    n_polar = 4
 
     max_anisotropy = 0
     vacuum_boundaries = 'left right top bottom'
@@ -39,7 +40,7 @@
   [Domain]
     type = AbsorbingNeutronicsMaterial
     num_groups = 1
-    group_absorption = 0.0
+    group_absorption = 2.0
     group_speeds = 2200.0
   []
 []
