@@ -38,7 +38,7 @@ public:
 
 private:
   // Generate a weight-ordinate pair for 1-3 dimensional problems.
-  void generateWeightOrdiantePair(const unsigned int i, const unsigned int j);
+  void generateWeightOrdiantePair(unsigned int i, unsigned int j);
 
   // Number of Chebyshev quadrature points and number of Legendre quadrature
   // points, respectively.

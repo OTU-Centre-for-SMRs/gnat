@@ -86,3 +86,32 @@ These methods are discussed in the [angular approach section](nte_angular_approa
 [!eqref](nte_wf) is known to be numerically unstable when solved using the finite element method, and therefore must be artificially stabilized. This is accomplished with two different options. The first is the self-adjoint angular flux (SAAF) method. The second is the upwinding method with discontinuous finite elements. Both of these approaches are discussed in the [stabilization section](stabilization.md).
 
 ## Mass Transport and Activation
+
+The second equation of state implemented by Gnat is the scalar transport equation
+for mobile isotopes:
+
+!equation id=isotope_transport
+\frac{\partial}{\partial t}N_{i}(\vec{r}, t)
++ \vec{\nabla}\cdot\Big(\vec{v}(\vec{r}, t)N_{i}(\vec{r}, t)\Big)
++ \lambda_{i}N_{i}(\vec{r}, t)
++ \sum_{g = 1}^{G}\sigma_{a,g,i}N_{i}(\vec{r}, t)\Phi_{g}(\vec{r}, t)
+= \vec{\nabla}\cdot\Big(D_{i}\vec{\nabla}N_{i}(\vec{r}, t)\Big)
++ \sum_{k = 1}^{K}\sum_{g = 1}^{G}\sigma_{a,g,k\rightarrow i}N_{k}(\vec{r}, t)\Phi_{g}(\vec{r}, t)
++ \sum_{k = 1}^{K}\lambda_{k}f_{k\rightarrow i}N_{k}(\vec{r}, t)
+
+where
+
+- $i$ is the identifier for the current isotope.
+- $K$ is the total number of isotopes.
+- $N_{i}(\vec{r}, t)$ is the number density of isotope $i$ ($cm^{-3}$).
+- $v(\vec{r}, t)$ is the velocity of the fluid which isotope $i$ is immersed in ($cm\,s^{-1}$).
+- $\lambda_{i}$ is the decay constant of isotope $i$ ($s^{-1}$).
+- $\sigma_{a,g,i}$ is the microscopic absorbsion cross-section of isotope $i$ ($cm^{-2}$).
+- $\Phi_{g}(\vec{r}, t)$ is the scalar (0th moment) of the neutron flux ($cm^{-2}s^{-1}$).
+- $D_{i}$ is the diffusion coefficient of isotope $i$ ($cm^{2}s^{-1}$),
+  which may be a function of other field properties such as the fluid velocity.
+- $\sigma_{a,g,k\rightarrow i}$ is the microscopic activation cross-section
+  which results in the formation of isotope $i$ from isotope $k$ during neutron
+  bombardment ($cm^{-2}$).
+- $f_{k\rightarrow i}$ is the branching factor which results in the formation of
+  isotope $i$ from isotope $k$ during a radioactive decay process.

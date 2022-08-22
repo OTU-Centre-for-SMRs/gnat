@@ -43,8 +43,8 @@ GaussAngularQuadrature::GaussAngularQuadrature(unsigned int n_c,
 }
 
 void
-GaussAngularQuadrature::generateWeightOrdiantePair(const unsigned int i,
-                                                   const unsigned int j)
+GaussAngularQuadrature::generateWeightOrdiantePair(unsigned int i,
+                                                   unsigned int j)
 {
   Real weight = 0.0;
   Real mu = 0.0;

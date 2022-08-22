@@ -3,8 +3,8 @@ Gnat
 
 Gnat is an open-source neutron activation analysis toolkit built within the MOOSE
 finite-element framework. Gnat has been designed for the simulation of neutron
-activation of gases and aerosols, and to act as the source-term solver for
-Caribou: a multiphysics transport code for environmental assessment of nuclear
+activation of gases and aerosols, acting as the source-term solver for Caribou:
+a multiphysics transport code for the environmental assessment of nuclear
 accidents.
 
 ## Installation
