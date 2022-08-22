@@ -39,12 +39,12 @@ as the angular flux equation:
 algebraically simplified to yield the SAAF weak form of the neutron transport equation:
 
 !equation id=saaf_wf_no_void
-\Big( \phi_{j} + \frac{1}{\Sigma_{r,\,g}}\vec{\nabla}\phi_{j}\cdot\hat{\Omega},\, \frac{\partial}{\partial t}\frac{\Psi^{h}_{g}}{v_{g}} \Big)_{V}
-+ \Big\langle \phi_{j},\, \hat{n}\cdot\hat{\Omega}\Psi^{h}_{g} \Big\rangle_{\Gamma}
-+ \Big( \vec{\nabla}\phi_{j}\cdot\hat{\Omega},\, \frac{1}{\Sigma_{r,\,g}}\hat{\Omega}\cdot\vec{\nabla}\Psi_{g}^{h}\Big)_{V}
-+ \Big( \phi_{j},\, \Sigma_{r,\,g}\Psi^{h}_{g} \Big)_{V}\\
-- \Big( \phi_{j} + \frac{1}{\Sigma_{r,\,g}}\vec{\nabla}\phi_{j}\cdot\hat{\Omega},\, \sum_{g' 1}^{G}\int_{4\pi}\Sigma_{s,\, g'\rightarrow g}f_{g'\rightarrow g}\Psi^{h}_{g'}\, d\Omega' \Big)_{V}
-- \Big( \phi_{j} + \frac{1}{\Sigma_{r,\,g}}\vec{\nabla}\phi_{j}\cdot\hat{\Omega},\, S_{g} \Big)_{V} = 0
+\Big( \psi_{j} + \frac{1}{\Sigma_{r,\,g}}\vec{\nabla}\psi_{j}\cdot\hat{\Omega},\, \frac{\partial}{\partial t}\frac{\Psi^{h}_{g}}{v_{g}} \Big)_{V}
++ \Big\langle \psi_{j},\, \hat{n}\cdot\hat{\Omega}\Psi^{h}_{g} \Big\rangle_{\Gamma}
++ \Big( \vec{\nabla}\psi_{j}\cdot\hat{\Omega},\, \frac{1}{\Sigma_{r,\,g}}\hat{\Omega}\cdot\vec{\nabla}\Psi_{g}^{h}\Big)_{V}
++ \Big( \psi_{j},\, \Sigma_{r,\,g}\Psi^{h}_{g} \Big)_{V}\\
+- \Big( \psi_{j} + \frac{1}{\Sigma_{r,\,g}}\vec{\nabla}\psi_{j}\cdot\hat{\Omega},\, \sum_{g' 1}^{G}\int_{4\pi}\Sigma_{s,\, g'\rightarrow g}f_{g'\rightarrow g}\Psi^{h}_{g'}\, d\Omega' \Big)_{V}
+- \Big( \psi_{j} + \frac{1}{\Sigma_{r,\,g}}\vec{\nabla}\psi_{j}\cdot\hat{\Omega},\, S_{g} \Big)_{V} = 0
 
 [!eqref](saaf_wf_no_void) is second order and therefore stable for
 continuous finite elements. However, the division by the removal cross-section
@@ -74,12 +74,12 @@ $\zeta = 0$ collapses [!eqref](afe_void) into [!eqref](afe). Substituting
 [!eqref](afe_void) into [!eqref](equations.md#nte_wf) yields the void-treated SAAF weak form which is implemented in Gnat as the SAAF scheme:
 
 !equation id=saaf_wf_void
-\Big( \phi_{j} + \tau_{g}\vec{\nabla}\phi_{j}\cdot\hat{\Omega},\, \frac{\partial}{\partial t}\frac{\Psi^{h}_{g}}{v_{g}} \Big)_{V}
-+ \Big\langle \phi_{j},\, \hat{n}\cdot\hat{\Omega}\Psi^{h}_{g} \Big\rangle_{\Gamma}
-+ \Big( \vec{\nabla}\phi_{j}\cdot\hat{\Omega},\, \tau_{g}\hat{\Omega}\cdot\vec{\nabla}\Psi_{g}^{h} + (\tau_{g}\Sigma_{r,\, g} - 1)\Psi_{g}^{h} \Big)_{V}\\
-+ \Big( \phi_{j},\, \Sigma_{r,\,g}\Psi^{h}_{g} \Big)_{V}
-- \Big( \phi_{j} + \tau_{g}\vec{\nabla}\phi_{j}\cdot\hat{\Omega},\, \sum_{g' = 1}^{G}\int_{4\pi}\Sigma_{s,\, g'\rightarrow g}f_{g'\rightarrow g}\Psi^{h}_{g'}\, d\Omega' \Big)_{V}
-- \Big( \phi_{j} + \tau_{g}\vec{\nabla}\phi_{j}\cdot\hat{\Omega},\, S_{g} \Big)_{V} = 0
+\Big( \psi_{j} + \tau_{g}\vec{\nabla}\psi_{j}\cdot\hat{\Omega},\, \frac{\partial}{\partial t}\frac{\Psi^{h}_{g}}{v_{g}} \Big)_{V}
++ \Big\langle \psi_{j},\, \hat{n}\cdot\hat{\Omega}\Psi^{h}_{g} \Big\rangle_{\Gamma}
++ \Big( \vec{\nabla}\psi_{j}\cdot\hat{\Omega},\, \tau_{g}\hat{\Omega}\cdot\vec{\nabla}\Psi_{g}^{h} + (\tau_{g}\Sigma_{r,\, g} - 1)\Psi_{g}^{h} \Big)_{V}\\
++ \Big( \psi_{j},\, \Sigma_{r,\,g}\Psi^{h}_{g} \Big)_{V}
+- \Big( \psi_{j} + \tau_{g}\vec{\nabla}\psi_{j}\cdot\hat{\Omega},\, \sum_{g' = 1}^{G}\int_{4\pi}\Sigma_{s,\, g'\rightarrow g}f_{g'\rightarrow g}\Psi^{h}_{g'}\, d\Omega' \Big)_{V}
+- \Big( \psi_{j} + \tau_{g}\vec{\nabla}\psi_{j}\cdot\hat{\Omega},\, S_{g} \Big)_{V} = 0
 
 ### 2. The Upwinding Method id=upwind
 
@@ -87,12 +87,12 @@ The upwinding approach for the neutron transport equation follows from the
 discontinuous weak form of the neutron transport equation:
 
 !equation id=discontinuous_wf
-\Big( \phi_{j},\, \frac{\partial}{\partial t}\frac{\Psi^{k}_{g}}{v_{g}} \Big)_{D^{k}}
-+ \Big\langle \phi_{j},\, \hat{n}\cdot\hat{\Omega}\mathcal{F}^{*}_{g} \Big\rangle_{F^{k}}
-- \Big( \vec{\nabla}\phi_{j}\cdot\hat{\Omega},\, \Psi^{k}_{g} \Big)_{D^{k}}\\
-+ \Big( \phi_{j},\, \Sigma_{r,\,g}\Psi^{k}_{g} \Big)_{D^{k}}
-- \Big( \phi_{j},\, \sum_{g' = 1}^{G}\int_{4\pi}\Sigma_{s,\, g'\rightarrow g}f_{g'\rightarrow g}\Psi^{k}_{g'}\,d\Omega' \Big)_{D^{k}}
-- \Big( \phi_{j},\, S_{g} \Big)_{D^{k}} = 0
+\Big( \psi_{j},\, \frac{\partial}{\partial t}\frac{\Psi^{k}_{g}}{v_{g}} \Big)_{D^{k}}
++ \Big\langle \psi_{j},\, \hat{n}\cdot\hat{\Omega}\mathcal{F}^{*}_{g} \Big\rangle_{F^{k}}
+- \Big( \vec{\nabla}\psi_{j}\cdot\hat{\Omega},\, \Psi^{k}_{g} \Big)_{D^{k}}\\
++ \Big( \psi_{j},\, \Sigma_{r,\,g}\Psi^{k}_{g} \Big)_{D^{k}}
+- \Big( \psi_{j},\, \sum_{g' = 1}^{G}\int_{4\pi}\Sigma_{s,\, g'\rightarrow g}f_{g'\rightarrow g}\Psi^{k}_{g'}\,d\Omega' \Big)_{D^{k}}
+- \Big( \psi_{j},\, S_{g} \Big)_{D^{k}} = 0
 
 where:
 

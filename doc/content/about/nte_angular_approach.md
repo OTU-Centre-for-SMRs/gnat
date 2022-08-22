@@ -11,7 +11,7 @@ is given with the following:
 
 !equation id=nte_wf_sn
 \underbrace{\Big( \psi_{j},\, \frac{\partial}{\partial t}\frac{\Psi^{k}_{g,n}}{v_{g}} \Big)_{D^{k}}}_{\text{Time Kernel}}
-+ \underbrace{+ \Big\langle \phi_{j},\, \hat{n}\cdot\hat{\Omega}\Psi^{h}_{g,n} \Big\rangle_{\Gamma}}_{\text{Implicit Boundary Conditions}}
++ \underbrace{+ \Big\langle \psi_{j},\, \hat{n}\cdot\hat{\Omega}\Psi^{h}_{g,n} \Big\rangle_{\Gamma}}_{\text{Implicit Boundary Conditions}}
 - \underbrace{\Big( \vec{\nabla}\psi_{j}\cdot\hat{\Omega},\, \Psi^{k}_{g,n} \Big)_{D^{k}}}_{\text{Streaming Kernel}}\\
 + \underbrace{\Big( \psi_{j},\, \Sigma_{r,\,g}\Psi^{k}_{g,n} \Big)_{D^{k}}}_{\text{Removal Kernel}}
 - \underbrace{\Big( \psi_{j},\, \sum_{g' = 1}^{G}\int_{4\pi}\Sigma_{s,\, g'\rightarrow g}f_{g'\rightarrow g}\Psi^{k}_{g'}\, d\hat{\Omega}' \Big)_{D^{k}}}_{\text{Scattering Kernel}}

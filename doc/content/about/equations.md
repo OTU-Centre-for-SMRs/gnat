@@ -45,7 +45,7 @@ where
 - $\hat{n}$ is the boundary normal vector.
 - $\Gamma$ is the boundary surface.
 
-The discontinuous weak form of [!eqref](nte) is given by the following (with functional
+The unstabilized weak form of [!eqref](nte) is given by the following (with functional
 notation omitted for brevity):
 
 !equation id=nte_wf
@@ -92,26 +92,40 @@ for mobile isotopes:
 
 !equation id=isotope_transport
 \frac{\partial}{\partial t}N_{i}(\vec{r}, t)
-+ \vec{\nabla}\cdot\Big(\vec{v}(\vec{r}, t)N_{i}(\vec{r}, t)\Big)
++ \nabla\cdot\Big(\vec{v}(\vec{r}, t)N_{i}(\vec{r}, t)\Big)
 + \lambda_{i}N_{i}(\vec{r}, t)
 + \sum_{g = 1}^{G}\sigma_{a,g,i}N_{i}(\vec{r}, t)\Phi_{g}(\vec{r}, t)
-= \vec{\nabla}\cdot\Big(D_{i}\vec{\nabla}N_{i}(\vec{r}, t)\Big)
-+ \sum_{k = 1}^{K}\sum_{g = 1}^{G}\sigma_{a,g,k\rightarrow i}N_{k}(\vec{r}, t)\Phi_{g}(\vec{r}, t)
-+ \sum_{k = 1}^{K}\lambda_{k}f_{k\rightarrow i}N_{k}(\vec{r}, t)
+\\= \nabla\cdot\Big(D_{i}(\vec{r}, t)\vec{\nabla}N_{i}(\vec{r}, t)\Big)
++ \sum_{i' = 1}^{I}\sum_{g = 1}^{G}\sigma_{a,g,i'\rightarrow i}N_{i'}(\vec{r}, t)\Phi_{g}(\vec{r}, t)
++ \sum_{i' = 1}^{I}\lambda_{i'}f_{i'\rightarrow i}N_{i'}(\vec{r}, t)
 
 where
 
 - $i$ is the identifier for the current isotope.
-- $K$ is the total number of isotopes.
+- $I$ is the total number of isotopes.
 - $N_{i}(\vec{r}, t)$ is the number density of isotope $i$ ($cm^{-3}$).
 - $v(\vec{r}, t)$ is the velocity of the fluid which isotope $i$ is immersed in ($cm\,s^{-1}$).
 - $\lambda_{i}$ is the decay constant of isotope $i$ ($s^{-1}$).
 - $\sigma_{a,g,i}$ is the microscopic absorbsion cross-section of isotope $i$ ($cm^{-2}$).
 - $\Phi_{g}(\vec{r}, t)$ is the scalar (0th moment) of the neutron flux ($cm^{-2}s^{-1}$).
-- $D_{i}$ is the diffusion coefficient of isotope $i$ ($cm^{2}s^{-1}$),
+- $D_{i}(\vec{r}, t)$ is the diffusion coefficient of isotope $i$ ($cm^{2}s^{-1}$),
   which may be a function of other field properties such as the fluid velocity.
-- $\sigma_{a,g,k\rightarrow i}$ is the microscopic activation cross-section
-  which results in the formation of isotope $i$ from isotope $k$ during neutron
+- $\sigma_{a,g,i'\rightarrow i}$ is the microscopic activation cross-section
+  which results in the formation of isotope $i$ from isotope $i'$ during neutron
   bombardment ($cm^{-2}$).
-- $f_{k\rightarrow i}$ is the branching factor which results in the formation of
-  isotope $i$ from isotope $k$ during a radioactive decay process.
+- $f_{i'\rightarrow i}$ is the branching factor which results in the formation of
+  isotope $i$ from isotope $i'$ during a radioactive decay process.
+
+The unstabilized weak form of [!eqref](isotope_transport) is given by the
+following (with functional notation omitted for brevity):
+
+!equation id=isotope_transport_wf
+\Big( \psi_{j},\,\frac{\partial}{\partial t} N_{i} \Big)_{V}
++ \Big\langle \psi_{j}\vec{v}\cdot\hat{n},\, N_{i} \Big\rangle_{\Gamma}
+- \Big( \vec{\nabla}\psi_{j}\cdot\vec{v},\, N_{i} \Big)_{V}
++ \Big( \psi_{j},\,\lambda_{i}N_{i} \Big)_{V}
++ \Big( \phi_{j},\, \sum_{g = 1}^{G}\sigma_{a,g,i}N_{i}\Phi_{g} \Big)_{V}
+\\- \Big\langle \psi_{j},\,D_{i}\hat{n}\cdot\vec{\nabla}N_{i} \Big\rangle_{\Gamma}
++ \Big( \vec{\nabla}\psi_{j},\, D_{i}\vec{\nabla}N_{i} \Big)_{V}
+- \Big( \psi_{j},\, \sum_{i' = 1}^{I}\sum_{g = 1}^{G}\sigma_{a,g,i'\rightarrow i}N_{i'}\Phi_{g} \Big)_{V}
+- \Big( \psi_{j},\, \sum_{i' = 1}^{I}\lambda_{i'}f_{i'\rightarrow i}N_{i'} \Big)
