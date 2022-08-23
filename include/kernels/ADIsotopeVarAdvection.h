@@ -28,4 +28,4 @@ protected:
   const ADVectorVariableValue & _vel;
 
   unsigned int _mesh_dims;
-};
+}; // class ADIsotopeVarAdvection

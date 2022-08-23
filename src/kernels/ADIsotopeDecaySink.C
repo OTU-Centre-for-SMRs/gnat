@@ -1,9 +1,9 @@
-#include "ADIsotopeDecay.h"
+#include "ADIsotopeDecaySink.h"
 
-registerMooseObject("GnatApp", ADIsotopeDecay);
+registerMooseObject("GnatApp", ADIsotopeDecaySink);
 
 InputParameters
-ADIsotopeDecay::validParams()
+ADIsotopeDecaySink::validParams()
 {
   auto params = ADKernel::validParams();
   params.addClassDescription("Computes the radioactive decay sink for the "
@@ -15,13 +15,13 @@ ADIsotopeDecay::validParams()
   return params;
 }
 
-ADIsotopeDecay::ADIsotopeDecay(const InputParameters & parameters)
+ADIsotopeDecaySink::ADIsotopeDecaySink(const InputParameters & parameters)
   : ADKernel(parameters)
   , _decay_const(getParam<Real>("decay_const"))
 { }
 
 ADReal
-ADIsotopeDecay::computeQpResidual()
+ADIsotopeDecaySink::computeQpResidual()
 {
   return _test[_i][_qp] * _decay_const * _u[_qp];
 }

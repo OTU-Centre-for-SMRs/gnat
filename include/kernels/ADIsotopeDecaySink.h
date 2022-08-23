@@ -2,15 +2,15 @@
 
 #include "ADKernel.h"
 
-class ADIsotopeDecay : public ADKernel
+class ADIsotopeDecaySink : public ADKernel
 {
 public:
   static InputParameters validParams();
 
-  ADIsotopeDecay(const InputParameters & parameters);
+  ADIsotopeDecaySink(const InputParameters & parameters);
 
 protected:
   virtual ADReal computeQpResidual() override;
 
   const Real _decay_const;
-};
+}; // class ADIsotopeDecaySink

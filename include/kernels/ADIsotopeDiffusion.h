@@ -13,4 +13,4 @@ protected:
   virtual ADReal computeQpResidual() override;
 
   const ADMaterialProperty<Real> & _mat_diff;
-};
+}; // class ADIsotopeDiffusion

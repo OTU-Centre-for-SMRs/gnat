@@ -13,4 +13,4 @@ protected:
   virtual ADReal computeQpResidual() override;
 
   const RealVectorValue _vel;
-};
+}; // class ADIsotopeConstAdvection
