@@ -116,7 +116,8 @@ where
 - $f_{i'\rightarrow i}$ is the branching factor which results in the formation of
   isotope $i$ from isotope $i'$ during a radioactive decay process.
 
-The unstabilized weak form of [!eqref](isotope_transport) is given by the
+The boundary conditions vary depending on the problem being modelled. The
+unstabilized weak form of [!eqref](isotope_transport) is given by the
 following (with functional notation omitted for brevity):
 
 !equation id=isotope_transport_wf
