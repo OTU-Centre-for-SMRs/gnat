@@ -34,7 +34,7 @@ protected:
   * _group_flux_ordinates[0] = Psi_{2, 1}
   * _group_flux_ordinates[0] = Psi_{2, 1}
   */
-  std::vector<const VariableValue *> _group_flux_ordinates;
+  std::vector<const ADVariableValue *> _group_flux_ordinates;
 
   /*
   * We assume that the vector of scattering cross-sections is stored in the

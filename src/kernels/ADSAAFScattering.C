@@ -58,7 +58,7 @@ ADSAAFScattering::ADSAAFScattering(const InputParameters & parameters)
 
   _group_flux_ordinates.reserve(num_coupled);
   for (unsigned int i = 0; i < num_coupled; ++i)
-    _group_flux_ordinates.emplace_back(&coupledValue("group_flux_ordinates", i));
+    _group_flux_ordinates.emplace_back(&adCoupledValue("group_flux_ordinates", i));
 }
 
 ADReal

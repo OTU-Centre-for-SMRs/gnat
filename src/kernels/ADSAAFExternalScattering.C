@@ -71,7 +71,7 @@ ADSAAFExternalScattering::ADSAAFExternalScattering(const InputParameters & param
 
   _group_flux_moments.reserve(num_coupled);
   for (unsigned int i = 0; i < num_coupled; ++i)
-    _group_flux_moments.emplace_back(&coupledValue("group_flux_moments", i));
+    _group_flux_moments.emplace_back(&adCoupledValue("group_flux_moments", i));
 }
 
 ADReal

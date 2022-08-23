@@ -35,7 +35,7 @@ protected:
    * coherency in memory. The action providing the moments is expected
    * to format them according to this arrangement.
   */
-  std::vector<const VariableValue *> _within_group_flux_moments;
+  std::vector<const ADVariableValue *> _within_group_flux_moments;
   unsigned int _provided_moment_degree;
 
   /*
