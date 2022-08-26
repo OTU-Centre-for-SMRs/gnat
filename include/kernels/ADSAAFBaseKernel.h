@@ -10,8 +10,6 @@ public:
   ADSAAFBaseKernel(const InputParameters & parameters);
 
 protected:
-  // Computes $h$ for the current element.
-  Real maxVertexSeparation();
   // Computes $\tau$ for the current quadrature point.
   ADReal computeQPTau();
   // Computes $\phi_{j} + \tau_{g}\vec{\nabla}\phi_{j}\cdot\hat{\Omega}$ for the

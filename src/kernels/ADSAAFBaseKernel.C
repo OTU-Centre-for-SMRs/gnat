@@ -32,32 +32,6 @@ ADSAAFBaseKernel::ADSAAFBaseKernel(const InputParameters & parameters)
   , _saaf_c(getADMaterialProperty<Real>("saaf_c"))
 { }
 
-Real
-ADSAAFBaseKernel::maxVertexSeparation()
-{
-  const unsigned int n_nodes = _current_elem->n_nodes();
-
-  // Loop over all nodes in the element to find the maximum vertex separation.
-  Real separation = std::numeric_limits<Real>::min();
-  for (unsigned int i = 0u; i < n_nodes; ++i)
-  {
-    const auto & point_i = _current_elem->point(i);
-    for (unsigned int j = 0u; j < n_nodes; ++j)
-    {
-      // Ignore the case when the i is equal to the j vertex: they are the same
-      // vertex in the element.
-      if (i == j)
-        continue;
-
-      const auto & point_j = _current_elem->point(j);
-      const auto diff = point_j - point_i;
-      separation = std::max(separation, diff.norm());
-    }
-  }
-
-  return separation;
-}
-
 ADReal
 ADSAAFBaseKernel::computeQPTau()
 {
@@ -67,7 +41,7 @@ ADSAAFBaseKernel::computeQPTau()
                "cross-sections.");
   }
 
-  auto h = maxVertexSeparation();
+  auto h = _current_elem->hmax();
   ADReal tau = 0.0;
   if (MetaPhysicL::raw_value(_sigma_r_g[_qp][_group_index] * _saaf_c[_qp]) * h
       >= _saaf_eta[_qp])

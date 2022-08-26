@@ -5,7 +5,7 @@ registerMooseObject("GnatApp", ADIsotopeDepletion);
 InputParameters
 ADIsotopeDepletion::validParams()
 {
-  auto params = ADKernel::validParams();
+  auto params = ADIsotopeBase::validParams();
   params.addClassDescription("Computes the neutron absorption sink for the "
                              "isotope scalar transport equation: "
                              "$( \\phi_{j}, \\sum_{g = 1}^{G}"
@@ -27,7 +27,7 @@ ADIsotopeDepletion::validParams()
 }
 
 ADIsotopeDepletion::ADIsotopeDepletion(const InputParameters & parameters)
-  : ADKernel(parameters)
+  : ADIsotopeBase(parameters)
   , _num_groups(getParam<unsigned int>("num_groups"))
   , _sigma_a_g(getParam<std::vector<Real>>("group_absorption"))
 {
@@ -53,5 +53,5 @@ ADIsotopeDepletion::computeQpResidual()
   for (unsigned int g = 0u; g < _num_groups; ++g)
     res += (*_group_scalar_fluxes[g])[_qp] * _sigma_a_g[g];
 
-  return _test[_i][_qp] * res * _u[_qp];
+  return computeQpTests() * res * _u[_qp];
 }

@@ -5,7 +5,7 @@ registerMooseObject("GnatApp", ADIsotopeDecaySink);
 InputParameters
 ADIsotopeDecaySink::validParams()
 {
-  auto params = ADKernel::validParams();
+  auto params = ADIsotopeBase::validParams();
   params.addClassDescription("Computes the radioactive decay sink for the "
                              "isotope scalar transport equation: "
                              "$( \\psi_{j},\\lambda_{i}N_{i} )$.");
@@ -16,12 +16,12 @@ ADIsotopeDecaySink::validParams()
 }
 
 ADIsotopeDecaySink::ADIsotopeDecaySink(const InputParameters & parameters)
-  : ADKernel(parameters)
+  : ADIsotopeBase(parameters)
   , _decay_const(getParam<Real>("decay_const"))
 { }
 
 ADReal
 ADIsotopeDecaySink::computeQpResidual()
 {
-  return _test[_i][_qp] * _decay_const * _u[_qp];
+  return computeQpTests() * _decay_const * _u[_qp];
 }

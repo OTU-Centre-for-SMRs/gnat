@@ -5,7 +5,7 @@ registerMooseObject("GnatApp", ADIsotopeDecaySource);
 InputParameters
 ADIsotopeDecaySource::validParams()
 {
-  auto params = ADKernel::validParams();
+  auto params = ADIsotopeBase::validParams();
   params.addClassDescription("Computes the neutron decay source for the "
                              "isotope scalar transport equation: "
                              "$-( \\psi_{j}, \\sum_{i' = 1}^{I}\\lambda_{i'}"
@@ -31,7 +31,7 @@ ADIsotopeDecaySource::validParams()
 }
 
 ADIsotopeDecaySource::ADIsotopeDecaySource(const InputParameters & parameters)
-  : ADKernel(parameters)
+  : ADIsotopeBase(parameters)
   , _decay_consts(getParam<std::vector<Real>>("decay_constants"))
   , _branching_factors(getParam<std::vector<Real>>("branching_factors"))
 {
@@ -56,5 +56,5 @@ ADIsotopeDecaySource::computeQpResidual()
   for (unsigned int i = 0u; i < _isotope_densities.size(); ++i)
     res += (*_isotope_densities[i])[_qp] * _branching_factors[i] * _decay_consts[i];
 
-  return -1.0 * _test[_i][_qp] * res;
+  return -1.0 * computeQpTests() * res;
 }

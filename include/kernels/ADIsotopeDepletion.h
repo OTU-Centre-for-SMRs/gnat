@@ -1,8 +1,8 @@
 #pragma once
 
-#include "ADKernel.h"
+#include "ADIsotopeBase.h"
 
-class ADIsotopeDepletion : public ADKernel
+class ADIsotopeDepletion : public ADIsotopeBase
 {
 public:
   static InputParameters validParams();

@@ -5,7 +5,7 @@ registerMooseObject("GnatApp", ADIsotopeActivation);
 InputParameters
 ADIsotopeActivation::validParams()
 {
-  auto params = ADKernel::validParams();
+  auto params = ADIsotopeBase::validParams();
   params.addClassDescription("Computes the neutron absorption source for the "
                              "isotope scalar transport equation: "
                              "$-( \\psi_{j}, \\sum_{i' = 1}^{I}"
@@ -34,7 +34,7 @@ ADIsotopeActivation::validParams()
 }
 
 ADIsotopeActivation::ADIsotopeActivation(const InputParameters & parameters)
-  : ADKernel(parameters)
+  : ADIsotopeBase(parameters)
   , _num_groups(getParam<unsigned int>("num_groups"))
   , _sigma_a_g(getParam<std::vector<Real>>("group_activation"))
 {
@@ -79,5 +79,5 @@ ADIsotopeActivation::computeQpResidual()
     iso_res = 0.0;
   }
 
-  return -1.0 * _test[_i][_qp] * res;
+  return -1.0 * computeQpTests() * res;
 }
