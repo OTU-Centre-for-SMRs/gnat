@@ -9,16 +9,15 @@ ADIsotopeDecaySink::validParams()
   params.addClassDescription("Computes the radioactive decay sink for the "
                              "isotope scalar transport equation: "
                              "$( \\psi_{j},\\lambda_{i}N_{i} )$.");
-  params.addRequiredParam<Real>("decay_const",
-                                "The decay constant for this isotope.");
+  params.addRequiredParam<Real>("decay_const", "The decay constant for this isotope.");
 
   return params;
 }
 
 ADIsotopeDecaySink::ADIsotopeDecaySink(const InputParameters & parameters)
-  : ADIsotopeBase(parameters)
-  , _decay_const(getParam<Real>("decay_const"))
-{ }
+  : ADIsotopeBase(parameters), _decay_const(getParam<Real>("decay_const"))
+{
+}
 
 ADReal
 ADIsotopeDecaySink::computeQpResidual()

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "ADKernel.h"
+#include "ADIsotopeBase.h"
 
-class ADIsotopeDiffusion : public ADKernel
+class ADIsotopeDiffusion : public ADIsotopeBase
 {
 public:
   static InputParameters validParams();
@@ -13,4 +13,5 @@ protected:
   virtual ADReal computeQpResidual() override;
 
   const ADMaterialProperty<Real> & _mat_diff;
+  const ADMaterialProperty<RealVectorValue> & _grad_mat_diff;
 }; // class ADIsotopeDiffusion

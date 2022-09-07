@@ -31,13 +31,12 @@ ADIsotopeDecaySource::validParams()
 }
 
 ADIsotopeDecaySource::ADIsotopeDecaySource(const InputParameters & parameters)
-  : ADIsotopeBase(parameters)
-  , _decay_consts(getParam<std::vector<Real>>("decay_constants"))
-  , _branching_factors(getParam<std::vector<Real>>("branching_factors"))
+  : ADIsotopeBase(parameters),
+    _decay_consts(getParam<std::vector<Real>>("decay_constants")),
+    _branching_factors(getParam<std::vector<Real>>("branching_factors"))
 {
   const unsigned int coupled_densities = coupledComponents("isotope_densities");
-  if (coupled_densities != _decay_consts.size()
-      || coupled_densities != _branching_factors.size())
+  if (coupled_densities != _decay_consts.size() || coupled_densities != _branching_factors.size())
   {
     mooseError("Mismatch between the number of provided decay "
                "constants/branching factors and the densities.");

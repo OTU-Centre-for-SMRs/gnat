@@ -27,9 +27,9 @@ ADIsotopeDepletion::validParams()
 }
 
 ADIsotopeDepletion::ADIsotopeDepletion(const InputParameters & parameters)
-  : ADIsotopeBase(parameters)
-  , _num_groups(getParam<unsigned int>("num_groups"))
-  , _sigma_a_g(getParam<std::vector<Real>>("group_absorption"))
+  : ADIsotopeBase(parameters),
+    _num_groups(getParam<unsigned int>("num_groups")),
+    _sigma_a_g(getParam<std::vector<Real>>("group_absorption"))
 {
   const unsigned int num_coupled = coupledComponents("group_scalar_fluxes");
   if (num_coupled != _sigma_a_g.size() && num_coupled != _num_groups)

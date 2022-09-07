@@ -34,9 +34,9 @@ ADIsotopeActivation::validParams()
 }
 
 ADIsotopeActivation::ADIsotopeActivation(const InputParameters & parameters)
-  : ADIsotopeBase(parameters)
-  , _num_groups(getParam<unsigned int>("num_groups"))
-  , _sigma_a_g(getParam<std::vector<Real>>("group_activation"))
+  : ADIsotopeBase(parameters),
+    _num_groups(getParam<unsigned int>("num_groups")),
+    _sigma_a_g(getParam<std::vector<Real>>("group_activation"))
 {
   const unsigned int coupled_densities = coupledComponents("isotope_densities");
   if (coupled_densities != (_sigma_a_g.size() / _num_groups))
@@ -46,8 +46,7 @@ ADIsotopeActivation::ADIsotopeActivation(const InputParameters & parameters)
   }
 
   const unsigned int coupled_fluxes = coupledComponents("group_scalar_fluxes");
-  if (coupled_fluxes != (_sigma_a_g.size() / coupled_densities)
-      && coupled_fluxes != _num_groups)
+  if (coupled_fluxes != (_sigma_a_g.size() / coupled_densities) && coupled_fluxes != _num_groups)
   {
     mooseError("Mismatch between the number of provided cross-sections and the "
                "scalar fluxes.");

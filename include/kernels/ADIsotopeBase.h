@@ -38,15 +38,13 @@ protected:
     Function = 1u,
     VariableComponent = 2u,
     VariableCombined = 3u
-  }
-  _vel_type;
+  } _vel_type;
 
   enum class DensityType
   {
     NumberDensity = 0u,
     MassDensity = 1u
-  }
-  _primal_variable_type;
+  } _primal_variable_type;
 
   // Molar mass to facilitate conversion between mass density and number density.
   const Real _molar_mass;

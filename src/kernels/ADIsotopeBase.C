@@ -22,20 +22,25 @@ ADIsotopeBase::validParams()
                              "multiplied by a number density while fluid "
                              "modules tend to output a mass density.");
   params.addParam<Real>("molar_mass", 1.0, "The molar mass of the isotope.");
-  params.addParam<RealVectorValue>("constant_velocity",
-                                   RealVectorValue(0.0),
-                                   "A constant velocity field.");
-  params.addParam<FunctionName>("u_function", "The x-component of the function "
+  params.addParam<RealVectorValue>(
+      "constant_velocity", RealVectorValue(0.0), "A constant velocity field.");
+  params.addParam<FunctionName>("u_function",
+                                "The x-component of the function "
                                 "velocity field.");
-  params.addParam<FunctionName>("v_function", "The y-component of the function "
+  params.addParam<FunctionName>("v_function",
+                                "The y-component of the function "
                                 "velocity field.");
-  params.addParam<FunctionName>("w_function", "The z-component of the function "
+  params.addParam<FunctionName>("w_function",
+                                "The z-component of the function "
                                 "velocity field.");
-  params.addCoupledVar("u_var", "The x-component of the variable velocity "
+  params.addCoupledVar("u_var",
+                       "The x-component of the variable velocity "
                        "field.");
-  params.addCoupledVar("v_var", "The y-component of the variable velocity "
+  params.addCoupledVar("v_var",
+                       "The y-component of the variable velocity "
                        "field.");
-  params.addCoupledVar("w_var", "The z-component of the variable velocity "
+  params.addCoupledVar("w_var",
+                       "The z-component of the variable velocity "
                        "field.");
   params.addCoupledVar("vector_velocity",
                        "A vector variable velocity field as opposed to using "
@@ -45,12 +50,12 @@ ADIsotopeBase::validParams()
 }
 
 ADIsotopeBase::ADIsotopeBase(const InputParameters & parameters)
-  : ADKernel(parameters)
-  , _vel_type(VelocityType::Constant)
-  , _primal_variable_type(getParam<MooseEnum>("density_type").getEnum<DensityType>())
-  , _mesh_dims(_fe_problem.mesh().dimension())
-  , _molar_mass(getParam<Real>("molar_mass"))
-  , _constant_vel(getParam<RealVectorValue>("constant_velocity"))
+  : ADKernel(parameters),
+    _vel_type(VelocityType::Constant),
+    _primal_variable_type(getParam<MooseEnum>("density_type").getEnum<DensityType>()),
+    _mesh_dims(_fe_problem.mesh().dimension()),
+    _molar_mass(getParam<Real>("molar_mass")),
+    _constant_vel(getParam<RealVectorValue>("constant_velocity"))
 {
   switch (getParam<MooseEnum>("velocity_type").getEnum<MooseEnumVelocityType>())
   {
