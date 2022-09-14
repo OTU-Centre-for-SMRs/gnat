@@ -16,8 +16,10 @@ protected:
   // current quadrature point.
   ADReal computeQPTests();
 
-  const unsigned int _ordinate_index; // n
-  const unsigned int _group_index; // g
+  // n
+  const unsigned int _ordinate_index;
+  // g
+  const unsigned int _group_index;
 
   const ADMaterialProperty<std::vector<Real>> & _sigma_r_g;
 

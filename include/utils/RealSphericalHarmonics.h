@@ -12,13 +12,11 @@ class RealSphericalHarmonics
 {
 public:
   static Real evaluateCoefficient(unsigned int degree, int order);
-  static Real evaluate(unsigned int degree, int order,
-                       const Real & mu, const Real & omega);
+  static Real evaluate(unsigned int degree, int order, const Real & mu, const Real & omega);
 
   RealSphericalHarmonics(unsigned int degree);
 
-  Real evaluatePrecomputed(unsigned int degree, int order, const Real & mu,
-                           const Real & omega);
+  Real evaluatePrecomputed(unsigned int degree, int order, const Real & mu, const Real & omega);
 
 private:
   const unsigned int _degree; // l

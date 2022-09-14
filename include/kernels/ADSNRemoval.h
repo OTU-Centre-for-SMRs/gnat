@@ -12,7 +12,8 @@ public:
 protected:
   virtual ADReal computeQpResidual() override;
 
-  const unsigned int _group_index; // g
+  // g
+  const unsigned int _group_index;
 
   const ADMaterialProperty<std::vector<Real>> & _sigma_r_g;
 }; // class ADSNRemoval

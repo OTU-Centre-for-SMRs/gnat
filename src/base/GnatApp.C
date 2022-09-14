@@ -22,13 +22,19 @@ GnatApp::GnatApp(InputParameters parameters) : MooseApp(parameters)
   GnatApp::registerAll(_factory, _action_factory, _syntax);
 }
 
-GnatApp::~GnatApp() { }
+GnatApp::~GnatApp() {}
 
 static void
 associateSyntaxInner(Syntax & syntax, ActionFactory & /*action_factory*/)
 {
-  syntax.registerActionSyntax("NeutronTransportAction", "NeutronActivationStudy/TransportSystem");
+  // Common syntax.
   syntax.registerActionSyntax("CommonGnatAction", "NeutronActivationStudy");
+
+  // Neutron transport syntax.
+  syntax.registerActionSyntax("NeutronTransportAction", "NeutronActivationStudy/TransportSystem");
+
+  // Mass transport syntax.
+  syntax.registerActionSyntax("AddMobileIsotopeAction", "NeutronActivationStudy/AddMobileIsotope");
 }
 
 void

@@ -15,8 +15,7 @@ public:
   ADSNBaseKernel(const InputParameters & parameters);
 
 protected:
-  void cartesianToSpherical(const RealVectorValue & ordinate,
-                            Real & mu, Real & omega);
+  void cartesianToSpherical(const RealVectorValue & ordinate, Real & mu, Real & omega);
 
   const GaussAngularQuadrature _quadrature_set;
   Real _symmetry_factor;

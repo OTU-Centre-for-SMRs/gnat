@@ -16,7 +16,7 @@ ADIsotopeBase::validParams()
                                      "An indicator for which type of velocity "
                                      "field should be used.");
   params.addParam<MooseEnum>("density_type",
-                             MooseEnum("number mass", "mass"),
+                             MooseEnum("number mass", "number"),
                              "If the primal variable is a mass or number "
                              "density. Microscopic cross-sections must be "
                              "multiplied by a number density while fluid "

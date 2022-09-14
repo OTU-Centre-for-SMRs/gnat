@@ -12,19 +12,16 @@ ADIsotopeDiffusion::validParams()
                              "D_{i}\\vec{\\nabla}N_{i} )_{V}$. This kernel "
                              "expects a diffusion coefficient from the "
                              "material system.");
-  params.addRequiredParam<unsigned int>("isotope_id",
-                                        "The ID of the isotope "
-                                        "this kernel applies to.");
 
   return params;
 }
 
 ADIsotopeDiffusion::ADIsotopeDiffusion(const InputParameters & parameters)
   : ADIsotopeBase(parameters),
-    _mat_diff(getADMaterialProperty<Real>("isotope_diff" +
-                                          Moose::stringify(getParam<unsigned int>("isotope_id")))),
+    _mat_diff(getADMaterialProperty<Real>(
+        "isotope_diff_" + Moose::stringify(getParam<NonlinearVariableName>("variable")))),
     _grad_mat_diff(getADMaterialProperty<RealVectorValue>(
-        "grad_isotope_diff" + Moose::stringify(getParam<unsigned int>("isotope_id"))))
+        "grad_isotope_diff_" + Moose::stringify(getParam<NonlinearVariableName>("variable"))))
 {
 }
 

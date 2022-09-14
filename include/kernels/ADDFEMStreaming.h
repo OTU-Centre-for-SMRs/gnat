@@ -12,5 +12,6 @@ public:
 protected:
   virtual ADReal computeQpResidual() override;
 
-  const unsigned int _ordinate_index; // n
+  // n
+  const unsigned int _ordinate_index;
 }; // class ADDFEMStreaming

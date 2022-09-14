@@ -1,6 +1,7 @@
 #include "GnatBaseAction.h"
 
 #include "FEProblemBase.h"
+#include "AddVariableAction.h"
 
 #include "CommonGnatAction.h"
 
@@ -21,7 +22,8 @@ GnatBaseAction::validParams()
   params.addParam<unsigned int>("num_groups",
                                 "The number of spectral energy groups in the "
                                 "problem.");
-  params.addParam<unsigned int>("max_anisotropy", 0,
+  params.addParam<unsigned int>("max_anisotropy",
+                                0,
                                 "The maximum degree of anisotropy to evaluate. "
                                 "Defaults to 0 for isotropic scattering.");
   params.addParam<MooseEnum>("execution_type",
@@ -45,12 +47,12 @@ GnatBaseAction::validParams()
 }
 
 GnatBaseAction::GnatBaseAction(const InputParameters & params)
-  : Action(params)
-  , _num_groups(0u)
-  , _max_eval_anisotropy(0u)
-  , _exec_type(ExecutionType::SteadySource)
-  , _flux_moment_name(getParam<std::string>("flux_moment_names"))
-  , _debug_level(getParam<MooseEnum>("debug_verbosity").getEnum<DebugVerbosity>())
+  : Action(params),
+    _num_groups(0u),
+    _max_eval_anisotropy(0u),
+    _exec_type(ExecutionType::SteadySource),
+    _flux_moment_name(getParam<std::string>("flux_moment_names")),
+    _debug_level(getParam<MooseEnum>("debug_verbosity").getEnum<DebugVerbosity>())
 {
   // Check if a container block exists with common parameters. If yes, apply them.
   auto common_actions = _awh.getActions<CommonGnatAction>();
@@ -113,10 +115,9 @@ GnatBaseAction::initializeBase()
         _group_flux_moments[g].reserve(_num_group_moments);
         for (unsigned int l = 0; l <= _max_eval_anisotropy; ++l)
         {
-          _group_flux_moments[g].emplace_back(_flux_moment_name + "_"
-                                              + Moose::stringify(g + 1u) + "_"
-                                              + Moose::stringify(l) + "_"
-                                              + Moose::stringify(0));
+          _group_flux_moments[g].emplace_back(_flux_moment_name + "_" + Moose::stringify(g + 1u) +
+                                              "_" + Moose::stringify(l) + "_" +
+                                              Moose::stringify(0));
         }
       }
       break;
@@ -134,10 +135,9 @@ GnatBaseAction::initializeBase()
         {
           for (int m = 0; m <= static_cast<int>(l); ++m)
           {
-            _group_flux_moments[g].emplace_back(_flux_moment_name + "_"
-                                                + Moose::stringify(g + 1u) + "_"
-                                                + Moose::stringify(l) + "_"
-                                                + Moose::stringify(m));
+            _group_flux_moments[g].emplace_back(_flux_moment_name + "_" + Moose::stringify(g + 1u) +
+                                                "_" + Moose::stringify(l) + "_" +
+                                                Moose::stringify(m));
           }
         }
       }
@@ -156,10 +156,9 @@ GnatBaseAction::initializeBase()
         {
           for (int m = -1 * static_cast<int>(l); m <= static_cast<int>(l); ++m)
           {
-            _group_flux_moments[g].emplace_back(_flux_moment_name + "_"
-                                                + Moose::stringify(g + 1u) + "_"
-                                                + Moose::stringify(l) + "_"
-                                                + Moose::stringify(m));
+            _group_flux_moments[g].emplace_back(_flux_moment_name + "_" + Moose::stringify(g + 1u) +
+                                                "_" + Moose::stringify(l) + "_" +
+                                                Moose::stringify(m));
           }
         }
       }
@@ -199,4 +198,26 @@ GnatBaseAction::debugOutput(const std::string & level0, const std::string & leve
     default:
       break;
   }
+}
+
+void
+GnatBaseAction::addVariable(const std::string & var_name)
+{
+  auto fe_type = AddVariableAction::feType(_pars);
+  auto type = AddVariableAction::variableType(fe_type, false, false);
+  auto var_params = _factory.getValidParams(type);
+  var_params.applySpecificParameters(_pars, {"family", "order"});
+  var_params.set<std::vector<Real>>("scaling") = {getParam<Real>("scaling")};
+
+  if (_subdomain_ids.empty())
+    _problem->addVariable(type, var_name, var_params);
+  else
+  {
+    for (const SubdomainID & id : _subdomain_ids)
+      var_params.set<std::vector<SubdomainName>>("block").push_back(Moose::stringify(id));
+
+    _problem->addVariable(type, var_name, var_params);
+  }
+
+  debugOutput("      - Adding variable " + var_name + ".");
 }

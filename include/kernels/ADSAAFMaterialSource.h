@@ -12,7 +12,8 @@ public:
 protected:
   virtual ADReal computeQpResidual() override;
 
-  const unsigned int _num_groups; // G
+  // Number of spectral energy groups (G).
+  const unsigned int _num_groups;
 
   /*
    * We assume that the vector of source moments is stored in order of group first,
@@ -44,7 +45,7 @@ protected:
    * This is a flattening of the source moments matrix to preserve coherency in
    * memory. The material providing the source moments is expected to format them
    * according to this arrangement.
-  */
+   */
   const ADMaterialProperty<std::vector<Real>> & _source_moments;
   // Degree of anisotropy (Legendre polynomial order L) for the material source.
   const MaterialProperty<unsigned int> & _anisotropy;

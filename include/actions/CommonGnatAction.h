@@ -10,4 +10,4 @@ public:
   CommonGnatAction(const InputParameters & params);
 
   virtual void act() override;
-};
+}; // class CommonGnatAction

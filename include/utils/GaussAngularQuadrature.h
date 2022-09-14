@@ -17,7 +17,8 @@
 class GaussAngularQuadrature
 {
 public:
-  GaussAngularQuadrature(unsigned int n_c, unsigned int n_l,
+  GaussAngularQuadrature(unsigned int n_c,
+                         unsigned int n_l,
                          MajorAxis axis = MajorAxis::X,
                          ProblemType type = ProblemType::Cartesian3D);
 

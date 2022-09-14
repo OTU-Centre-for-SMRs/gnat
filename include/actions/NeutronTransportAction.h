@@ -34,14 +34,12 @@ protected:
 
   // Member functions to initialize the MOOSE objects required for all schemes.
   void addOutputs();
-  void addVariable(const std::string & var_name);
   void addBCs(const std::string & var_name, unsigned int g, unsigned int n);
   void addICs(const std::string & var_name, unsigned int g, unsigned int n);
   void addAuxVariables(const std::string & var_name);
   // is_output = true as a default parameter.
   // TODO: Fix this for scattering moments.
-  void addAuxKernels(const std::string & var_name, unsigned int g,
-                     unsigned int l, int m);
+  void addAuxKernels(const std::string & var_name, unsigned int g, unsigned int l, int m);
 
   // Member functions to initialize the MOOSE objects required for the
   // CGFEM-SAAF scheme.
