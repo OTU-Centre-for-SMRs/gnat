@@ -47,4 +47,5 @@ protected:
   // Activation parent isotope properties.
   const std::vector<Real> _parent_sigma_act;
 
+  bool _first_action;
 }; // class AddMobileIsotopeAction

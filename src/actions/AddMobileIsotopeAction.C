@@ -29,6 +29,10 @@ AddMobileIsotopeAction::validParams()
                                      "function to use for this variable "
                                      "(additional orders not listed are "
                                      "allowed).");
+  params.addParam<Real>("scaling",
+                        1.0,
+                        "Specifies a scaling factor to apply to "
+                        "this variable.");
   params.addRequiredParam<std::string>("isotope_name", "The identifying name of the isotope.");
 
   //----------------------------------------------------------------------------
@@ -126,7 +130,8 @@ AddMobileIsotopeAction::AddMobileIsotopeAction(const InputParameters & params)
     _sigma_a(getParam<std::vector<Real>>("absorption_cross_sections")),
     _half_life(0.0),
     _hl_units(getParam<MooseEnum>("half_life_units").getEnum<HalfLifeUnits>()),
-    _parent_branching_fractions(getParam<std::vector<Real>>("parent_branching_factors"))
+    _parent_branching_fractions(getParam<std::vector<Real>>("parent_branching_factors")),
+    _first_action(true)
 {
   const auto & parent_half_lives = getParam<std::vector<Real>>("parent_half_lives");
   _parent_decay_constants.reserve(parent_half_lives.size());
@@ -184,16 +189,67 @@ AddMobileIsotopeAction::applyIsotopeParameters(InputParameters & params)
   params.set<MooseEnum>("density_type") = getParam<MooseEnum>("density_type");
   params.set<Real>("molar_mass") = getParam<Real>("molar_mass");
 
-  params.set<RealVectorValue>("constant_velocity") = getParam<RealVectorValue>("constant_velocity");
+  switch (getParam<MooseEnum>("velocity_type").getEnum<ADIsotopeBase::MooseEnumVelocityType>())
+  {
+    case ADIsotopeBase::MooseEnumVelocityType::Constant:
+      params.set<RealVectorValue>("constant_velocity") =
+          getParam<RealVectorValue>("constant_velocity");
+      break;
 
-  params.set<FunctionName>("u_function") = getParam<FunctionName>("u_function");
-  params.set<FunctionName>("v_function") = getParam<FunctionName>("v_function");
-  params.set<FunctionName>("w_function") = getParam<FunctionName>("w_function");
+    case ADIsotopeBase::MooseEnumVelocityType::Function:
+      switch (_p_type)
+      {
+        case ProblemType::Cartesian1D:
+          params.set<FunctionName>("u_function") = getParam<FunctionName>("u_function");
+          break;
 
-  params.set<VariableName>("u_var") = getParam<VariableName>("u_var");
-  params.set<VariableName>("v_var") = getParam<VariableName>("v_var");
-  params.set<VariableName>("w_var") = getParam<VariableName>("w_var");
-  params.set<VariableName>("vector_velocity") = getParam<VariableName>("vector_velocity");
+        case ProblemType::Cartesian2D:
+          params.set<FunctionName>("u_function") = getParam<FunctionName>("u_function");
+          params.set<FunctionName>("v_function") = getParam<FunctionName>("v_function");
+          break;
+
+        case ProblemType::Cartesian3D:
+          params.set<FunctionName>("u_function") = getParam<FunctionName>("u_function");
+          params.set<FunctionName>("v_function") = getParam<FunctionName>("v_function");
+          params.set<FunctionName>("w_function") = getParam<FunctionName>("w_function");
+          break;
+
+        default:
+          break;
+      }
+      break;
+
+    case ADIsotopeBase::MooseEnumVelocityType::Variable:
+      if (isParamValid("u_var"))
+      {
+        switch (_p_type)
+        {
+          case ProblemType::Cartesian1D:
+            params.set<VariableName>("u_var") = getParam<VariableName>("u_var");
+
+            break;
+
+          case ProblemType::Cartesian2D:
+            params.set<VariableName>("u_var") = getParam<VariableName>("u_var");
+            params.set<VariableName>("v_var") = getParam<VariableName>("v_var");
+
+            break;
+
+          case ProblemType::Cartesian3D:
+            params.set<VariableName>("u_var") = getParam<VariableName>("u_var");
+            params.set<VariableName>("v_var") = getParam<VariableName>("v_var");
+            params.set<VariableName>("w_var") = getParam<VariableName>("w_var");
+
+            break;
+
+          default:
+            break;
+        }
+      }
+      else
+        params.set<VariableName>("vector_velocity") = getParam<VariableName>("vector_velocity");
+      break;
+  }
 }
 
 void
@@ -201,6 +257,7 @@ AddMobileIsotopeAction::addKernels()
 {
 
   // Add ADIsotopeActivation.
+  if (_activation_parents.size() > 0u)
   {
     auto params = _factory.getValidParams("ADIsotopeActivation");
     params.set<NonlinearVariableName>("variable") = _isotope_name;
@@ -270,6 +327,7 @@ AddMobileIsotopeAction::addKernels()
   } // ADIsotopeDecaySink
 
   // Add ADIsotopeDecaySource.
+  if (_decay_parents.size() > 0u)
   {
     auto params = _factory.getValidParams("ADIsotopeDecaySource");
     params.set<NonlinearVariableName>("variable") = _isotope_name;
@@ -294,6 +352,7 @@ AddMobileIsotopeAction::addKernels()
   } // ADIsotopeDecaySource
 
   // Add ADIsotopeDepletion.
+  if (_sigma_a.size() > 0u)
   {
     auto params = _factory.getValidParams("ADIsotopeDepletion");
     params.set<NonlinearVariableName>("variable") = _isotope_name;
@@ -382,25 +441,30 @@ AddMobileIsotopeAction::addMaterials()
 void
 AddMobileIsotopeAction::act()
 {
+  if (_first_action)
   {
     const std::string init_mass =
         "Initializing a mass transport system for species " + _isotope_name + ": ";
     debugOutput(init_mass, init_mass);
+
+    initializeBase();
+
+    _first_action = false;
   }
 
-  if (_action_type == "add_variable")
+  if (_current_task == "add_variable")
   {
     debugOutput("  - Adding variables...");
     addVariable(_isotope_name);
   }
 
-  if (_action_type == "add_kernel")
+  if (_current_task == "add_kernel")
   {
     debugOutput("  - Adding kernels...");
     addKernels();
   }
 
-  if (_action_type == "add_material")
+  if (_current_task == "add_material")
   {
     debugOutput("  - Adding materials...");
     addMaterials();

@@ -1,5 +1,7 @@
 #include "AutoIsotopeMaterial.h"
 
+registerMooseObject("GnatApp", AutoIsotopeMaterial);
+
 InputParameters
 AutoIsotopeMaterial::validParams()
 {

@@ -5,6 +5,14 @@
 class ADIsotopeBase : public ADKernel
 {
 public:
+// An enum to get around MooseEnum type checking for enums.
+  enum class MooseEnumVelocityType
+  {
+    Constant = 0u,
+    Function = 1u,
+    Variable = 2u
+  };
+
   static InputParameters validParams();
 
   ADIsotopeBase(const InputParameters & parameters);
@@ -22,14 +30,6 @@ protected:
   // Functions for converting between number and mass densities.
   ADReal adComputeNumberDensity(ADReal mass_density);
   ADReal adComputeMassDensity(ADReal number_density);
-
-  // An enum to get around MooseEnum type checking for enums.
-  enum class MooseEnumVelocityType
-  {
-    Constant = 0u,
-    Function = 1u,
-    Variable = 2u
-  };
 
   // Enums to make reading the source code easier.
   enum class VelocityType
