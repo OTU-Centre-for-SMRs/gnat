@@ -34,7 +34,9 @@ associateSyntaxInner(Syntax & syntax, ActionFactory & /*action_factory*/)
   syntax.registerActionSyntax("NeutronTransportAction", "NeutronActivationStudy/TransportSystem");
 
   // Mass transport syntax.
-  syntax.registerActionSyntax("AddMobileIsotopeAction", "NeutronActivationStudy/AddMobileIsotope");
+  syntax.registerActionSyntax("SetupIsotopeSystemAction", "NeutronActivationStudy/IsotopeSystem");
+  syntax.registerActionSyntax("AddMobileIsotopeAction",
+                              "NeutronActivationStudy/IsotopeSystem/AddMobileIsotopes/*");
 }
 
 void

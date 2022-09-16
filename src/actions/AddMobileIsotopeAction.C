@@ -1,6 +1,7 @@
 #include "AddMobileIsotopeAction.h"
 
 #include "AddVariableAction.h"
+#include "SetupIsotopeSystemAction.h"
 
 #include "ADIsotopeBase.h"
 
@@ -33,7 +34,7 @@ AddMobileIsotopeAction::validParams()
                         1.0,
                         "Specifies a scaling factor to apply to "
                         "this variable.");
-  params.addRequiredParam<std::string>("isotope_name", "The identifying name of the isotope.");
+  params.addRequiredParam<VariableName>("isotope_name", "The identifying name of the isotope.");
 
   //----------------------------------------------------------------------------
   // Properties of the isotope itself.
@@ -83,49 +84,19 @@ AddMobileIsotopeAction::validParams()
   //----------------------------------------------------------------------------
   // Parameters required for mass transport and stabilization. These are applied
   // to all isotope kernels.
-  params.addRequiredParam<MooseEnum>("velocity_type",
-                                     MooseEnum("constant function variable"),
-                                     "An indicator for which type of velocity "
-                                     "field should be used.");
-  params.addParam<MooseEnum>("density_type",
-                             MooseEnum("number mass", "number"),
-                             "If the primal variable is a mass or number "
-                             "density. Microscopic cross-sections must be "
-                             "multiplied by a number density while fluid "
-                             "modules tend to output a mass density.");
-  params.addParam<Real>("molar_mass", 1.0, "The molar mass of the isotope.");
-  params.addParam<RealVectorValue>(
-      "constant_velocity", RealVectorValue(0.0), "A constant velocity field.");
-  params.addParam<FunctionName>("u_function",
-                                "The x-component of the function "
-                                "velocity field.");
-  params.addParam<FunctionName>("v_function",
-                                "The y-component of the function "
-                                "velocity field.");
-  params.addParam<FunctionName>("w_function",
-                                "The z-component of the function "
-                                "velocity field.");
-  params.addCoupledVar("u_var",
-                       "The x-component of the variable velocity "
-                       "field.");
-  params.addCoupledVar("v_var",
-                       "The y-component of the variable velocity "
-                       "field.");
-  params.addCoupledVar("w_var",
-                       "The z-component of the variable velocity "
-                       "field.");
-  params.addCoupledVar("vector_velocity",
-                       "A vector variable velocity field as opposed to using "
-                       "individual velocity components.");
+  params += SetupIsotopeSystemAction::validParams();
+  params.makeParamNotRequired<MooseEnum>("velocity_type");
+  params.makeParamNotRequired<std::vector<VariableName>>("isotopes");
 
   return params;
 }
 
 AddMobileIsotopeAction::AddMobileIsotopeAction(const InputParameters & params)
   : GnatBaseAction(params),
-    _isotope_name(getParam<std::string>("isotope_name")),
+    _isotope_name(getParam<VariableName>("isotope_name")),
     _decay_parents(getParam<std::vector<VariableName>>("decay_parents")),
     _activation_parents(getParam<std::vector<VariableName>>("activation_parents")),
+    _master_isotope_list(getParam<std::vector<VariableName>>("isotopes")),
     _diffusion_coefficient_base(getParam<Real>("diffusion_coefficient_base")),
     _sigma_a(getParam<std::vector<Real>>("absorption_cross_sections")),
     _half_life(0.0),
@@ -133,6 +104,30 @@ AddMobileIsotopeAction::AddMobileIsotopeAction(const InputParameters & params)
     _parent_branching_fractions(getParam<std::vector<Real>>("parent_branching_factors")),
     _first_action(true)
 {
+  // Check if a container block exists with isotope parameters. If yes, apply them.
+  auto isotope_system_actions = _awh.getActions<SetupIsotopeSystemAction>();
+  if (isotope_system_actions.size() == 1)
+    _pars.applyParameters(isotope_system_actions[0]->parameters());
+
+  // Check to make sure all required isotopes are in the master list.
+  {
+    auto r = std::find(_master_isotope_list.begin(), _master_isotope_list.end(), _isotope_name);
+    if (r == _master_isotope_list.end())
+      mooseError("Current isotope " + _isotope_name + " is not in the isotope list.");
+  }
+  for (const auto & d_parent : _decay_parents)
+  {
+    auto r = std::find(_master_isotope_list.begin(), _master_isotope_list.end(), d_parent);
+    if (r == _master_isotope_list.end())
+      mooseError("Parent " + d_parent + " is not in the isotope list.");
+  }
+  for (const auto & a_parent : _activation_parents)
+  {
+    auto r = std::find(_master_isotope_list.begin(), _master_isotope_list.end(), a_parent);
+    if (r == _master_isotope_list.end())
+      mooseError("Parent " + a_parent + " is not in the isotope list.");
+  }
+
   const auto & parent_half_lives = getParam<std::vector<Real>>("parent_half_lives");
   _parent_decay_constants.reserve(parent_half_lives.size());
   switch (_hl_units)

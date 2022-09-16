@@ -1,0 +1,114 @@
+# A simple test case with a purely absorbing medium and a point source in the
+# middle of the domain.
+
+[Mesh]
+  [domain]
+    type = CartesianMeshGenerator
+    dim = 2
+    dx = 10
+    dy = 10
+    ix = 100
+    iy = 100
+  []
+[]
+
+[NeutronActivationStudy]
+  num_groups = 1
+  execution_type = steady
+  debug_verbosity = level0
+
+  [TransportSystem]
+    scheme = saaf_cfem
+    output_angular_fluxes = true
+
+    order = FIRST
+    family = LAGRANGE
+
+    n_azimuthal = 1
+    n_polar = 1
+
+    vacuum_boundaries = 'left right top bottom'
+
+    point_source_locations = '5.0 0.0 0.0'
+    point_source_intensities = '1000.0'
+    point_source_groups = '1'
+  []
+
+  [IsotopeSystem]
+    velocity_type = constant
+    constant_velocity = '1.0 0.0 0.0'
+
+    isotopes = 'cs_137 sr_90'
+
+    [AddMobileIsotopes]
+      [Cs_137]
+        order = FIRST
+        family = LAGRANGE
+
+        isotope_name = cs_137
+
+        diffusion_coefficient_base = 1.0
+        half_life = 1.0
+        half_life_units = minutes
+
+        absorption_cross_sections = '1.0'
+      []
+
+      [Sr_90]
+        order = FIRST
+        family = LAGRANGE
+
+        isotope_name = sr_90
+
+        diffusion_coefficient_base = 1.0
+        half_life = 1.0
+        half_life_units = minutes
+
+        absorption_cross_sections = '1.0'
+      []
+    []
+  []
+[]
+
+[BCs]
+  [Inflow]
+    type = ADIsotopeInflowBC
+    variable = cs_137
+    boundary = bottom
+    inflow_rate = 10.0
+
+    velocity_type = constant
+    constant_velocity = '1.0 0.0 0.0'
+  []
+
+  [Outflow]
+    type = ADIsotopeOutflowBC
+    variable = cs_137
+    boundary = top
+
+    velocity_type = constant
+    constant_velocity = '1.0 0.0 0.0'
+  []
+[]
+
+[Materials]
+  [Domain]
+    type = AbsorbingNeutronicsMaterial
+    num_groups = 1
+    group_absorption = 0.0
+    group_speeds = 2200.0
+  []
+[]
+
+[Problem]
+  type = FEProblem
+[]
+
+[Executioner]
+  type = Steady
+  solve_type = PJFNK
+  petsc_options_iname = '-pc_type -pc_hypre_type -ksp_gmres_restart'
+  petsc_options_value = 'hypre boomeramg 10'
+  l_max_its = 50
+  nl_rel_tol = 1e-12
+[]

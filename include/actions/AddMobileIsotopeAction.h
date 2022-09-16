@@ -29,9 +29,11 @@ protected:
   } _hl_units;
 
   // Variable names.
-  const std::string _isotope_name;
+  const VariableName _isotope_name;
   const std::vector<VariableName> _decay_parents;
   const std::vector<VariableName> _activation_parents;
+
+  const std::vector<VariableName> & _master_isotope_list;
 
   // Base diffusion coefficient. TODO: Different diffusion coefficient correlations?
   const Real _diffusion_coefficient_base;
