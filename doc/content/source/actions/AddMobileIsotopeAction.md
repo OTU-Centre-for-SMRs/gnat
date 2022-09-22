@@ -6,7 +6,7 @@ documenting the class, which includes the typical automatic documentation associ
 however, what is contained is ultimately determined by what is necessary to make the documentation
 clear for users.
 
-!syntax description /NeutronActivationStudy/AddMobileIsotope/AddMobileIsotopeAction
+!syntax description /NeutronActivationStudy/IsotopeSystem/AddMobileIsotopes/AddMobileIsotopeAction
 
 ## Overview
 
@@ -16,6 +16,6 @@ clear for users.
 
 !! Describe and include an example of how to use the AddMobileIsotopeAction action.
 
-!syntax description /NeutronActivationStudy/AddMobileIsotope/AddMobileIsotopeAction
+!syntax description /NeutronActivationStudy/IsotopeSystem/AddMobileIsotopes/AddMobileIsotopeAction
 
-!syntax parameters /NeutronActivationStudy/AddMobileIsotope/AddMobileIsotopeAction
+!syntax parameters /NeutronActivationStudy/IsotopeSystem/AddMobileIsotopes/AddMobileIsotopeAction

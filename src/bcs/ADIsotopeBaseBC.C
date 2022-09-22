@@ -6,7 +6,7 @@ InputParameters
 ADIsotopeBaseBC::validParams()
 {
   auto params = ADIntegratedBC::validParams();
-  params.addClassDescription("A base class whick computes the S/U-PG "
+  params.addClassDescription("A base class which computes the S/U-PG "
                              "stabilization term for the isotope mass "
                              "transport boundary conditions.");
   params.addRequiredParam<MooseEnum>("velocity_type",

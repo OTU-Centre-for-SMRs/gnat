@@ -12,9 +12,6 @@ public:
   virtual void act() override;
 
 protected:
-  using Action::addRelationshipManagers;
-  void addRelationshipManagers(Moose::RelationshipManagerType when_type) override;
-
   void applyIsotopeParameters(InputParameters & params);
   void addKernels();
   void addMaterials();

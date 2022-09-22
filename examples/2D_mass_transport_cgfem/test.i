@@ -15,28 +15,28 @@
 [NeutronActivationStudy]
   num_groups = 1
   execution_type = steady
-  debug_verbosity = level0
+  debug_verbosity = level1
 
   [TransportSystem]
     scheme = saaf_cfem
-    output_angular_fluxes = true
+    output_angular_fluxes = false
 
     order = FIRST
     family = LAGRANGE
 
-    n_azimuthal = 1
-    n_polar = 1
+    n_azimuthal = 3
+    n_polar = 3
 
     vacuum_boundaries = 'left right top bottom'
 
-    point_source_locations = '5.0 0.0 0.0'
+    point_source_locations = '5.0 5.0 0.0'
     point_source_intensities = '1000.0'
     point_source_groups = '1'
   []
 
   [IsotopeSystem]
     velocity_type = constant
-    constant_velocity = '1.0 0.0 0.0'
+    constant_velocity = '0.0 1.0 0.0'
 
     isotopes = 'cs_137 sr_90'
 
@@ -51,7 +51,7 @@
         half_life = 1.0
         half_life_units = minutes
 
-        absorption_cross_sections = '1.0'
+        absorption_cross_sections = '0.0'
       []
 
       [Sr_90]
@@ -67,35 +67,28 @@
         absorption_cross_sections = '1.0'
       []
     []
-  []
-[]
 
-[BCs]
-  [Inflow]
-    type = ADIsotopeInflowBC
-    variable = cs_137
-    boundary = bottom
-    inflow_rate = 10.0
+    [AddIsotopeBCs]
+      [Inflow]
+        type = ADIsotopeInflowBC
+        boundary = bottom
+        inflow_rate = 10.0
+      []
 
-    velocity_type = constant
-    constant_velocity = '1.0 0.0 0.0'
-  []
-
-  [Outflow]
-    type = ADIsotopeOutflowBC
-    variable = cs_137
-    boundary = top
-
-    velocity_type = constant
-    constant_velocity = '1.0 0.0 0.0'
+      [Outflow]
+        type = ADIsotopeOutflowBC
+        boundary = top
+      []
+    []
   []
 []
 
 [Materials]
   [Domain]
-    type = AbsorbingNeutronicsMaterial
+    type = ConstantNeutronicsMaterial
     num_groups = 1
-    group_absorption = 0.0
+    group_absorption = 1.0
+    group_scattering = 1.0
     group_speeds = 2200.0
   []
 []

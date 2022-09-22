@@ -173,11 +173,6 @@ AddMobileIsotopeAction::AddMobileIsotopeAction(const InputParameters & params)
 }
 
 void
-AddMobileIsotopeAction::addRelationshipManagers(Moose::RelationshipManagerType when_type)
-{
-}
-
-void
 AddMobileIsotopeAction::applyIsotopeParameters(InputParameters & params)
 {
   params.set<MooseEnum>("velocity_type") = getParam<MooseEnum>("velocity_type");

@@ -37,6 +37,8 @@ associateSyntaxInner(Syntax & syntax, ActionFactory & /*action_factory*/)
   syntax.registerActionSyntax("SetupIsotopeSystemAction", "NeutronActivationStudy/IsotopeSystem");
   syntax.registerActionSyntax("AddMobileIsotopeAction",
                               "NeutronActivationStudy/IsotopeSystem/AddMobileIsotopes/*");
+  syntax.registerActionSyntax("AddIsotopeBCAction",
+                              "NeutronActivationStudy/IsotopeSystem/AddIsotopeBCs/*");
 }
 
 void
