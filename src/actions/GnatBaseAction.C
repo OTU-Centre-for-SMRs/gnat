@@ -2,6 +2,7 @@
 
 #include "FEProblemBase.h"
 #include "AddVariableAction.h"
+#include "InputParameterWarehouse.h"
 
 #include "CommonGnatAction.h"
 
@@ -55,9 +56,15 @@ GnatBaseAction::GnatBaseAction(const InputParameters & params)
     _debug_level(getParam<MooseEnum>("debug_verbosity").getEnum<DebugVerbosity>())
 {
   // Check if a container block exists with common parameters. If yes, apply them.
+  // Check if a container block exists with isotope parameters. If yes, apply them.
+  // FIX THIS: The most janky way to fix this breaking MOOSE change.
   auto common_actions = _awh.getActions<CommonGnatAction>();
   if (common_actions.size() == 1)
-    _pars.applyParameters(common_actions[0]->parameters());
+  {
+    const auto & params = _app.getInputParameterWarehouse().getInputParameters();
+    InputParameters & pars(*(params.find(uniqueActionName())->second.get()));
+    pars.applyParameters(common_actions[0]->parameters());
+  }
 
   // Error check to make sure the user has supplied mandatory parameters.
   if (!isParamValid("num_groups"))

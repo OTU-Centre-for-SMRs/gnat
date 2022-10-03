@@ -2,6 +2,7 @@
 
 #include "AddVariableAction.h"
 #include "SetupIsotopeSystemAction.h"
+#include "InputParameterWarehouse.h"
 
 #include "ADIsotopeBase.h"
 
@@ -107,7 +108,11 @@ AddMobileIsotopeAction::AddMobileIsotopeAction(const InputParameters & params)
   // Check if a container block exists with isotope parameters. If yes, apply them.
   auto isotope_system_actions = _awh.getActions<SetupIsotopeSystemAction>();
   if (isotope_system_actions.size() == 1)
-    _pars.applyParameters(isotope_system_actions[0]->parameters());
+  {
+    const auto & params = _app.getInputParameterWarehouse().getInputParameters();
+    InputParameters & pars(*(params.find(uniqueActionName())->second.get()));
+    pars.applyParameters(isotope_system_actions[0]->parameters());
+  }
 
   // Check to make sure all required isotopes are in the master list.
   {
