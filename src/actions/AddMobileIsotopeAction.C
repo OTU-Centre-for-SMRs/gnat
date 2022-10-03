@@ -106,6 +106,8 @@ AddMobileIsotopeAction::AddMobileIsotopeAction(const InputParameters & params)
     _first_action(true)
 {
   // Check if a container block exists with isotope parameters. If yes, apply them.
+  // Check if a container block exists with isotope parameters. If yes, apply them.
+  // FIX THIS: The most janky way to fix this breaking MOOSE change.
   auto isotope_system_actions = _awh.getActions<SetupIsotopeSystemAction>();
   if (isotope_system_actions.size() == 1)
   {

@@ -32,6 +32,7 @@ AddIsotopeBCAction::AddIsotopeBCAction(const InputParameters & parameters)
     _p_type(ProblemType::Cartesian1D)
 {
   // Check if a container block exists with isotope parameters. If yes, apply them.
+  // FIX THIS: The most janky way to fix this breaking MOOSE change.
   auto isotope_system_actions = _awh.getActions<SetupIsotopeSystemAction>();
   if (isotope_system_actions.size() == 1)
   {
