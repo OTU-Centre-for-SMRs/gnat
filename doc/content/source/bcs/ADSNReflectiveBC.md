@@ -6,7 +6,7 @@ documenting the class, which includes the typical automatic documentation associ
 MooseObject; however, what is contained is ultimately determined by what is necessary to make the
 documentation clear for users.
 
-!syntax description /BCs/ADSNReflectiveBC
+!syntax description /NeutronActivationStudy/IsotopeSystem/AddIsotopeBCs/ADSNReflectiveBC
 
 ## Overview
 
@@ -16,8 +16,8 @@ documentation clear for users.
 
 !! Describe and include an example of how to use the ADSNReflectiveBC object.
 
-!syntax parameters /BCs/ADSNReflectiveBC
+!syntax parameters /NeutronActivationStudy/IsotopeSystem/AddIsotopeBCs/ADSNReflectiveBC
 
-!syntax inputs /BCs/ADSNReflectiveBC
+!syntax inputs /NeutronActivationStudy/IsotopeSystem/AddIsotopeBCs/ADSNReflectiveBC
 
-!syntax children /BCs/ADSNReflectiveBC
+!syntax children /NeutronActivationStudy/IsotopeSystem/AddIsotopeBCs/ADSNReflectiveBC

@@ -6,7 +6,7 @@ documenting the class, which includes the typical automatic documentation associ
 MooseObject; however, what is contained is ultimately determined by what is necessary to make the
 documentation clear for users.
 
-!syntax description /BCs/ADSNMatSourceBC
+!syntax description /NeutronActivationStudy/IsotopeSystem/AddIsotopeBCs/ADSNMatSourceBC
 
 ## Overview
 
@@ -16,8 +16,8 @@ documentation clear for users.
 
 !! Describe and include an example of how to use the ADSNMatSourceBC object.
 
-!syntax parameters /BCs/ADSNMatSourceBC
+!syntax parameters /NeutronActivationStudy/IsotopeSystem/AddIsotopeBCs/ADSNMatSourceBC
 
-!syntax inputs /BCs/ADSNMatSourceBC
+!syntax inputs /NeutronActivationStudy/IsotopeSystem/AddIsotopeBCs/ADSNMatSourceBC
 
-!syntax children /BCs/ADSNMatSourceBC
+!syntax children /NeutronActivationStudy/IsotopeSystem/AddIsotopeBCs/ADSNMatSourceBC

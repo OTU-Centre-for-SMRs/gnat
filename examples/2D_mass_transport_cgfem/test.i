@@ -24,8 +24,8 @@
     order = FIRST
     family = LAGRANGE
 
-    n_azimuthal = 3
-    n_polar = 3
+    n_azimuthal = 2
+    n_polar = 2
 
     vacuum_boundaries = 'left right top bottom'
 
@@ -87,9 +87,10 @@
   [Domain]
     type = ConstantNeutronicsMaterial
     num_groups = 1
+    anisotropy = 0
     group_absorption = 1.0
     group_scattering = 1.0
-    group_speeds = 2200.0
+    group_speeds = 220000.0
   []
 []
 

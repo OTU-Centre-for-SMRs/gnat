@@ -6,7 +6,7 @@ documenting the class, which includes the typical automatic documentation associ
 MooseObject; however, what is contained is ultimately determined by what is necessary to make the
 documentation clear for users.
 
-!syntax description /BCs/ADIsotopeOutflowBC
+!syntax description /NeutronActivationStudy/IsotopeSystem/AddIsotopeBCs/ADIsotopeOutflowBC
 
 ## Overview
 
@@ -16,8 +16,8 @@ documentation clear for users.
 
 !! Describe and include an example of how to use the ADIsotopeOutflowBC object.
 
-!syntax parameters /BCs/ADIsotopeOutflowBC
+!syntax parameters /NeutronActivationStudy/IsotopeSystem/AddIsotopeBCs/ADIsotopeOutflowBC
 
-!syntax inputs /BCs/ADIsotopeOutflowBC
+!syntax inputs /NeutronActivationStudy/IsotopeSystem/AddIsotopeBCs/ADIsotopeOutflowBC
 
-!syntax children /BCs/ADIsotopeOutflowBC
+!syntax children /NeutronActivationStudy/IsotopeSystem/AddIsotopeBCs/ADIsotopeOutflowBC

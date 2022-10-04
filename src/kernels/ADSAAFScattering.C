@@ -40,11 +40,11 @@ ADSAAFScattering::validParams()
 }
 
 ADSAAFScattering::ADSAAFScattering(const InputParameters & parameters)
-  : ADSAAFBaseKernel(parameters)
-  , _sigma_s_g_prime_g_l(getADMaterialProperty<std::vector<Real>>("scattering_matrix"))
-  , _anisotropy(getMaterialProperty<unsigned int>("medium_anisotropy"))
-  , _num_groups(getParam<unsigned int>("num_groups"))
-  , _max_anisotropy(getParam<unsigned int>("max_anisotropy"))
+  : ADSAAFBaseKernel(parameters),
+    _sigma_s_g_prime_g_l(getADMaterialProperty<std::vector<Real>>("scattering_matrix")),
+    _anisotropy(getMaterialProperty<unsigned int>("medium_anisotropy")),
+    _num_groups(getParam<unsigned int>("num_groups")),
+    _max_anisotropy(getParam<unsigned int>("max_anisotropy"))
 {
   if (_group_index >= _num_groups)
     mooseError("The group index exceeds the number of energy groups.");
@@ -61,26 +61,22 @@ ADSAAFScattering::ADSAAFScattering(const InputParameters & parameters)
     _group_flux_ordinates.emplace_back(&adCoupledValue("group_flux_ordinates", i));
 }
 
-ADReal
-ADSAAFScattering::computeFluxMoment(unsigned int g_prime, unsigned int l,
-                                    int m)
+Real
+ADSAAFScattering::computeFluxMoment(unsigned int g_prime, unsigned int l, int m)
 {
   ADReal moment = 0.0;
   Real omega = 0.0;
   Real mu = 0.0;
   for (unsigned int i = 0; i < _quadrature_set.totalOrder(); ++i)
   {
-    cartesianToSpherical(_quadrature_set.direction(i),
-                         mu, omega);
+    cartesianToSpherical(_quadrature_set.direction(i), mu, omega);
 
-    const unsigned int base_n = g_prime * (_group_flux_ordinates.size()
-                                           / _num_groups);
-    moment += RealSphericalHarmonics::evaluate(l, m, mu, omega)
-              * std::max((* _group_flux_ordinates[base_n + i])[_qp], 0.0)
-              * _quadrature_set.weight(i);
+    const unsigned int base_n = g_prime * (_group_flux_ordinates.size() / _num_groups);
+    moment += RealSphericalHarmonics::evaluate(l, m, mu, omega) *
+              std::max((*_group_flux_ordinates[base_n + i])[_qp], 0.0) * _quadrature_set.weight(i);
   }
 
-  return moment;
+  return MetaPhysicL::raw_value(moment);
 }
 
 // Compute the full scattering term for both in-group and group-to-group
@@ -99,12 +95,10 @@ ADSAAFScattering::computeQpResidual()
   unsigned int scattering_index = 0u;
   for (unsigned int g_prime = 0; g_prime < _num_groups; ++g_prime)
   {
-    scattering_index = g_prime * _num_groups * _anisotropy[_qp]
-                       + _group_index * _anisotropy[_qp];
+    scattering_index = g_prime * _num_groups * _anisotropy[_qp] + _group_index * _anisotropy[_qp];
 
     // The maximum degree of anisotropy we can handle.
-    const unsigned int max_anisotropy = std::min(_anisotropy[_qp],
-                                                 max_anisotropy);
+    const unsigned int max_anisotropy = std::min(_anisotropy[_qp], max_anisotropy);
     for (unsigned int l = 0; l <= max_anisotropy; ++l)
     {
       // Handle different levels of dimensionality.
@@ -112,20 +106,18 @@ ADSAAFScattering::computeQpResidual()
       {
         // Legendre moments in 1D, looping over m is unecessary.
         case ProblemType::Cartesian1D:
-          cartesianToSpherical(_quadrature_set.direction(_ordinate_index),
-                               mu, omega);
-          moment_l += computeFluxMoment(g_prime, l, 0)
-                      * RealSphericalHarmonics::evaluate(l, 0, mu, omega);
+          cartesianToSpherical(_quadrature_set.direction(_ordinate_index), mu, omega);
+          moment_l +=
+              computeFluxMoment(g_prime, l, 0) * RealSphericalHarmonics::evaluate(l, 0, mu, omega);
           break;
 
         // Need moments with m >= 0 for 2D.
         case ProblemType::Cartesian2D:
           for (int m = 0; m <= static_cast<int>(l); ++m)
           {
-            cartesianToSpherical(_quadrature_set.direction(_ordinate_index),
-                                 mu, omega);
-            moment_l += computeFluxMoment(g_prime, l, m)
-                        * RealSphericalHarmonics::evaluate(l, m, mu, omega);
+            cartesianToSpherical(_quadrature_set.direction(_ordinate_index), mu, omega);
+            moment_l += computeFluxMoment(g_prime, l, m) *
+                        RealSphericalHarmonics::evaluate(l, m, mu, omega);
           }
           break;
 
@@ -133,10 +125,9 @@ ADSAAFScattering::computeQpResidual()
         case ProblemType::Cartesian3D:
           for (int m = -1 * static_cast<int>(l); m <= static_cast<int>(l); ++m)
           {
-            cartesianToSpherical(_quadrature_set.direction(_ordinate_index),
-                                 mu, omega);
-            moment_l += computeFluxMoment(g_prime, l, m)
-                        * RealSphericalHarmonics::evaluate(l, m, mu, omega);
+            cartesianToSpherical(_quadrature_set.direction(_ordinate_index), mu, omega);
+            moment_l += computeFluxMoment(g_prime, l, m) *
+                        RealSphericalHarmonics::evaluate(l, m, mu, omega);
           }
           break;
 
@@ -144,9 +135,8 @@ ADSAAFScattering::computeQpResidual()
           break;
       }
 
-      res += (2.0 * static_cast<Real>(l) + 1.0) / (4.0 * M_PI)
-             * _sigma_s_g_prime_g_l[_qp][scattering_index] * moment_l
-             * _symmetry_factor;
+      res += (2.0 * static_cast<Real>(l) + 1.0) / (4.0 * M_PI) *
+             _sigma_s_g_prime_g_l[_qp][scattering_index] * moment_l * _symmetry_factor;
 
       scattering_index++;
       moment_l = 0.0;
