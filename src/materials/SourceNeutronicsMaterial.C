@@ -18,16 +18,16 @@ SourceNeutronicsMaterial::validParams()
   params.addRequiredParam<std::vector<Real>>("group_source",
                                              "The external source moments for "
                                              "all energy groups.");
-  params.addParam<unsigned int>("source_anisotropy", 0u,
-                                "The external source anisotropy of the medium.");
+  params.addParam<unsigned int>(
+      "source_anisotropy", 0u, "The external source anisotropy of the medium.");
 
   return params;
 }
 
 SourceNeutronicsMaterial::SourceNeutronicsMaterial(const InputParameters & parameters)
-  : ConstantNeutronicsMaterial(parameters)
-  , _source_moments(getParam<std::vector<Real>>("group_source"))
-  , _source_anisotropy(getParam<unsigned int>("source_anisotropy"))
+  : ConstantNeutronicsMaterial(parameters),
+    _source_moments(getParam<std::vector<Real>>("group_source")),
+    _source_anisotropy(getParam<unsigned int>("source_anisotropy"))
 {
   switch (_mesh.dimension())
   {
@@ -72,11 +72,11 @@ SourceNeutronicsMaterial::computeQpProperties()
   _mat_saaf_c[_qp] = _saaf_c;
 
   // Speeds and removal cross-sections.
-  _mat_v_g[_qp].resize(_num_groups, 0.0);
+  _mat_inv_v_g[_qp].resize(_num_groups, 0.0);
   _mat_sigma_r_g[_qp].resize(_num_groups, 0.0);
   for (unsigned int i = 0; i < _num_groups; ++i)
   {
-    _mat_v_g[_qp][i] = _v_g[i];
+    _mat_inv_v_g[_qp][i] = 1.0 / _v_g[i];
     // Have to sum the absorption and out-scattering cross-section to form the
     // removal cross-section.
     _mat_sigma_r_g[_qp][i] = _sigma_a_g[i] + _sigma_s_out[i];

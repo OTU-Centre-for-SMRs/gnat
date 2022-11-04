@@ -7,6 +7,7 @@
 #include "ADIsotopeBase.h"
 
 registerMooseAction("GnatApp", AddMobileIsotopeAction, "add_variable");
+registerMooseAction("GnatApp", AddMobileIsotopeAction, "add_ic");
 registerMooseAction("GnatApp", AddMobileIsotopeAction, "add_kernel");
 registerMooseAction("GnatApp", AddMobileIsotopeAction, "add_material");
 
@@ -83,6 +84,15 @@ AddMobileIsotopeAction::validParams()
                                      "first, neutron flux group second.");
 
   //----------------------------------------------------------------------------
+  // Initial conditions.
+  params.addParam<MooseEnum>("ic_type",
+                             MooseEnum("constant function file", "constant"),
+                             "The type of initial condition to use (if "
+                             "multiple are provided). Defaults to constant "
+                             "initial conditions.");
+  params.addParam<Real>("constant_ic", 0.0, "A constant initial condition for the isotope.");
+
+  //----------------------------------------------------------------------------
   // Parameters required for mass transport and stabilization. These are applied
   // to all isotope kernels.
   params += SetupIsotopeSystemAction::validParams();
@@ -103,9 +113,9 @@ AddMobileIsotopeAction::AddMobileIsotopeAction(const InputParameters & params)
     _half_life(0.0),
     _hl_units(getParam<MooseEnum>("half_life_units").getEnum<HalfLifeUnits>()),
     _parent_branching_fractions(getParam<std::vector<Real>>("parent_branching_factors")),
+    _parent_sigma_act(getParam<std::vector<Real>>("activation_cross_sections")),
     _first_action(true)
 {
-  // Check if a container block exists with isotope parameters. If yes, apply them.
   // Check if a container block exists with isotope parameters. If yes, apply them.
   // FIX THIS: The most janky way to fix this breaking MOOSE change.
   auto isotope_system_actions = _awh.getActions<SetupIsotopeSystemAction>();
@@ -250,9 +260,49 @@ AddMobileIsotopeAction::applyIsotopeParameters(InputParameters & params)
 }
 
 void
+AddMobileIsotopeAction::addICs()
+{
+  if (_exec_type != ExecutionType::Transient)
+    return;
+
+  switch (static_cast<int>(getParam<MooseEnum>("ic_type")))
+  {
+    case 0:
+      // Add ConstantIC.
+      {
+        auto params = _factory.getValidParams("ConstantIC");
+        params.set<VariableName>("variable") = _isotope_name;
+
+        if (isParamValid("block"))
+        {
+          params.set<std::vector<SubdomainName>>("block") =
+              getParam<std::vector<SubdomainName>>("block");
+        }
+
+        params.set<Real>("value") = getParam<Real>("constant_ic");
+
+        _problem->addInitialCondition("ConstantIC", "ConstantIC_" + _isotope_name, params);
+        debugOutput("Adding IC ConstantIC for the variable " + _isotope_name + ".");
+      } // ConstantIC
+      break;
+
+    case 1:
+      mooseError("Function ICs are not currently supported.");
+      break;
+
+    case 2:
+      mooseError("File ICs are not currently supported.");
+      break;
+
+    default:
+      mooseError("Unknown IC type.");
+      break;
+  }
+}
+
+void
 AddMobileIsotopeAction::addKernels()
 {
-
   // Add ADIsotopeActivation.
   if (_activation_parents.size() > 0u)
   {
@@ -453,6 +503,12 @@ AddMobileIsotopeAction::act()
   {
     debugOutput("  - Adding variables...");
     addVariable(_isotope_name);
+  }
+
+  if (_current_task == "add_ic")
+  {
+    debugOutput("  - Adding initial conditions...");
+    addICs();
   }
 
   if (_current_task == "add_kernel")

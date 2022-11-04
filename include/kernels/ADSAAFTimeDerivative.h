@@ -15,5 +15,5 @@ protected:
   // Holds the time derivatives at the quadrature points.
   const ADTemplateVariableValue<Real> & _u_dot;
 
-  const ADMaterialProperty<std::vector<Real>> & _v_g;
+  const ADMaterialProperty<std::vector<Real>> & _inv_v_g;
 }; // ADSAAFTimeDerivative

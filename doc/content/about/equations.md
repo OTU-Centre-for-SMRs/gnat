@@ -130,3 +130,5 @@ following (with functional notation omitted for brevity):
 + \Big( \vec{\nabla}\psi_{j},\, D_{i}\vec{\nabla}N_{i} \Big)_{V}
 - \Big( \psi_{j},\, \sum_{i' = 1}^{I}\sum_{g = 1}^{G}\sigma_{a,g,i'\rightarrow i}N_{i'}\Phi_{g} \Big)_{V}
 - \Big( \psi_{j},\, \sum_{i' = 1}^{I}\lambda_{i'}f_{i'\rightarrow i}N_{i'} \Big)
+
+Similar to [!eqref](nte_wf), [!eqref](isotope_transport_wf) is known to be numerically unstable when solved with continuous finite elements. Stabilization of the isotope mass transport equation is accomplished with the streamline upwind/Petrov-Galerkin (SUPG) stabilization scheme. This approach is discussed in the the [stabilization section](stabilization.md).

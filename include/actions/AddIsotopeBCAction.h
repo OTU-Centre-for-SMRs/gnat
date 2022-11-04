@@ -20,4 +20,5 @@ protected:
   ProblemType _p_type;
 
   const std::vector<VariableName> & _master_isotope_list;
+  const std::vector<VariableName> & _exclude;
 };

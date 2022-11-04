@@ -4,9 +4,9 @@ Both the neutron transport equation and the mass transport equations are
 hyperbolic and are numerically unstable when solved using the finite element
 method. There are several approaches to mitigate the oscillations that occur in
 the neutron transport equation and mass transport problems dominated by
-streaming and convection (respectively). The following sections discuss the approaches taken by
+streaming and advection (respectively). The following sections discuss the approaches taken by
 Gnat for both sets of governing equations, starting with the neutron transport
-equation and ending with the convection-diffusion equations.
+equation and ending with the advection-diffusion equations.
 
 ## Neutron Transport
 
@@ -116,3 +116,22 @@ at the interface for downwind faces, and the value of the current element's
 trial function at the interface.
 
 ## Mass Transport
+
+The stabilization approach taken for the isotope mass transport equation is the SUPG method (TODO: REFERENCE HERE). The SUPG method substitutes the set of continuous test functions for a discontinuous set of test functions which add artificial diffusion in the direction of advection. The derivation of the stabilized SUPG form begins with the discontinuous test functions:
+
+!equation id=discontinuous_test
+\psi_{j} + \tau\vec{v}\cdot\vec{\nabla}\psi_{j},\, \tau = \frac{h}{2||v||}
+
+where $\vec{v}$ is the velocity and $h$ is the minimum separation between vertices in a single finite element. Rearranging [!eqref](equations.md#isotope_transport) such that it equals zero, multiplying by the modified test functions [!eqref](discontinuous_test) and integrating over the domain $V$ yields the following:
+
+!equation id=stabilized_isotope_variational
+\Big(\psi_{j} + \tau\vec{v}\cdot\vec{\nabla}\psi_{j},\,\frac{\partial}{\partial t}N_{i}\Big)_{V}
++ \Big(\psi_{j} + \tau\vec{v}\cdot\vec{\nabla}\psi_{j},\,\nabla\cdot\Big(\vec{v}N_{i}\Big)\Big)_{V}
++ \Big(\psi_{j} + \tau\vec{v}\cdot\vec{\nabla}\psi_{j},\,\lambda_{i}N_{i}\Big)_{V}
++ \Big(\psi_{j} + \tau\vec{v}\cdot\vec{\nabla}\psi_{j},\,\sum_{g = 1}^{G}\sigma_{a,g,i}N_{i}\Phi_{g}\Big)_{V}\\
+- \Big(\psi_{j} + \tau\vec{v}\cdot\vec{\nabla}\psi_{j},\,\nabla\cdot\Big(D_{i}\vec{\nabla}N_{i}\Big)\Big)_{V}
+- \Big(\psi_{j} + \tau\vec{v}\cdot\vec{\nabla}\psi_{j},\,\sum_{i' = 1}^{I}\sum_{g = 1}^{G}\sigma_{a,g,i'\rightarrow i}N_{i'}\Phi_{g}\Big)_{V}
+- \Big(\psi_{j} + \tau\vec{v}\cdot\vec{\nabla}\psi_{j},\,\sum_{i' = 1}^{I}\lambda_{i'}f_{i'\rightarrow i}N_{i'}\Big)_{V}
+= 0
+
+Applying integration by parts and the divergence theorem yields the final weak form for the isotope mass transport equation:

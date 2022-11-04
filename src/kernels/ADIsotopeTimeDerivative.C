@@ -1,5 +1,7 @@
 #include "ADIsotopeTimeDerivative.h"
 
+registerMooseObject("GnatApp", ADIsotopeTimeDerivative);
+
 InputParameters
 ADIsotopeTimeDerivative::validParams()
 {

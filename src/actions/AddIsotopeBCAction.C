@@ -17,6 +17,11 @@ AddIsotopeBCAction::validParams()
   // params += GnatBaseAction::validParams();
 
   params.addClassDescription("Adds a boundary condition to all isotopes in the isotope system.");
+  params.addParam<std::vector<VariableName>>(
+      "excluded_isotopes",
+      std::vector<VariableName>(),
+      "Isotopes in the master list that this boundary condition should "
+      "not be applied to..");
 
   // Add common isotope system parameters.
   params += SetupIsotopeSystemAction::validParams();
@@ -29,6 +34,7 @@ AddIsotopeBCAction::validParams()
 AddIsotopeBCAction::AddIsotopeBCAction(const InputParameters & parameters)
   : MooseObjectAction(parameters),
     _master_isotope_list(getParam<std::vector<VariableName>>("isotopes")),
+    _exclude(getParam<std::vector<VariableName>>("excluded_isotopes")),
     _p_type(ProblemType::Cartesian1D)
 {
   // Check if a container block exists with isotope parameters. If yes, apply them.
@@ -134,6 +140,12 @@ AddIsotopeBCAction::act()
 
   for (const auto & var : _master_isotope_list)
   {
+    {
+      auto r = std::find(_exclude.begin(), _exclude.end(), var);
+      if (r != _exclude.end())
+        continue;
+    }
+
     _moose_object_pars.set<NonlinearVariableName>("variable") = var;
     applyIsotopeParameters(_moose_object_pars);
 

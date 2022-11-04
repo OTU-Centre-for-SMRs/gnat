@@ -7,12 +7,12 @@ GaussAngularQuadrature::GaussAngularQuadrature(unsigned int n_c,
                                                unsigned int n_l,
                                                MajorAxis axis,
                                                ProblemType type)
-  : _n_c(std::move(n_c))
-  , _n_l(std::move(n_l))
-  , _axis(std::move(axis))
-  , _type(std::move(type))
-  , _polar_quadrature(std::move(n_l))
-  , _azimuthal_quadrature(std::move(n_c))
+  : _n_c(std::move(n_c)),
+    _n_l(std::move(n_l)),
+    _axis(std::move(axis)),
+    _type(std::move(type)),
+    _polar_quadrature(std::move(n_l)),
+    _azimuthal_quadrature(std::move(n_c))
 {
   switch (type)
   {
@@ -43,8 +43,7 @@ GaussAngularQuadrature::GaussAngularQuadrature(unsigned int n_c,
 }
 
 void
-GaussAngularQuadrature::generateWeightOrdiantePair(unsigned int i,
-                                                   unsigned int j)
+GaussAngularQuadrature::generateWeightOrdiantePair(unsigned int i, unsigned int j)
 {
   Real weight = 0.0;
   Real mu = 0.0;
@@ -59,14 +58,11 @@ GaussAngularQuadrature::generateWeightOrdiantePair(unsigned int i,
       break;
 
     case ProblemType::Cartesian2D:
-      weight = _polar_quadrature.weight(i - 1u)
-                    * _azimuthal_quadrature.weight(j - 1u);
+      weight = _polar_quadrature.weight(i - 1u) * _azimuthal_quadrature.weight(j - 1u);
       mu = _polar_quadrature.root(i - 1u);
       omega = _azimuthal_quadrature.angularRoot(j - 1u);
       _quadrature_set_omega.emplace_back(
-        RealVectorValue(mu,
-                        std::sqrt(1.0 - (mu * mu)) * std::cos(omega),
-                        0.0));
+          RealVectorValue(mu, std::sqrt(1.0 - (mu * mu)) * std::cos(omega), 0.0));
       _quadrature_set_omega.back() /= _quadrature_set_omega.back().norm();
       _quadrature_set_weight.emplace_back(weight);
 
@@ -77,57 +73,55 @@ GaussAngularQuadrature::generateWeightOrdiantePair(unsigned int i,
       switch (_axis)
       {
         case MajorAxis::X:
-          weight = _polar_quadrature.weight(i - 1u)
-                        * _azimuthal_quadrature.weight(j - 1u);
+          weight = _polar_quadrature.weight(i - 1u) * _azimuthal_quadrature.weight(j - 1u);
           mu = _polar_quadrature.root(i - 1u);
           omega = _azimuthal_quadrature.angularRoot(j - 1u);
           _quadrature_set_omega.emplace_back(
-            RealVectorValue(mu,
-                            std::sqrt(1.0 - (mu * mu)) * std::cos(omega),
-                            std::sqrt(1.0 - (mu * mu)) * std::sin(omega)));
+              RealVectorValue(mu,
+                              std::sqrt(1.0 - (mu * mu)) * std::cos(omega),
+                              std::sqrt(1.0 - (mu * mu)) * std::sin(omega)));
           _quadrature_set_weight.emplace_back(weight);
 
           _quadrature_set_omega.emplace_back(
-            RealVectorValue(-1.0 * mu,
-                            -1.0 * std::sqrt(1.0 - (mu * mu)) * std::cos(omega),
-                            -1.0 * std::sqrt(1.0 - (mu * mu)) * std::sin(omega)));
+              RealVectorValue(-1.0 * mu,
+                              -1.0 * std::sqrt(1.0 - (mu * mu)) * std::cos(omega),
+                              -1.0 * std::sqrt(1.0 - (mu * mu)) * std::sin(omega)));
           _quadrature_set_weight.emplace_back(weight);
 
           break;
 
         case MajorAxis::Y:
-          weight = _polar_quadrature.weight(i - 1u)
-                        * _azimuthal_quadrature.weight(j - 1u);
+          weight = _polar_quadrature.weight(i - 1u) * _azimuthal_quadrature.weight(j - 1u);
           mu = _polar_quadrature.root(i - 1u);
           omega = _azimuthal_quadrature.angularRoot(j - 1u);
           _quadrature_set_omega.emplace_back(
-            RealVectorValue(std::sqrt(1.0 - (mu * mu)) * std::sin(omega), mu,
-                            std::sqrt(1.0 - (mu * mu)) * std::cos(omega)));
+              RealVectorValue(std::sqrt(1.0 - (mu * mu)) * std::sin(omega),
+                              mu,
+                              std::sqrt(1.0 - (mu * mu)) * std::cos(omega)));
           _quadrature_set_weight.emplace_back(weight);
 
           _quadrature_set_omega.emplace_back(
-            RealVectorValue(-1.0 * std::sqrt(1.0 - (mu * mu)) * std::sin(omega),
-                            -1.0 * mu,
-                            -1.0 * std::sqrt(1.0 - (mu * mu)) * std::cos(omega)));
+              RealVectorValue(-1.0 * std::sqrt(1.0 - (mu * mu)) * std::sin(omega),
+                              -1.0 * mu,
+                              -1.0 * std::sqrt(1.0 - (mu * mu)) * std::cos(omega)));
           _quadrature_set_weight.emplace_back(weight);
 
           break;
 
         case MajorAxis::Z:
-          weight = _polar_quadrature.weight(i - 1u)
-                        * _azimuthal_quadrature.weight(j - 1u);
+          weight = _polar_quadrature.weight(i - 1u) * _azimuthal_quadrature.weight(j - 1u);
           mu = _polar_quadrature.root(i - 1u);
           omega = _azimuthal_quadrature.angularRoot(j - 1u);
           _quadrature_set_omega.emplace_back(
-            RealVectorValue(std::sqrt(1.0 - (mu * mu)) * std::cos(omega),
-                            std::sqrt(1.0 - (mu * mu)) * std::sin(omega),
-                            mu));
+              RealVectorValue(std::sqrt(1.0 - (mu * mu)) * std::cos(omega),
+                              std::sqrt(1.0 - (mu * mu)) * std::sin(omega),
+                              mu));
           _quadrature_set_weight.emplace_back(weight);
 
           _quadrature_set_omega.emplace_back(
-            RealVectorValue(-1.0 * std::sqrt(1.0 - (mu * mu)) * std::cos(omega),
-                            -1.0 * std::sqrt(1.0 - (mu * mu)) * std::sin(omega),
-                            -1.0 * mu));
+              RealVectorValue(-1.0 * std::sqrt(1.0 - (mu * mu)) * std::cos(omega),
+                              -1.0 * std::sqrt(1.0 - (mu * mu)) * std::sin(omega),
+                              -1.0 * mu));
           _quadrature_set_weight.emplace_back(weight);
 
           break;

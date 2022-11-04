@@ -19,17 +19,16 @@ ConstantNeutronicsMaterial::validParams()
                                              "The group-to-group scattering "
                                              "cross-section moments for all "
                                              "energy groups.");
-  params.addParam<unsigned int>("anisotropy", 0u,
-                                "The scattering anisotropy of the medium.");
+  params.addParam<unsigned int>("anisotropy", 0u, "The scattering anisotropy of the medium.");
 
   return params;
 }
 
 ConstantNeutronicsMaterial::ConstantNeutronicsMaterial(const InputParameters & parameters)
-  : AbsorbingNeutronicsMaterial(parameters)
-  , _sigma_s_g_prime_g_l(getParam<std::vector<Real>>("group_scattering"))
-  , _anisotropy(getParam<unsigned int>("anisotropy"))
-  , _max_moments((_anisotropy + 1u) * _num_groups * _num_groups)
+  : AbsorbingNeutronicsMaterial(parameters),
+    _sigma_s_g_prime_g_l(getParam<std::vector<Real>>("group_scattering")),
+    _anisotropy(getParam<unsigned int>("anisotropy")),
+    _max_moments((_anisotropy + 1u) * _num_groups * _num_groups)
 {
   // Warn the user if more parameters have been provided than required.
   if (_sigma_s_g_prime_g_l.size() > _max_moments)
@@ -40,8 +39,7 @@ ConstantNeutronicsMaterial::ConstantNeutronicsMaterial(const InputParameters & p
   }
 
   // Error if the user did not provide enough parameters.
-  if (_sigma_s_g_prime_g_l.size() < _max_moments
-      && _sigma_s_g_prime_g_l.size() != 0u)
+  if (_sigma_s_g_prime_g_l.size() < _max_moments && _sigma_s_g_prime_g_l.size() != 0u)
   {
     mooseError("Not enough scattering cross-section moments have been "
                "provided.");
@@ -76,11 +74,11 @@ ConstantNeutronicsMaterial::computeQpProperties()
   _mat_saaf_c[_qp] = _saaf_c;
 
   // Speeds and removal cross-sections.
-  _mat_v_g[_qp].resize(_num_groups, 0.0);
+  _mat_inv_v_g[_qp].resize(_num_groups, 0.0);
   _mat_sigma_r_g[_qp].resize(_num_groups, 0.0);
   for (unsigned int i = 0; i < _num_groups; ++i)
   {
-    _mat_v_g[_qp][i] = _v_g[i];
+    _mat_inv_v_g[_qp][i] = 1.0 / _v_g[i];
     // Have to sum the absorption and out-scattering cross-section to form the
     // removal cross-section.
     _mat_sigma_r_g[_qp][i] = _sigma_a_g[i] + _sigma_s_out[i];

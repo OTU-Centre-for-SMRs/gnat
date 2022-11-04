@@ -23,8 +23,7 @@ VoidNeutronicsMaterial::validParams()
 }
 
 VoidNeutronicsMaterial::VoidNeutronicsMaterial(const InputParameters & parameters)
-  : EmptyNeutronicsMaterial(parameters)
-  , _v_g(getParam<std::vector<Real>>("group_speeds"))
+  : EmptyNeutronicsMaterial(parameters), _v_g(getParam<std::vector<Real>>("group_speeds"))
 {
   // Warn the user if they provided more properties than required.
   if (_v_g.size() > _num_groups)
@@ -52,11 +51,11 @@ VoidNeutronicsMaterial::computeQpProperties()
   _mat_saaf_eta[_qp] = _saaf_eta;
   _mat_saaf_c[_qp] = _saaf_c;
 
-  _mat_v_g[_qp].resize(_num_groups, 0.0);
+  _mat_inv_v_g[_qp].resize(_num_groups, 0.0);
   _mat_sigma_r_g[_qp].resize(_num_groups, 0.0);
   for (unsigned int i = 0; i < _num_groups; ++i)
   {
-    _mat_v_g[_qp][i] = _v_g[i];
+    _mat_inv_v_g[_qp][i] = 1.0 / _v_g[i];
     _mat_sigma_r_g[_qp][i] = 0.0;
   }
 }

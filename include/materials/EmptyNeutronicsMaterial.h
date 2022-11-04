@@ -15,7 +15,7 @@ protected:
   const unsigned int _num_groups;
 
   // Material properties that neutronics materials are expected to provide.
-  ADMaterialProperty<std::vector<Real>> & _mat_v_g;
+  ADMaterialProperty<std::vector<Real>> & _mat_inv_v_g;
   ADMaterialProperty<std::vector<Real>> & _mat_sigma_r_g;
   ADMaterialProperty<std::vector<Real>> & _mat_surface_source;
   ADMaterialProperty<std::vector<Real>> & _mat_sigma_s_g_prime_g_l;

@@ -13,6 +13,7 @@ public:
 
 protected:
   void applyIsotopeParameters(InputParameters & params);
+  void addICs();
   void addKernels();
   void addMaterials();
 
@@ -35,16 +36,16 @@ protected:
   // Base diffusion coefficient. TODO: Different diffusion coefficient correlations?
   const Real _diffusion_coefficient_base;
   // Vector of microscopic absorption cross-sections.
-  const std::vector<Real> _sigma_a;
+  const std::vector<Real> & _sigma_a;
   // Half-life.
   Real _half_life;
 
   // Decay parent isotope properties.
   std::vector<Real> _parent_decay_constants;
-  const std::vector<Real> _parent_branching_fractions;
+  const std::vector<Real> & _parent_branching_fractions;
 
   // Activation parent isotope properties.
-  const std::vector<Real> _parent_sigma_act;
+  const std::vector<Real> & _parent_sigma_act;
 
   bool _first_action;
 }; // class AddMobileIsotopeAction

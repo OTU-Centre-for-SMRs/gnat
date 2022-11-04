@@ -41,6 +41,7 @@ ADIsotopeActivation::ADIsotopeActivation(const InputParameters & parameters)
   const unsigned int coupled_densities = coupledComponents("isotope_densities");
   if (coupled_densities != (_sigma_a_g.size() / _num_groups))
   {
+    std::cout << coupled_densities << " " << (_sigma_a_g.size() / _num_groups) << std::endl;
     mooseError("Mismatch between the number of provided cross-sections and the "
                "densities.");
   }

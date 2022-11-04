@@ -15,5 +15,5 @@ protected:
   // g
   const unsigned int _group_index;
 
-  const ADMaterialProperty<std::vector<Real>> & _v_g;
+  const ADMaterialProperty<std::vector<Real>> & _inv_v_g;
 }; // class ADDFEMTimeDerivative

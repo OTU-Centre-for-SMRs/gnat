@@ -22,16 +22,17 @@ ADDFEMTimeDerivative::validParams()
 }
 
 ADDFEMTimeDerivative::ADDFEMTimeDerivative(const InputParameters & parameters)
-  : ADTimeDerivative(parameters)
-  , _group_index(getParam<unsigned int>("group_index"))
-  , _v_g(getADMaterialProperty<std::vector<Real>>("v_g"))
-{ }
+  : ADTimeDerivative(parameters),
+    _group_index(getParam<unsigned int>("group_index")),
+    _inv_v_g(getADMaterialProperty<std::vector<Real>>("inv_v_g"))
+{
+}
 
 ADReal
 ADDFEMTimeDerivative::precomputeQpResidual()
 {
-  if (_group_index >= _v_g[_qp].size())
+  if (_group_index >= _inv_v_g[_qp].size())
     mooseError("The group index exceeds the number of provided neutron speeds.");
 
-  return (1.0 / _v_g[_qp][_group_index]) * ADTimeDerivative::precomputeQpResidual();
+  return _inv_v_g[_qp][_group_index] * ADTimeDerivative::precomputeQpResidual();
 }
