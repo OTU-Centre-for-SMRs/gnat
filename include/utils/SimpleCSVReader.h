@@ -13,6 +13,8 @@ public:
 
   bool read();
 
+  bool has(const std::string & column) { return _csv_data.count(column) > 0u; }
+
   std::size_t numColumns() const { return _column_headers.size(); }
 
   std::string & getHeader(std::size_t column_index) { return _column_headers[column_index]; }

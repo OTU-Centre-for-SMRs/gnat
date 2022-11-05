@@ -111,7 +111,7 @@ FileNeutronicsMaterial::FileNeutronicsMaterial(const InputParameters & parameter
 
   // Resize the properties and initialize with 0.0.
   _sigma_r_g.resize(_num_groups, 0.0);
-  _sigma_s_g_prime_g_l.resize(_num_groups * _num_groups * _anisotropy, 0.0);
+  _sigma_s_g_prime_g_l.resize(_num_groups * _num_groups * (_anisotropy + 1u), 0.0);
 
   // Convert per-nuclide cross-sections to bulk material cross-sections.
   bool first_inv_v = true;
@@ -295,6 +295,7 @@ FileNeutronicsMaterial::parseOpenMCProperty(const PropertyType & type,
     // fast, group 2 would be thermal.
     // The case switch-case works with the different nuclear properties.
     auto & values = reader.getColumn("mean");
+    bool has_moments = reader.has("legendre");
     switch (type)
     {
       case PropertyType::InvVelocity:
@@ -345,9 +346,13 @@ FileNeutronicsMaterial::parseOpenMCProperty(const PropertyType & type,
         {
           _material_properties[reader.getEntry("nuclide", row)]._sigma_s_g_prime_g_l.emplace_back(
               std::stod(values[row]));
-          _anisotropy = std::max(
-              _anisotropy,
-              static_cast<unsigned int>(std::stoi(reader.getEntry("legendre", row).substr(1u))));
+
+          if (has_moments)
+          {
+            _anisotropy = std::max(
+                _anisotropy,
+                static_cast<unsigned int>(std::stoi(reader.getEntry("legendre", row).substr(1u))));
+          }
         }
         _max_moments = (_anisotropy + 1u) * _num_groups * _num_groups;
         break;

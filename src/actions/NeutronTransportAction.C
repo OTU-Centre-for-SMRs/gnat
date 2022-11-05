@@ -366,32 +366,101 @@ NeutronTransportAction::initializeCommon()
 
     // Loop over all moments and set up auxvariables and auxkernels.
     unsigned int moment_index = 0u;
-    for (unsigned int l = 0; l <= _max_eval_anisotropy; ++l)
+    switch (_p_type)
     {
-      for (int m = -1 * static_cast<int>(l); m <= static_cast<int>(l); ++m)
-      {
-        const auto & var_name = _group_flux_moments[g][moment_index];
-
-        // Add auxvariables.
-        if (_current_task == "add_aux_variable")
+      case ProblemType::Cartesian1D:
+        for (unsigned int l = 0; l <= _max_eval_anisotropy; ++l)
         {
-          if (g == 0u && l == 0u && m == -1 * static_cast<int>(l))
-            debugOutput("    - Adding auxvariables...");
+          const auto & var_name = _group_flux_moments[g][moment_index];
 
-          addAuxVariables(var_name);
+          // Add auxvariables.
+          if (_current_task == "add_aux_variable")
+          {
+            if (g == 0u && l == 0u)
+              debugOutput("    - Adding auxvariables...");
+
+            addAuxVariables(var_name);
+          }
+
+          // Add auxkernels.
+          if (_current_task == "add_aux_kernel")
+          {
+            if (g == 0u && l == 0u)
+              debugOutput("    - Adding auxkernels...");
+
+            addAuxKernels(var_name, g, l, 0u);
+          }
+
+          moment_index++;
         }
+        moment_index = 0u;
+        break;
 
-        // Add auxkernels.
-        if (_current_task == "add_aux_kernel")
+      case ProblemType::Cartesian2D:
+        for (unsigned int l = 0u; l <= _max_eval_anisotropy; ++l)
         {
-          if (g == 0u && l == 0u && m == -1 * static_cast<int>(l))
-            debugOutput("    - Adding auxkernels...");
+          for (int m = 0; m <= static_cast<int>(l); ++m)
+          {
+            const auto & var_name = _group_flux_moments[g][moment_index];
 
-          addAuxKernels(var_name, g, l, m);
+            // Add auxvariables.
+            if (_current_task == "add_aux_variable")
+            {
+              if (g == 0u && l == 0u && m == 0u)
+                debugOutput("    - Adding auxvariables...");
+
+              addAuxVariables(var_name);
+            }
+
+            // Add auxkernels.
+            if (_current_task == "add_aux_kernel")
+            {
+              if (g == 0u && l == 0u && m == 0u)
+                debugOutput("    - Adding auxkernels...");
+
+              addAuxKernels(var_name, g, l, m);
+            }
+
+            moment_index++;
+          }
         }
+        moment_index = 0u;
+        break;
 
-        moment_index++;
-      }
+      case ProblemType::Cartesian3D:
+        for (unsigned int l = 0; l <= _max_eval_anisotropy; ++l)
+        {
+          for (int m = -1 * static_cast<int>(l); m <= static_cast<int>(l); ++m)
+          {
+            const auto & var_name = _group_flux_moments[g][moment_index];
+
+            // Add auxvariables.
+            if (_current_task == "add_aux_variable")
+            {
+              if (g == 0u && l == 0u && m == -1 * static_cast<int>(l))
+                debugOutput("    - Adding auxvariables...");
+
+              addAuxVariables(var_name);
+            }
+
+            // Add auxkernels.
+            if (_current_task == "add_aux_kernel")
+            {
+              if (g == 0u && l == 0u && m == -1 * static_cast<int>(l))
+                debugOutput("    - Adding auxkernels...");
+
+              addAuxKernels(var_name, g, l, m);
+            }
+
+            moment_index++;
+          }
+        }
+        moment_index = 0u;
+        break;
+
+      default:
+        mooseError("Unknown mesh dimensionality.");
+        break;
     }
   }
 

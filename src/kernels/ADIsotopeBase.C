@@ -8,20 +8,11 @@ ADIsotopeBase::validParams()
   auto params = ADKernel::validParams();
   params.addClassDescription("A base class whick computes the S/U-PG "
                              "stabilization term for the isotope mass "
-                             "transport equation. Provides extra functionality "
-                             "for converting between number densities and mass "
-                             "densities.");
+                             "transport equation.");
   params.addRequiredParam<MooseEnum>("velocity_type",
                                      MooseEnum("constant function variable"),
                                      "An indicator for which type of velocity "
                                      "field should be used.");
-  params.addParam<MooseEnum>("density_type",
-                             MooseEnum("number mass", "number"),
-                             "If the primal variable is a mass or number "
-                             "density. Microscopic cross-sections must be "
-                             "multiplied by a number density while fluid "
-                             "modules tend to output a mass density.");
-  params.addParam<Real>("molar_mass", 1.0, "The molar mass of the isotope.");
   params.addParam<RealVectorValue>(
       "constant_velocity", RealVectorValue(0.0), "A constant velocity field.");
   params.addParam<FunctionName>("u_function",
@@ -52,9 +43,7 @@ ADIsotopeBase::validParams()
 ADIsotopeBase::ADIsotopeBase(const InputParameters & parameters)
   : ADKernel(parameters),
     _vel_type(VelocityType::Constant),
-    _primal_variable_type(getParam<MooseEnum>("density_type").getEnum<DensityType>()),
     _mesh_dims(_fe_problem.mesh().dimension()),
-    _molar_mass(getParam<Real>("molar_mass")),
     _constant_vel(getParam<RealVectorValue>("constant_velocity"))
 {
   switch (getParam<MooseEnum>("velocity_type").getEnum<MooseEnumVelocityType>())
@@ -169,16 +158,4 @@ ADIsotopeBase::computeQpTests()
   tau /= (getQpVelocity() + ADRealVectorValue(libMesh::TOLERANCE * libMesh::TOLERANCE)).norm();
 
   return _test[_i][_qp] + tau * getQpVelocity() * _grad_test[_i][_qp];
-}
-
-ADReal
-ADIsotopeBase::adComputeNumberDensity(ADReal mass_density)
-{
-  return mass_density * _avogadros_number / _molar_mass;
-}
-
-ADReal
-ADIsotopeBase::adComputeMassDensity(ADReal number_density)
-{
-  return number_density * _molar_mass / _avogadros_number;
 }

@@ -98,7 +98,7 @@ ADSAAFScattering::computeQpResidual()
     scattering_index = g_prime * _num_groups * _anisotropy[_qp] + _group_index * _anisotropy[_qp];
 
     // The maximum degree of anisotropy we can handle.
-    const unsigned int max_anisotropy = std::min(_anisotropy[_qp], max_anisotropy);
+    const unsigned int max_anisotropy = std::min(_anisotropy[_qp], _max_anisotropy);
     for (unsigned int l = 0; l <= max_anisotropy; ++l)
     {
       // Handle different levels of dimensionality.

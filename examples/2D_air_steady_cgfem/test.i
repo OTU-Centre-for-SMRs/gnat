@@ -38,8 +38,8 @@
 [Materials]
   [Domain]
     type = FileNeutronicsMaterial
-    num_groups = 8
-    file_name = './examples/2D_cross_sections_steady_cgfem/cross_sections/cross_sections.txt'
+    num_groups = 1
+    file_name = './examples/2D_air_steady_cgfem/cross_sections/cross_sections.txt'
     source_material_id = '1'
   []
 []
