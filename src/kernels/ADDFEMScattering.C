@@ -80,8 +80,9 @@ ADDFEMScattering::computeFluxMoment(unsigned int g_prime, unsigned int l, int m)
   Real omega = 0.0;
   for (unsigned int i = 0; i < _quadrature_set.totalOrder(); ++i)
   {
-    cartesianToSpherical(_quadrature_set.direction(i), mu, omega);
-
+    mu = _quadrature_set.getPolarRoot(i);
+    omega = _quadrature_set.getAzimuthalAngularRoot(i);
+    // cartesianToSpherical(_quadrature_set.direction(i), mu, omega);
     const unsigned int base_n = g_prime * (_group_flux_ordinates.size() / _num_groups);
     moment += RealSphericalHarmonics::evaluate(l, m, mu, omega) *
               std::max(MetaPhysicL::raw_value((*_group_flux_ordinates[base_n + i])[_qp]), 0.0) *
@@ -118,7 +119,9 @@ ADDFEMScattering::computeQpResidual()
       {
         // Legendre moments in 1D, looping over m is unecessary.
         case ProblemType::Cartesian1D:
-          cartesianToSpherical(_quadrature_set.direction(_ordinate_index), mu, omega);
+          mu = _quadrature_set.getPolarRoot(_ordinate_index);
+          omega = _quadrature_set.getAzimuthalAngularRoot(_ordinate_index);
+          // cartesianToSpherical(_quadrature_set.direction(_ordinate_index), mu, omega);
           moment_l +=
               computeFluxMoment(g_prime, l, 0) * RealSphericalHarmonics::evaluate(l, 0, mu, omega);
           break;
@@ -127,7 +130,9 @@ ADDFEMScattering::computeQpResidual()
         case ProblemType::Cartesian2D:
           for (int m = 0; m <= static_cast<int>(l); ++m)
           {
-            cartesianToSpherical(_quadrature_set.direction(_ordinate_index), mu, omega);
+            mu = _quadrature_set.getPolarRoot(_ordinate_index);
+            omega = _quadrature_set.getAzimuthalAngularRoot(_ordinate_index);
+            // cartesianToSpherical(_quadrature_set.direction(_ordinate_index), mu, omega);
             moment_l += computeFluxMoment(g_prime, l, m) *
                         RealSphericalHarmonics::evaluate(l, m, mu, omega);
           }
@@ -137,7 +142,9 @@ ADDFEMScattering::computeQpResidual()
         case ProblemType::Cartesian3D:
           for (int m = -1 * static_cast<int>(l); m <= static_cast<int>(l); ++m)
           {
-            cartesianToSpherical(_quadrature_set.direction(_ordinate_index), mu, omega);
+            mu = _quadrature_set.getPolarRoot(_ordinate_index);
+            omega = _quadrature_set.getAzimuthalAngularRoot(_ordinate_index);
+            // cartesianToSpherical(_quadrature_set.direction(_ordinate_index), mu, omega);
             moment_l += computeFluxMoment(g_prime, l, m) *
                         RealSphericalHarmonics::evaluate(l, m, mu, omega);
           }

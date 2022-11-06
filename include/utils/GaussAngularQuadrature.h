@@ -36,6 +36,11 @@ public:
 
   LegendrePolynomial getPolarLegendre() const { return _polar_quadrature; }
   ChebyshevPolynomial getAzimuthalChebyshev() const { return _azimuthal_quadrature; }
+  Real getPolarRoot(unsigned int n) const { return _polar_quadrature.root(n / _n_l); }
+  Real getAzimuthalAngularRoot(unsigned int n) const
+  {
+    return _azimuthal_quadrature.angularRoot(n % _n_c);
+  }
 
 private:
   // Generate a weight-ordinate pair for 1-3 dimensional problems.

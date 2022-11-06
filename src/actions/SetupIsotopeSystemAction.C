@@ -20,13 +20,6 @@ SetupIsotopeSystemAction::validParams()
                                      MooseEnum("constant function variable"),
                                      "An indicator for which type of velocity "
                                      "field should be used.");
-  params.addParam<MooseEnum>("density_type",
-                             MooseEnum("number mass", "number"),
-                             "If the primal variable is a mass or number "
-                             "density. Microscopic cross-sections must be "
-                             "multiplied by a number density while fluid "
-                             "modules tend to output a mass density.");
-  params.addParam<Real>("molar_mass", 1.0, "The molar mass of the isotope.");
   params.addParam<RealVectorValue>(
       "constant_velocity", RealVectorValue(0.0), "A constant velocity field.");
   params.addParam<FunctionName>("u_function",

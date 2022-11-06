@@ -17,14 +17,7 @@ protected:
   void addKernels();
   void addMaterials();
 
-  enum class HalfLifeUnits
-  {
-    Seconds = 0u,
-    Minutes = 1u,
-    Hours = 2u,
-    Days = 3u,
-    Years = 4u
-  } _hl_units;
+  HalfLifeUnits _hl_units;
 
   // Variable names.
   const VariableName _isotope_name;

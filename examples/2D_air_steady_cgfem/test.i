@@ -5,17 +5,21 @@
   [domain]
     type = CartesianMeshGenerator
     dim = 2
-    dx = 10
-    dy = 10
-    ix = 100
-    iy = 100
+    dx = '3.5 3 3.5'
+    dy = '3.5 3 3.5'
+    ix = '35 31 35'
+    iy = '35 31 35'
+    subdomain_id = '
+      1 1 1
+      1 1 1
+      1 1 1'
   []
 []
 
 [NeutronActivationStudy]
   execution_type = steady
-  num_groups = 1
-  max_anisotropy = 0
+  num_groups = 2
+  max_anisotropy = 1
 
   [TransportSystem]
     scheme = saaf_cfem
@@ -24,8 +28,8 @@
     order = FIRST
     family = LAGRANGE
 
-    n_azimuthal = 2
-    n_polar = 2
+    n_azimuthal = 3
+    n_polar = 3
 
     vacuum_boundaries = 'left right top bottom'
 
@@ -38,9 +42,10 @@
 [Materials]
   [Domain]
     type = FileNeutronicsMaterial
-    num_groups = 1
+    num_groups = 2
     file_name = './examples/2D_air_steady_cgfem/cross_sections/cross_sections.txt'
     source_material_id = '1'
+    block = '1'
   []
 []
 

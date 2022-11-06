@@ -3,9 +3,9 @@
 // Major axis for quadrature sets.
 enum class MajorAxis
 {
-  X = 0,
-  Y = 1,
-  Z = 2
+  X = 0u,
+  Y = 1u,
+  Z = 2u
 }; // enum class MajorAxis
 
 // Problem type to determine the appropriate quadrature set and spherical
@@ -40,3 +40,31 @@ enum class DebugVerbosity
   Level0 = 0u,
   Level1 = 1u
 }; // enum class DebugVerbosity
+
+// An enum to make input easier for the mobile isotope system.
+enum class HalfLifeUnits
+{
+  Seconds = 0u,
+  Minutes = 1u,
+  Hours = 2u,
+  Days = 3u,
+  Years = 4u
+}; // enum class HalfLifeUnits
+
+// An enum to make the parsing code for cross-section files cleaner.
+enum class PropertyType
+{
+  InvVelocity = 0u,
+  SigmaR = 1u,
+  SigmaA = 2u,
+  SigmaS = 3u,
+  SigmaSMatrix = 4u
+}; // enum class PropertyType
+
+// An enum to make the parsing code for cross-section files cleaner.
+enum class CrossSectionSource
+{
+  Detect = 0u,
+  Gnat = 1u,
+  OpenMC = 2u
+}; // enum class CrossSectionSource

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "GnatBase.h"
 #include "EmptyNeutronicsMaterial.h"
 
 class FileNeutronicsMaterial : public EmptyNeutronicsMaterial
@@ -10,28 +11,15 @@ public:
   FileNeutronicsMaterial(const InputParameters & parameters);
 
 protected:
-  enum class PropertyType
-  {
-    InvVelocity = 0u,
-    SigmaR = 1u,
-    SigmaA = 2u,
-    SigmaS = 3u,
-    SigmaSMatrix = 4u
-  };
-
   virtual void computeQpProperties() override;
   void parseProperty(const PropertyType & type, const std::string & property_file);
   void parseGnatProperty(const PropertyType & type, const std::string & property_file);
   void parseOpenMCProperty(const PropertyType & type, const std::string & property_file);
 
-  enum class CrossSectionSource
-  {
-    Detect = 0u,
-    Gnat = 1u,
-    OpenMC = 2u
-  } _xs_source;
+  CrossSectionSource _xs_source;
 
-  struct IsotopeProperties
+  // Nuclear properties for individual isotopes.
+  struct NuclideProperties
   {
     std::vector<Real> _inv_v_g;
     std::vector<Real> _sigma_r_g;
@@ -39,9 +27,7 @@ protected:
     std::vector<Real> _sigma_s_g;
     std::vector<Real> _sigma_s_g_prime_g_l;
   };
-
-  // Nuclear properties for individual isotopes.
-  std::unordered_map<std::string, IsotopeProperties> _material_properties;
+  std::unordered_map<std::string, NuclideProperties> _material_properties;
 
   // The sum of all isotopic material properties are the actual properties provided to the transport
   // solver.
@@ -74,6 +60,11 @@ protected:
   std::vector<Real> _sigma_s_g_prime_g_l;
   unsigned int _anisotropy;
   unsigned int _max_moments;
+
+  std::vector<Real> _source_moments;
+  const unsigned int _source_anisotropy;
+  unsigned int _max_source_moments;
+  bool _has_volumetric_source;
 
   const std::string & _file_name;
   const std::string & _source_material_id;

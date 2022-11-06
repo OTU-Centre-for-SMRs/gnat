@@ -39,7 +39,7 @@ GaussAngularQuadrature::GaussAngularQuadrature(unsigned int n_c,
       }
 
       break;
-  };
+  }
 }
 
 void
@@ -63,7 +63,7 @@ GaussAngularQuadrature::generateWeightOrdiantePair(unsigned int i, unsigned int 
       omega = _azimuthal_quadrature.angularRoot(j - 1u);
       _quadrature_set_omega.emplace_back(
           RealVectorValue(mu, std::sqrt(1.0 - (mu * mu)) * std::cos(omega), 0.0));
-      _quadrature_set_omega.back() /= _quadrature_set_omega.back().norm();
+      //_quadrature_set_omega.back() /= _quadrature_set_omega.back().norm();
       _quadrature_set_weight.emplace_back(weight);
 
       break;

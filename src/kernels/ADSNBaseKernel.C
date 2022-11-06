@@ -17,7 +17,8 @@ ADSNBaseKernel::validParams()
                                                     "Order of the azimuthal "
                                                     "Gauss-Chebyshev "
                                                     "quadrature set.");
-  params.addParam<MooseEnum>("major_axis", MooseEnum("x y z", "x"),
+  params.addParam<MooseEnum>("major_axis",
+                             MooseEnum("x y z", "x"),
                              "Major axis of the angular quadrature. Allows the "
                              "polar angular quadrature to align with a cartesian "
                              "axis with minimal heterogeneity. Default is the "
@@ -27,17 +28,17 @@ ADSNBaseKernel::validParams()
                                      MooseEnum("1D_cartesian 2D_cartesian 3D_cartesian"),
                                      "Dimensionality and the coordinate system of the "
                                      "problem.");
-                                     
+
   return params;
 }
 
 ADSNBaseKernel::ADSNBaseKernel(const InputParameters & parameters)
-  : ADKernel(parameters)
-  , _quadrature_set(getParam<unsigned int>("n_c"),
+  : ADKernel(parameters),
+    _quadrature_set(getParam<unsigned int>("n_c"),
                     getParam<unsigned int>("n_l"),
                     getParam<MooseEnum>("major_axis").getEnum<MajorAxis>(),
-                    getParam<MooseEnum>("dimensionality").getEnum<ProblemType>())
-  , _symmetry_factor(1.0)
+                    getParam<MooseEnum>("dimensionality").getEnum<ProblemType>()),
+    _symmetry_factor(1.0)
 {
   switch (_quadrature_set.getProblemType())
   {
@@ -60,8 +61,7 @@ ADSNBaseKernel::ADSNBaseKernel(const InputParameters & parameters)
 }
 
 void
-ADSNBaseKernel::cartesianToSpherical(const RealVectorValue & ordinate,
-                                     Real & mu, Real & omega)
+ADSNBaseKernel::cartesianToSpherical(const RealVectorValue & ordinate, Real & mu, Real & omega)
 {
   switch (_quadrature_set.getAxis())
   {

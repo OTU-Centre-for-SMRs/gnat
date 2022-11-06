@@ -11,13 +11,15 @@ InputParameters
 FileNeutronicsMaterial::validParams()
 {
   auto params = EmptyNeutronicsMaterial::validParams();
-  params.addClassDescription("Provides the neutron group velocity ($v_{g}$), "
-                             "neutron group absorption cross-section "
-                             "($\\Sigma_{a,g}$), and the scattering cross-"
-                             "section moments "
-                             "($\\Sigma_{s, g', g, l}$) for "
-                             "transport problems. The material properties "
-                             "are imported from files provided by the user.");
+  params.addClassDescription(
+      "Provides the neutron group velocity ($v_{g}$), "
+      "neutron group absorption cross-section "
+      "($\\Sigma_{a,g}$), and the scattering cross-"
+      "section moments "
+      "($\\Sigma_{s, g', g, l}$) for "
+      "transport problems. The material properties "
+      "are imported from files provided by the user. The user many also provide volumetric neutron "
+      "source moments through the input parameter system.");
   params.addRequiredParam<std::string>("file_name", "The file to extract cross-sections from.");
   params.addRequiredParam<std::string>("source_material_id",
                                        "The material ID used by the cross-section source to "
@@ -31,6 +33,12 @@ FileNeutronicsMaterial::validParams()
                              "material will attempt to determine the source and parse "
                              "accordingly.");
 
+  // Optional parameters for a volumetric particle source.
+  params.addParam<std::vector<Real>>("group_source",
+                                     "The external source moments for all energy groups.");
+  params.addParam<unsigned int>(
+      "source_anisotropy", 0u, "The external source anisotropy of the medium.");
+
   return params;
 }
 
@@ -40,7 +48,11 @@ FileNeutronicsMaterial::FileNeutronicsMaterial(const InputParameters & parameter
     _source_material_id(getParam<std::string>("source_material_id")),
     _xs_source(getParam<MooseEnum>("cross_section_source").getEnum<CrossSectionSource>()),
     _anisotropy(0u),
-    _max_moments(0u)
+    _max_moments(0u),
+    _source_moments(getParam<std::vector<Real>>("group_source")),
+    _source_anisotropy(getParam<unsigned int>("source_anisotropy")),
+    _max_source_moments(0u),
+    _has_volumetric_source(false)
 {
   // Open the descriptor file to figure out where the cross-sections are stored and what the files
   // are named.
@@ -167,6 +179,44 @@ FileNeutronicsMaterial::FileNeutronicsMaterial(const InputParameters & parameter
       for (unsigned int i = 0u; i < _sigma_s_g_prime_g_l.size(); ++i)
         _sigma_s_g_prime_g_l[i] += data._sigma_s_g_prime_g_l[i];
     }
+  }
+
+  _has_volumetric_source = _source_moments.size() > 0u;
+  if (_has_volumetric_source)
+  {
+    switch (_mesh.dimension())
+    {
+      case 1u:
+        _max_source_moments = (_source_anisotropy + 1u);
+        _max_source_moments *= _num_groups;
+        break;
+
+      case 2u:
+        _max_source_moments = (_source_anisotropy + 1u) * (_source_anisotropy + 2u) / 2u;
+        _max_source_moments *= _num_groups;
+        break;
+
+      case 3u:
+        _max_source_moments = (_source_anisotropy + 1u) * (_source_anisotropy + 1u);
+        _max_source_moments *= _num_groups;
+        break;
+
+      default:
+        mooseError("Unknown mesh dimensionality.");
+        break;
+    }
+
+    // Warn the user if more parameters have been provided than required.
+    if (_source_moments.size() > _max_source_moments)
+    {
+      mooseWarning("More source moments have been provided than possibly "
+                   "supported with the given maximum source anisotropy and "
+                   "number of groups. The vector will be truncated.");
+    }
+
+    // Error if the user did not provide enough parameters.
+    if (_source_moments.size() < _max_source_moments)
+      mooseError("Not enough source moments have been provided.");
   }
 }
 
@@ -383,4 +433,13 @@ FileNeutronicsMaterial::computeQpProperties()
   _mat_sigma_s_g_prime_g_l[_qp].resize(_max_moments, 0.0);
   for (unsigned int i = 0u; i < _max_moments; ++i)
     _mat_sigma_s_g_prime_g_l[_qp][i] = _sigma_s_g_prime_g_l[i];
+
+  // Source moments and anisotropy.
+  if (_has_volumetric_source)
+  {
+    _mat_src_anisotropy[_qp] = _source_anisotropy;
+    _mat_source_moments[_qp].resize(_max_source_moments, 0.0);
+    for (unsigned int i = 0u; i < _max_source_moments; ++i)
+      _mat_source_moments[_qp][i] = _source_moments[i];
+  }
 }

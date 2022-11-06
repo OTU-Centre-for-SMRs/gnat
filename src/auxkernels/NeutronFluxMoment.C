@@ -21,7 +21,8 @@ NeutronFluxMoment::validParams()
                                                     "Order of the azimuthal "
                                                     "Gauss-Chebyshev "
                                                     "quadrature set.");
-  params.addParam<MooseEnum>("major_axis", MooseEnum("x y z", "x"),
+  params.addParam<MooseEnum>("major_axis",
+                             MooseEnum("x y z", "x"),
                              "Major axis of the angular quadrature. Allows the "
                              "polar angular quadrature to align with a cartesian "
                              "axis with minimal heterogeneity. Default is the "
@@ -31,14 +32,17 @@ NeutronFluxMoment::validParams()
                                      MooseEnum("1D_cartesian 2D_cartesian 3D_cartesian"),
                                      "Dimensionality and the coordinate system of the "
                                      "problem.");
-  params.addRequiredCoupledVar("group_flux_ordinates", "The flux solutions for "
+  params.addRequiredCoupledVar("group_flux_ordinates",
+                               "The flux solutions for "
                                "all discrete directions. Must be listed in the "
                                "same order as the quadrature directions and "
                                "weights.");
-  params.addRequiredParam<unsigned int>("degree", "Degree of this angular flux "
+  params.addRequiredParam<unsigned int>("degree",
+                                        "Degree of this angular flux "
                                         "moment.");
   params.addRequiredParam<int>("order", "Order of this angular flux moment.");
-  params.addParam<bool>("normalize_output", false,
+  params.addParam<bool>("normalize_output",
+                        false,
                         "Divide the flux moment by the spherical harmonics "
                         "weights.");
 
@@ -46,14 +50,14 @@ NeutronFluxMoment::validParams()
 }
 
 NeutronFluxMoment::NeutronFluxMoment(const InputParameters & parameters)
-  : AuxKernel(parameters)
-  , _quadrature_set(getParam<unsigned int>("n_c"),
+  : AuxKernel(parameters),
+    _quadrature_set(getParam<unsigned int>("n_c"),
                     getParam<unsigned int>("n_l"),
                     getParam<MooseEnum>("major_axis").getEnum<MajorAxis>(),
-                    getParam<MooseEnum>("dimensionality").getEnum<ProblemType>())
-  , _degree(getParam<unsigned int>("degree"))
-  , _order(getParam<int>("order"))
-  , _symmetry_factor(1.0)
+                    getParam<MooseEnum>("dimensionality").getEnum<ProblemType>()),
+    _degree(getParam<unsigned int>("degree")),
+    _order(getParam<int>("order")),
+    _symmetry_factor(1.0)
 {
   const unsigned int num_coupled = coupledComponents("group_flux_ordinates");
 
@@ -85,8 +89,7 @@ NeutronFluxMoment::NeutronFluxMoment(const InputParameters & parameters)
 }
 
 void
-NeutronFluxMoment::cartesianToSpherical(const RealVectorValue & ordinate,
-                                        Real & mu, Real & omega)
+NeutronFluxMoment::cartesianToSpherical(const RealVectorValue & ordinate, Real & mu, Real & omega)
 {
   switch (_quadrature_set.getAxis())
   {
@@ -118,10 +121,12 @@ NeutronFluxMoment::computeValue()
   Real mu = 0.0;
   for (unsigned int i = 0; i < _quadrature_set.totalOrder(); ++i)
   {
-    cartesianToSpherical(_quadrature_set.direction(i), mu, omega);
-    moment += RealSphericalHarmonics::evaluate(_degree, _order, mu, omega)
-              * std::max(MetaPhysicL::raw_value((* _flux_ordinates[i])[_qp]), 0.0)
-              * _quadrature_set.weight(i);
+    mu = _quadrature_set.getPolarRoot(i);
+    omega = _quadrature_set.getAzimuthalAngularRoot(i);
+    // cartesianToSpherical(_quadrature_set.direction(i), mu, omega);
+    moment += RealSphericalHarmonics::evaluate(_degree, _order, mu, omega) *
+              std::max(MetaPhysicL::raw_value((*_flux_ordinates[i])[_qp]), 0.0) *
+              _quadrature_set.weight(i);
   }
 
   return moment;
