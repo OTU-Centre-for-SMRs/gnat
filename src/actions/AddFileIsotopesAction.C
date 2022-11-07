@@ -40,7 +40,7 @@ AddFileIsotopesAction::validParams()
                         "Specifies a scaling factor to apply to "
                         "this variable.");
   params.addRequiredParam<std::vector<VariableName>>(
-      "isotope_names", "The identifying names of the isotopes to pull from the provided files.");
+      "nuclide_names", "The identifying names of the nuclides to pull from the provided files.");
 
   //----------------------------------------------------------------------------
   // Property file information.
@@ -101,7 +101,49 @@ AddFileIsotopesAction::AddFileIsotopesAction(const InputParameters & parameters)
     pars.applyParameters(isotope_system_actions[0]->parameters());
   }
 
+  // Setup the nuclide name list.
+  for (const auto & name : getParam<std::vector<VariableName>>("nuclide_names"))
+    _nuclide_properties.try_emplace(name);
+
   // Parse cross-sections first.
+  {
+    // Open the cross-section descriptor file to figure out where the cross-sections are stored and
+    // what the files are named.
+    std::ifstream descriptor_file(_xs_file_name);
+    std::string line;
+    std::string accum;
+    if (descriptor_file.is_open())
+    {
+      std::getline(descriptor_file, line);
+      if (_xs_source == CrossSectionSource::Detect)
+      {
+        // First line should always be the cross-section source. Use that to determine the
+        // properties.
+        if (line == "openmc")
+          _xs_source = CrossSectionSource::OpenMC;
+        else if (line == "gnat")
+          _xs_source = CrossSectionSource::Gnat;
+        else
+          mooseError("Unknown cross-section source.");
+      }
+
+      // Read each line. Assume that anything after the keyword is the relative path of the
+      // specific cross-section file to the descriptor file.
+      while (std::getline(descriptor_file, line))
+      {
+        auto pos = line.find("SigmaA: ");
+        if (pos != std::string::npos)
+        {
+          parseProperty(PropertyType::SigmaA, line.substr(pos + std::string("SigmaA: ").size()));
+          continue;
+        }
+      }
+
+      descriptor_file.close();
+    }
+    else
+      mooseError("Failed to open file " + _xs_file_name + " to read material properties.");
+  }
 
   // Nuclide information second.
 }
@@ -512,15 +554,6 @@ AddFileIsotopesAction::parseOpenMCProperty(const PropertyType & type,
       }
     }
 
-    // Loop over the data and add nuclides to the unordered map of data.
-    {
-      auto & nuclides = reader.getColumn("nuclide");
-      for (unsigned int row = static_cast<unsigned int>(min_row);
-           row < static_cast<unsigned int>(min_row) + num_isotopes;
-           ++row)
-        _nuclide_properties.try_emplace(nuclides[row]);
-    }
-
     // Loop over all of the rows of data and parse accordingly.
     // OpenMC orders energy groups from the largest to smallest. As an example: group 1 would be
     // fast, group 2 would be thermal.
@@ -529,8 +562,13 @@ AddFileIsotopesAction::parseOpenMCProperty(const PropertyType & type,
       for (unsigned int row = static_cast<unsigned int>(min_row);
            row <= static_cast<unsigned int>(max_row);
            ++row)
-        _nuclide_properties[reader.getEntry("nuclide", row)]._sigma_a_g.emplace_back(
-            std::stod(values[row]));
+      {
+        if (_nuclide_properties.count(reader.getEntry("nuclide", row)) > 0u)
+        {
+          _nuclide_properties[reader.getEntry("nuclide", row)]._sigma_a_g.emplace_back(
+              std::stod(values[row]));
+        }
+      }
     }
   }
   else
