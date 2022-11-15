@@ -1,7 +1,7 @@
 #include "AddMobileIsotopeAction.h"
 
 #include "AddVariableAction.h"
-#include "SetupIsotopeSystemAction.h"
+#include "SetupNuclideSystemAction.h"
 #include "InputParameterWarehouse.h"
 
 #include "ADIsotopeBase.h"
@@ -95,9 +95,9 @@ AddMobileIsotopeAction::validParams()
   //----------------------------------------------------------------------------
   // Parameters required for mass transport and stabilization. These are applied
   // to all isotope kernels.
-  params += SetupIsotopeSystemAction::validParams();
+  params += SetupNuclideSystemAction::validParams();
   params.makeParamNotRequired<MooseEnum>("velocity_type");
-  params.makeParamNotRequired<std::vector<VariableName>>("isotopes");
+  params.makeParamNotRequired<std::vector<VariableName>>("nuclides");
 
   return params;
 }
@@ -107,7 +107,7 @@ AddMobileIsotopeAction::AddMobileIsotopeAction(const InputParameters & params)
     _isotope_name(getParam<VariableName>("isotope_name")),
     _decay_parents(getParam<std::vector<VariableName>>("decay_parents")),
     _activation_parents(getParam<std::vector<VariableName>>("activation_parents")),
-    _master_isotope_list(getParam<std::vector<VariableName>>("isotopes")),
+    _master_isotope_list(getParam<std::vector<VariableName>>("nuclides")),
     _diffusion_coefficient_base(getParam<Real>("diffusion_coefficient_base")),
     _sigma_a(getParam<std::vector<Real>>("absorption_cross_sections")),
     _half_life(0.0),
@@ -118,7 +118,7 @@ AddMobileIsotopeAction::AddMobileIsotopeAction(const InputParameters & params)
 {
   // Check if a container block exists with isotope parameters. If yes, apply them.
   // FIX THIS: The most janky way to fix this breaking MOOSE change.
-  auto isotope_system_actions = _awh.getActions<SetupIsotopeSystemAction>();
+  auto isotope_system_actions = _awh.getActions<SetupNuclideSystemAction>();
   if (isotope_system_actions.size() == 1)
   {
     const auto & params = _app.getInputParameterWarehouse().getInputParameters();

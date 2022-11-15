@@ -1,0 +1,18 @@
+Begin: Ar40
+DiffusionCoefficient: 1.0
+WeightFraction: 0.99
+End: Ar40
+
+Begin: Ar41
+DiffusionCoefficient: 1.0
+HalfLife: 109.34
+WeightFraction: 0.01
+ActivationParents: Ar40
+End: Ar41
+
+Begin: K41
+DiffusionCoefficient: 1.0
+WeightFraction: 0.0
+DecayParents: Ar41
+DecayParentBranching: 1.0
+End: K41

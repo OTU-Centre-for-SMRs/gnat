@@ -4,7 +4,7 @@
 #include "BoundaryCondition.h"
 #include "InputParameterWarehouse.h"
 
-#include "SetupIsotopeSystemAction.h"
+#include "SetupNuclideSystemAction.h"
 #include "ADIsotopeBaseBC.h"
 #include "ADIsotopeBase.h"
 
@@ -18,28 +18,28 @@ AddIsotopeBCAction::validParams()
 
   params.addClassDescription("Adds a boundary condition to all isotopes in the isotope system.");
   params.addParam<std::vector<VariableName>>(
-      "excluded_isotopes",
+      "excluded_nuclides",
       std::vector<VariableName>(),
       "Isotopes in the master list that this boundary condition should "
       "not be applied to..");
 
   // Add common isotope system parameters.
-  params += SetupIsotopeSystemAction::validParams();
+  params += SetupNuclideSystemAction::validParams();
   params.makeParamNotRequired<MooseEnum>("velocity_type");
-  params.makeParamNotRequired<std::vector<VariableName>>("isotopes");
+  params.makeParamNotRequired<std::vector<VariableName>>("nuclides");
 
   return params;
 }
 
 AddIsotopeBCAction::AddIsotopeBCAction(const InputParameters & parameters)
   : MooseObjectAction(parameters),
-    _master_isotope_list(getParam<std::vector<VariableName>>("isotopes")),
-    _exclude(getParam<std::vector<VariableName>>("excluded_isotopes")),
+    _master_isotope_list(getParam<std::vector<VariableName>>("nuclides")),
+    _exclude(getParam<std::vector<VariableName>>("excluded_nuclides")),
     _p_type(ProblemType::Cartesian1D)
 {
   // Check if a container block exists with isotope parameters. If yes, apply them.
   // FIX THIS: The most janky way to fix this breaking MOOSE change.
-  auto isotope_system_actions = _awh.getActions<SetupIsotopeSystemAction>();
+  auto isotope_system_actions = _awh.getActions<SetupNuclideSystemAction>();
   if (isotope_system_actions.size() == 1)
   {
     const auto & params = _app.getInputParameterWarehouse().getInputParameters();

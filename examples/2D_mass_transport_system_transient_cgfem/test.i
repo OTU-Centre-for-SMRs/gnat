@@ -5,17 +5,21 @@
   [domain]
     type = CartesianMeshGenerator
     dim = 2
-    dx = 10
-    dy = 10
-    ix = 100
-    iy = 100
+    dx = '3.5 3 3.5'
+    dy = '3.5 3 3.5'
+    ix = '35 31 35'
+    iy = '35 31 35'
+    subdomain_id = '
+      1 1 1
+      1 1 1
+      1 1 1'
   []
 []
 
 [NeutronActivationStudy]
-  num_groups = 1
   execution_type = steady
-  debug_verbosity = level1
+  num_groups = 2
+  max_anisotropy = 0
 
   [TransportSystem]
     scheme = saaf_cfem
@@ -30,49 +34,35 @@
     vacuum_boundaries = 'left right top bottom'
 
     point_source_locations = '5.0 5.0 0.0'
-    point_source_intensities = '1000.0'
+    point_source_intensities = '1000000.0'
     point_source_groups = '1'
   []
 
-  [IsotopeSystem]
+  [NuclideSystem]
     velocity_type = constant
-    constant_velocity = '0.0 1.0 0.0'
+    constant_velocity = '0.0 4.0 0.0'
 
-    isotopes = 'cs_137 sr_90'
+    nuclides = 'Ar40 Ar41 K41'
 
-    [AddMobileIsotopes]
-      [Cs_137]
-        order = FIRST
-        family = LAGRANGE
+    order = FIRST
+    family = LAGRANGE
 
-        isotope_name = cs_137
+    xs_file_name = './examples/2D_mass_transport_system_cgfem/cross_sections_micro/cross_sections.txt'
+    xs_type = micro
+    xs_source_material_id = '1'
 
-        diffusion_coefficient_base = 1.0
-        half_life = 1.0
-        half_life_units = minutes
+    nuclide_prop_file_name = './examples/2D_mass_transport_system_cgfem/nuclide_system.txt'
+    half_life_units = minutes
 
-        absorption_cross_sections = '0.0'
-      []
+    density = 0.0012
 
-      [Sr_90]
-        order = FIRST
-        family = LAGRANGE
-
-        isotope_name = sr_90
-
-        diffusion_coefficient_base = 1.0
-        half_life = 1.0
-        half_life_units = minutes
-
-        absorption_cross_sections = '1.0'
-      []
-    []
-
-    [AddIsotopeBCs]
-      [Inflow]
+    [AddNuclideBCs]
+      [Ar40Inflow]
         type = ADIsotopeInflowBC
         boundary = bottom
         inflow_rate = 10.0
+
+        excluded_nuclides = 'Ar41 K41'
       []
 
       [Outflow]
@@ -85,12 +75,11 @@
 
 [Materials]
   [Domain]
-    type = ConstantNeutronicsMaterial
-    num_groups = 1
-    anisotropy = 0
-    group_absorption = 1.0
-    group_scattering = 1.0
-    group_speeds = 220000.0
+    type = FileNeutronicsMaterial
+    num_groups = 2
+    file_name = './examples/2D_mass_transport_system_cgfem/cross_sections_macro/cross_sections.txt'
+    source_material_id = '1'
+    block = '1'
   []
 []
 

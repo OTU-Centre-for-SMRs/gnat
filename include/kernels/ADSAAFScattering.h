@@ -11,7 +11,7 @@ public:
 
 protected:
   virtual ADReal computeQpResidual() override;
-  Real computeFluxMoment(unsigned int g_prime, unsigned int l, int m);
+  ADReal computeFluxMoment(unsigned int g_prime, unsigned int l, int m);
 
   // Number of spectral energy groups (G).
   const unsigned int _num_groups;

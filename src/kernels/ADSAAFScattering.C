@@ -61,7 +61,7 @@ ADSAAFScattering::ADSAAFScattering(const InputParameters & parameters)
     _group_flux_ordinates.emplace_back(&adCoupledValue("group_flux_ordinates", i));
 }
 
-Real
+ADReal
 ADSAAFScattering::computeFluxMoment(unsigned int g_prime, unsigned int l, int m)
 {
   ADReal moment = 0.0;
@@ -73,12 +73,20 @@ ADSAAFScattering::computeFluxMoment(unsigned int g_prime, unsigned int l, int m)
     omega = _quadrature_set.getAzimuthalAngularRoot(i);
     // cartesianToSpherical(_quadrature_set.direction(i), mu, omega);
 
+    if (i == _ordinate_index)
+    {
+      moment +=
+          RealSphericalHarmonics::evaluate(l, m, mu, omega) * _u[_qp] * _quadrature_set.weight(i);
+      continue;
+    }
+
     const unsigned int base_n = g_prime * (_group_flux_ordinates.size() / _num_groups);
     moment += RealSphericalHarmonics::evaluate(l, m, mu, omega) *
-              std::max((*_group_flux_ordinates[base_n + i])[_qp], 0.0) * _quadrature_set.weight(i);
+              MetaPhysicL::raw_value(std::max((*_group_flux_ordinates[base_n + i])[_qp], 0.0)) *
+              _quadrature_set.weight(i);
   }
 
-  return MetaPhysicL::raw_value(moment);
+  return moment;
 }
 
 // Compute the full scattering term for both in-group and group-to-group

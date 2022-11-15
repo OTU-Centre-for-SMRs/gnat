@@ -2,12 +2,12 @@
 
 #include "Action.h"
 
-class SetupIsotopeSystemAction : public Action
+class SetupNuclideSystemAction : public Action
 {
 public:
   static InputParameters validParams();
 
-  SetupIsotopeSystemAction(const InputParameters & parameters);
+  SetupNuclideSystemAction(const InputParameters & parameters);
 
   virtual void act() override;
 };

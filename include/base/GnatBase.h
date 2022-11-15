@@ -68,3 +68,10 @@ enum class CrossSectionSource
   Gnat = 1u,
   OpenMC = 2u
 }; // enum class CrossSectionSource
+
+// An enum to indicate if cross-sections are macroscopic or microscopic.
+enum class CrossSectionType
+{
+  Micro = 0u,
+  Macro = 1u
+}; // enum class CrossSectionType

@@ -58,7 +58,6 @@ FileNeutronicsMaterial::FileNeutronicsMaterial(const InputParameters & parameter
   // are named.
   std::ifstream descriptor_file(_file_name);
   std::string line;
-  std::string accum;
   if (descriptor_file.is_open())
   {
     std::getline(descriptor_file, line);
