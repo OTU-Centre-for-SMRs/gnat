@@ -15,5 +15,5 @@ protected:
   // g
   const unsigned int _group_index;
 
-  const ADMaterialProperty<std::vector<Real>> & _sigma_r_g;
+  const ADMaterialProperty<std::vector<Real>> & _sigma_t_g;
 }; // class ADSNRemoval

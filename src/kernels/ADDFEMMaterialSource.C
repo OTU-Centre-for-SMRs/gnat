@@ -35,12 +35,12 @@ ADDFEMMaterialSource::validParams()
 }
 
 ADDFEMMaterialSource::ADDFEMMaterialSource(const InputParameters & parameters)
-  : ADSNBaseKernel(parameters)
-  , _source_moments(getADMaterialProperty<std::vector<Real>>("source_moments"))
-  , _anisotropy(getMaterialProperty<unsigned int>("medium_source_anisotropy"))
-  , _ordinate_index(getParam<unsigned int>("ordinate_index"))
-  , _group_index(getParam<unsigned int>("group_index"))
-  , _num_groups(getParam<unsigned int>("num_groups"))
+  : ADSNBaseKernel(parameters),
+    _source_moments(getADMaterialProperty<std::vector<Real>>("source_moments")),
+    _anisotropy(getMaterialProperty<unsigned int>("medium_source_anisotropy")),
+    _ordinate_index(getParam<unsigned int>("ordinate_index")),
+    _group_index(getParam<unsigned int>("group_index")),
+    _num_groups(getParam<unsigned int>("num_groups"))
 {
   if (_group_index >= _num_groups)
     mooseError("The group index exceeds the number of energy groups.");
@@ -70,10 +70,9 @@ ADDFEMMaterialSource::computeQpResidual()
     {
       // Legendre moments in 1D, looping over m is unecessary.
       case ProblemType::Cartesian1D:
-        cartesianToSpherical(_quadrature_set.direction(_ordinate_index),
-                             mu, omega);
-        src_l += _source_moments[_qp][moment_index]
-                 * RealSphericalHarmonics::evaluate(l, 0, mu, omega);
+        cartesianToSpherical(_quadrature_set.direction(_ordinate_index), mu, omega);
+        src_l +=
+            _source_moments[_qp][moment_index] * RealSphericalHarmonics::evaluate(l, 0, mu, omega);
         moment_index++;
         break;
 
@@ -81,10 +80,9 @@ ADDFEMMaterialSource::computeQpResidual()
       case ProblemType::Cartesian2D:
         for (int m = 0; m <= static_cast<int>(l); ++m)
         {
-          cartesianToSpherical(_quadrature_set.direction(_ordinate_index),
-                               mu, omega);
-          src_l += _source_moments[_qp][moment_index]
-                   * RealSphericalHarmonics::evaluate(l, m, mu, omega);
+          cartesianToSpherical(_quadrature_set.direction(_ordinate_index), mu, omega);
+          src_l += _source_moments[_qp][moment_index] *
+                   RealSphericalHarmonics::evaluate(l, m, mu, omega);
           moment_index++;
         }
         break;
@@ -93,10 +91,9 @@ ADDFEMMaterialSource::computeQpResidual()
       case ProblemType::Cartesian3D:
         for (int m = -1 * static_cast<int>(l); m <= static_cast<int>(l); ++m)
         {
-          cartesianToSpherical(_quadrature_set.direction(_ordinate_index),
-                               mu, omega);
-          src_l += _source_moments[_qp][moment_index]
-                   * RealSphericalHarmonics::evaluate(l, m, mu, omega);
+          cartesianToSpherical(_quadrature_set.direction(_ordinate_index), mu, omega);
+          src_l += _source_moments[_qp][moment_index] *
+                   RealSphericalHarmonics::evaluate(l, m, mu, omega);
           moment_index++;
         }
         break;
@@ -105,8 +102,7 @@ ADDFEMMaterialSource::computeQpResidual()
         break;
     }
 
-    res += src_l * (2.0 * static_cast<Real>(l) + 1.0) / (4.0 * M_PI)
-           * _symmetry_factor;
+    res += src_l * (2.0 * static_cast<Real>(l) + 1.0) / (4.0 * M_PI) * _symmetry_factor;
     src_l = 0.0;
   }
 

@@ -35,6 +35,7 @@ EmptyNeutronicsMaterial::EmptyNeutronicsMaterial(const InputParameters & paramet
     _saaf_eta(getParam<Real>("saaf_eta")),
     _saaf_c(getParam<Real>("saaf_c")),
     _mat_inv_v_g(declareADProperty<std::vector<Real>>("inv_v_g")),
+    _mat_sigma_t_g(declareADProperty<std::vector<Real>>("total_xs_g")),
     _mat_sigma_r_g(declareADProperty<std::vector<Real>>("removal_xs_g")),
     _mat_surface_source(declareADProperty<std::vector<Real>>("surface_source")),
     _mat_sigma_s_g_prime_g_l(declareADProperty<std::vector<Real>>("scattering_matrix")),

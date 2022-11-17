@@ -19,8 +19,7 @@ DFEMAnisoPointSource::validParams()
                                                     "The discrete ordinate index "
                                                     "of the current angular "
                                                     "flux.");
-  params.addRequiredParam<Real>("intensity",
-                                "Intensity of the anisotropic point source.");
+  params.addRequiredParam<Real>("intensity", "Intensity of the anisotropic point source.");
   params.addRequiredParam<FunctionName>("phase_function",
                                         "Anisotropic phase function for the "
                                         "point source. x, y, and z are treated "
@@ -32,12 +31,13 @@ DFEMAnisoPointSource::validParams()
 }
 
 DFEMAnisoPointSource::DFEMAnisoPointSource(const InputParameters & parameters)
-  : SNBaseDiracKernel(parameters)
-  , _ordinate_index(getParam<unsigned int>("ordinate_index"))
-  , _source_intensity(getParam<Real>("intensities"))
-  , _angular_distribution(getFunction("phase_function"))
-  , _source_location(getParam<Point>("points"))
-{ }
+  : SNBaseDiracKernel(parameters),
+    _ordinate_index(getParam<unsigned int>("ordinate_index")),
+    _source_intensity(getParam<Real>("intensities")),
+    _angular_distribution(getFunction("phase_function")),
+    _source_location(getParam<Point>("points"))
+{
+}
 
 void
 DFEMAnisoPointSource::addPoints()
@@ -54,8 +54,8 @@ DFEMAnisoPointSource::computeQpResidual()
 
   // Hijacking the MOOSE function system so the user can parse in an analytical
   // phase function for this point source.
-  return (-1.0 / M_PI) * _test[_i][_qp] * _angular_distribution.value(_t, temp)
-         * _source_intensity * _symmetry_factor;
+  return (-1.0 / M_PI) * _test[_i][_qp] * _angular_distribution.value(_t, temp) *
+         _source_intensity * _symmetry_factor;
 }
 
 Real

@@ -40,6 +40,7 @@ protected:
   std::vector<Real> _sigma_s_g_prime_g_l;
   // Out-scattering scalar cross-section.
   std::vector<Real> _sigma_s_out;
+  std::vector<Real> _sigma_s_g_g;
 
   const unsigned int _anisotropy;
   const unsigned int _max_moments;

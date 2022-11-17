@@ -420,11 +420,11 @@ FileNeutronicsMaterial::computeQpProperties()
   EmptyNeutronicsMaterial::computeQpProperties();
 
   _mat_inv_v_g[_qp].resize(_num_groups, 0.0);
-  _mat_sigma_r_g[_qp].resize(_num_groups, 0.0);
+  _mat_sigma_t_g[_qp].resize(_num_groups, 0.0);
   for (unsigned int i = 0; i < _num_groups; ++i)
   {
     _mat_inv_v_g[_qp][i] = _inv_v_g[i];
-    _mat_sigma_r_g[_qp][i] = _sigma_r_g[i];
+    _mat_sigma_t_g[_qp][i] = _sigma_r_g[i];
   }
 
   // Scattering moments and anisotropy.

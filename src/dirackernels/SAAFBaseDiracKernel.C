@@ -25,13 +25,14 @@ SAAFBaseDiracKernel::validParams()
 }
 
 SAAFBaseDiracKernel::SAAFBaseDiracKernel(const InputParameters & parameters)
-  : SNBaseDiracKernel(parameters)
-  , _ordinate_index(getParam<unsigned int>("ordinate_index"))
-  , _group_index(getParam<unsigned int>("group_index"))
-  , _sigma_r_g(getADMaterialProperty<std::vector<Real>>("removal_xs_g"))
-  , _saaf_eta(getADMaterialProperty<Real>("saaf_eta"))
-  , _saaf_c(getADMaterialProperty<Real>("saaf_c"))
-{ }
+  : SNBaseDiracKernel(parameters),
+    _ordinate_index(getParam<unsigned int>("ordinate_index")),
+    _group_index(getParam<unsigned int>("group_index")),
+    _sigma_r_g(getADMaterialProperty<std::vector<Real>>("total_xs_g")),
+    _saaf_eta(getADMaterialProperty<Real>("saaf_eta")),
+    _saaf_c(getADMaterialProperty<Real>("saaf_c"))
+{
+}
 
 Real
 SAAFBaseDiracKernel::maxVertexSeparation()
@@ -70,8 +71,8 @@ SAAFBaseDiracKernel::computeQPTau()
 
   auto h = maxVertexSeparation();
   Real tau = 0.0;
-  if (MetaPhysicL::raw_value(_sigma_r_g[_qp][_group_index] * _saaf_c[_qp]) * h
-      >= MetaPhysicL::raw_value(_saaf_eta[_qp]))
+  if (MetaPhysicL::raw_value(_sigma_r_g[_qp][_group_index] * _saaf_c[_qp]) * h >=
+      MetaPhysicL::raw_value(_saaf_eta[_qp]))
     tau = 1.0 / MetaPhysicL::raw_value(_sigma_r_g[_qp][_group_index] * _saaf_c[_qp]);
   else
     tau = h / MetaPhysicL::raw_value(_saaf_eta[_qp]);
@@ -85,7 +86,6 @@ SAAFBaseDiracKernel::computeQPTests()
   if (_ordinate_index >= _quadrature_set.totalOrder())
     mooseError("The ordinates index exceeds the number of quadrature points.");
 
-  return _test[_i][_qp]
-         + computeQPTau() * _grad_test[_i][_qp]
-         * _quadrature_set.direction(_ordinate_index);
+  return _test[_i][_qp] +
+         computeQPTau() * _grad_test[_i][_qp] * _quadrature_set.direction(_ordinate_index);
 }

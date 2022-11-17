@@ -52,10 +52,12 @@ VoidNeutronicsMaterial::computeQpProperties()
   _mat_saaf_c[_qp] = _saaf_c;
 
   _mat_inv_v_g[_qp].resize(_num_groups, 0.0);
+  _mat_sigma_t_g[_qp].resize(_num_groups, 0.0);
   _mat_sigma_r_g[_qp].resize(_num_groups, 0.0);
   for (unsigned int i = 0; i < _num_groups; ++i)
   {
     _mat_inv_v_g[_qp][i] = 1.0 / _v_g[i];
+    _mat_sigma_t_g[_qp][i] = 0.0;
     _mat_sigma_r_g[_qp][i] = 0.0;
   }
 }

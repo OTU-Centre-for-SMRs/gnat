@@ -1050,10 +1050,10 @@ NeutronTransportAction::addDGFEMKernels(const std::string & var_name,
                                         unsigned int g,
                                         unsigned int n)
 {
-  // Add ADDFEMTimeDerivative.
+  // Add ADParticleTimeDerivative.
   if (_exec_type == ExecutionType::Transient)
   {
-    auto params = _factory.getValidParams("ADDFEMTimeDerivative");
+    auto params = _factory.getValidParams("ADParticleTimeDerivative");
     params.set<NonlinearVariableName>("variable") = var_name;
     // Group index is required to fetch the group neutron velocity.
     params.set<unsigned int>("group_index") = g;
@@ -1064,9 +1064,10 @@ NeutronTransportAction::addDGFEMKernels(const std::string & var_name,
           getParam<std::vector<SubdomainName>>("block");
     }
 
-    _problem->addKernel("ADDFEMTimeDerivative", "ADDFEMTimeDerivative_" + var_name, params);
-    debugOutput("      - Adding kernel ADDFEMTimeDerivative for the variable " + var_name + ".");
-  } // ADDFEMTimeDerivative
+    _problem->addKernel("ADParticleTimeDerivative", "ADParticleTimeDerivative_" + var_name, params);
+    debugOutput("      - Adding kernel ADParticleTimeDerivative for the variable " + var_name +
+                ".");
+  } // ADParticleTimeDerivative
 
   // Add ADDFEMStreaming.
   {

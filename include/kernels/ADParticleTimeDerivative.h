@@ -2,12 +2,12 @@
 
 #include "ADTimeDerivative.h"
 
-class ADDFEMTimeDerivative : public ADTimeDerivative
+class ADParticleTimeDerivative : public ADTimeDerivative
 {
 public:
   static InputParameters validParams();
 
-  ADDFEMTimeDerivative(const InputParameters & parameters);
+  ADParticleTimeDerivative(const InputParameters & parameters);
 
 protected:
   virtual ADReal precomputeQpResidual() override;
@@ -16,4 +16,4 @@ protected:
   const unsigned int _group_index;
 
   const ADMaterialProperty<std::vector<Real>> & _inv_v_g;
-}; // class ADDFEMTimeDerivative
+}; // class ADParticleTimeDerivative

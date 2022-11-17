@@ -16,7 +16,7 @@ public:
 
 protected:
   virtual ADReal computeQpResidual() override;
-  Real computeFluxMoment(unsigned int g_prime, unsigned int l, int m);
+  ADReal computeFluxMoment(unsigned int g_prime, unsigned int l, int m);
 
   const unsigned int _ordinate_index; // n
   const unsigned int _group_index;    // g

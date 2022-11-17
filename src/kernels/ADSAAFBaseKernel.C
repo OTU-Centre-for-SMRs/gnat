@@ -27,7 +27,7 @@ ADSAAFBaseKernel::ADSAAFBaseKernel(const InputParameters & parameters)
   : ADSNBaseKernel(parameters),
     _ordinate_index(getParam<unsigned int>("ordinate_index")),
     _group_index(getParam<unsigned int>("group_index")),
-    _sigma_r_g(getADMaterialProperty<std::vector<Real>>("removal_xs_g")),
+    _sigma_r_g(getADMaterialProperty<std::vector<Real>>("total_xs_g")),
     _saaf_eta(getADMaterialProperty<Real>("saaf_eta")),
     _saaf_c(getADMaterialProperty<Real>("saaf_c"))
 {

@@ -1,35 +1,33 @@
 #pragma once
 
-#include "ADSAAFBaseKernel.h"
+#include "ADKernel.h"
 
-class ADSAAFScattering : public ADSAAFBaseKernel
+class ADDiffusionScattering : public ADKernel
 {
 public:
   static InputParameters validParams();
 
-  ADSAAFScattering(const InputParameters & parameters);
+  ADDiffusionScattering(const InputParameters & parameters);
 
 protected:
   virtual ADReal computeQpResidual() override;
-  ADReal computeFluxMoment(unsigned int g_prime, unsigned int l, int m);
 
-  // Number of spectral energy groups (G).
+  // Number of spectral energy groups (G) and the current group (g).
   const unsigned int _num_groups;
-  // L
-  const unsigned int _max_anisotropy;
+  const unsigned int _group_index;
 
   /*
-   * We assume that the vector of flux ordinates is stored in order of group
-   * first, direction second. An example for 2 energy groups (G = 2) and a
-   * quadrature set with 2 elements (N = 2) is given below:
+   * Vector of the scalar fluxes (0th degree and moment of the angular flux). We assume that the
+   * vector of scalar fluxes is ordered by energy group. An example with 4 energy groups (G = 2) can
+   * be found below:
    *
-   * The flux ordinates are indexed as Psi_{g, n}:
-   * _group_flux_ordinates[0] = Psi_{1, 1}
-   * _group_flux_ordinates[1] = Psi_{1, 2}
-   * _group_flux_ordinates[2] = Psi_{2, 1}
-   * _group_flux_ordinates[3] = Psi_{2, 1}
+   * The scalar fluxes are indexed as Phi_{g}:
+   * _group_scalar_fluxes[0] = Phi_{1}
+   * _group_scalar_fluxes[1] = Phi_{2}
+   * _group_scalar_fluxes[2] = Phi_{3}
+   * _group_scalar_fluxes[3] = Phi_{4}
    */
-  std::vector<const ADVariableValue *> _group_flux_ordinates;
+  std::vector<const ADVariableValue *> _group_scalar_fluxes;
 
   /*
    * We assume that the vector of scattering cross-sections is stored in the
@@ -53,9 +51,12 @@ protected:
    *
    * This is a flattening of the scattering matrix to preserve coherency in memory.
    * The material providing the cross-sections moments is expected to format them
-   * according to this arrangement.
+   * according to this arrangement. We use this format for the diffusion solver to ensure
+   * compatibility with materials that provide scattering moments for the transport solvers. This
+   * kernel only uses the 0th degree.
    */
   const ADMaterialProperty<std::vector<Real>> & _sigma_s_g_prime_g_l;
   // Degree of anisotropy (Legendre polynomial order L) for the medium.
+  // Only needed here to index the scattering matix correctly.
   const MaterialProperty<unsigned int> & _anisotropy;
-}; // class ADSAAFScattering
+}; // class ADDiffusionScattering

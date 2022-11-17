@@ -73,13 +73,18 @@ SourceNeutronicsMaterial::computeQpProperties()
 
   // Speeds and removal cross-sections.
   _mat_inv_v_g[_qp].resize(_num_groups, 0.0);
+  _mat_sigma_t_g[_qp].resize(_num_groups, 0.0);
   _mat_sigma_r_g[_qp].resize(_num_groups, 0.0);
   for (unsigned int i = 0; i < _num_groups; ++i)
   {
     _mat_inv_v_g[_qp][i] = 1.0 / _v_g[i];
+    // Have to sum the absorption and group g cross-section to form the
+    // total cross-section.
+    _mat_sigma_t_g[_qp][i] = _sigma_a_g[i] + _sigma_s_out[i];
     // Have to sum the absorption and out-scattering cross-section to form the
-    // removal cross-section.
-    _mat_sigma_r_g[_qp][i] = _sigma_a_g[i] + _sigma_s_out[i];
+    // total cross-section. This sums all g -> g_prime scattering cross-sections and then subtracts
+    // the g -> g cross-section.
+    _mat_sigma_r_g[_qp][i] = _sigma_a_g[i] + _sigma_s_out[i] - _sigma_s_g_g[i];
   }
 
   // Scattering moments and anisotropy.
