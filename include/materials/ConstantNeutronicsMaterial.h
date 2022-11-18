@@ -38,8 +38,8 @@ protected:
    */
   // In-scattering cross-section moments.
   std::vector<Real> _sigma_s_g_prime_g_l;
-  // Out-scattering scalar cross-section.
-  std::vector<Real> _sigma_s_out;
+  // Out-scattering scalar cross-section and within group scattering cross-section.
+  std::vector<Real> _sigma_s_g;
   std::vector<Real> _sigma_s_g_g;
 
   const unsigned int _anisotropy;

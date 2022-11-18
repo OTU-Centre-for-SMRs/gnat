@@ -22,7 +22,8 @@ enum class ProblemType
 enum class Scheme
 {
   SAAFCFEM = 0u,
-  UpwindingDFEM = 1u
+  UpwindingDFEM = 1u,
+  DiffusionApprox = 2u
 }; // enum class Scheme
 
 // An enum for the execution type of the problem. Either steady-state or

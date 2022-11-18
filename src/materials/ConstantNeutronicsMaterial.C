@@ -53,19 +53,51 @@ ConstantNeutronicsMaterial::ConstantNeutronicsMaterial(const InputParameters & p
   // Compute the out-scattering cross-section. This is the sum of the 0'th
   // moments of the scattering cross-sections from the current group into all
   // other groups (excluding the current group).
-  _sigma_s_out.resize(_num_groups, 0.0);
+  _sigma_s_g.resize(_num_groups, 0.0);
   _sigma_s_g_g.resize(_num_groups, 0.0);
-  auto index = 0u;
   for (unsigned int g = 0u; g < _num_groups; ++g)
   {
     for (unsigned int g_prime = 0u; g_prime < _num_groups; ++g_prime)
-    {
-      index = g_prime * _num_groups * _anisotropy + g * _anisotropy;
-      _sigma_s_out[g] += _sigma_s_g_prime_g_l[index];
-    }
+      _sigma_s_g[g] += _sigma_s_g_prime_g_l[g_prime * _num_groups * _anisotropy + g * _anisotropy];
 
     _sigma_s_g_g[g] = _sigma_s_g_prime_g_l[g * _num_groups * _anisotropy + g * _anisotropy];
   }
+
+  // Recompute the neutron diffusion coefficients to account for scattering (transport
+  // approximation).
+  // Sum the first order Legendre out-scattering cross-sections for all groups.
+  std::vector<Real> _sigma_s_g_prime_g_1;
+  _sigma_s_g_prime_g_1.resize(_num_groups, 0.0);
+  if (_anisotropy > 0u)
+  {
+    for (unsigned int g = 0u; g < _num_groups; ++g)
+    {
+      for (unsigned int g_prime = 0u; g_prime < _num_groups; ++g_prime)
+      {
+        _sigma_s_g[g] +=
+            _sigma_s_g_prime_g_l[g_prime * _num_groups * _anisotropy + g * _anisotropy + 1u];
+      }
+    }
+  }
+
+  _diffusion_g.resize(_num_groups, 0.0);
+  bool warning = false;
+  for (unsigned int g = 0u; g < _diffusion_g.size(); ++g)
+  {
+    if (3.0 * (_sigma_a_g[g] + _sigma_s_g[g] - _sigma_s_g_prime_g_1[g]) < 3.0 * libMesh::TOLERANCE)
+    {
+      _diffusion_g[g] = 1.0 / (3.0 * libMesh::TOLERANCE);
+      warning = true;
+    }
+    else
+      _diffusion_g[g] = 1.0 / (3.0 * (_sigma_a_g[g] + _sigma_s_g[g] - _sigma_s_g_prime_g_1[g]));
+  }
+
+  if (warning)
+    mooseWarning("3.0 * (_sigma_a_g[g] + _sigma_s_g[g] - _sigma_s_g_prime_g_1[g]) < "
+                 "3.0 * libMesh::TOLERANCE for the "
+                 "provided cross-section(s). Using a diffusion coefficient of 1 / "
+                 "3.0 * libMesh::TOLERANCE for those values.");
 }
 
 void
@@ -81,16 +113,18 @@ ConstantNeutronicsMaterial::computeQpProperties()
   _mat_inv_v_g[_qp].resize(_num_groups, 0.0);
   _mat_sigma_t_g[_qp].resize(_num_groups, 0.0);
   _mat_sigma_r_g[_qp].resize(_num_groups, 0.0);
+  _mat_diffusion_g[_qp].resize(_num_groups, 0.0);
   for (unsigned int i = 0; i < _num_groups; ++i)
   {
     _mat_inv_v_g[_qp][i] = 1.0 / _v_g[i];
     // Have to sum the absorption and group g cross-section to form the
     // total cross-section.
-    _mat_sigma_t_g[_qp][i] = _sigma_a_g[i] + _sigma_s_out[i];
+    _mat_sigma_t_g[_qp][i] = _sigma_a_g[i] + _sigma_s_g[i];
     // Have to sum the absorption and out-scattering cross-section to form the
     // total cross-section. This sums all g -> g_prime scattering cross-sections and then subtracts
     // the g -> g cross-section.
-    _mat_sigma_r_g[_qp][i] = _sigma_a_g[i] + _sigma_s_out[i] - _sigma_s_g_g[i];
+    _mat_sigma_r_g[_qp][i] = _sigma_a_g[i] + _sigma_s_g[i] - _sigma_s_g_g[i];
+    _mat_diffusion_g[_qp][i] = _diffusion_g[i];
   }
 
   // Scattering moments and anisotropy.

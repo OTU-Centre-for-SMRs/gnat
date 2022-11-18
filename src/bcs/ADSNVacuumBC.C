@@ -10,7 +10,7 @@ ADSNVacuumBC::validParams()
                              "weak form given by "
                              "$\\langle \\psi_{j},\\, 0\\rangle_{\\Gamma_{v}}$, "
                              "$\\hat{n}\\cdot\\hat{\\Omega} \\leq 0$. "
-                             "This kernel should not be exposed to the user, "
+                             "This BC should not be exposed to the user, "
                              "instead being enabled through a transport action.");
   params.addRequiredRangeCheckedParam<unsigned int>("ordinate_index",
                                                     "ordinate_index >= 0",

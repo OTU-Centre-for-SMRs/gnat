@@ -22,7 +22,7 @@ protected:
   struct NuclideProperties
   {
     std::vector<Real> _inv_v_g;
-    std::vector<Real> _sigma_r_g;
+    std::vector<Real> _sigma_t_g;
     std::vector<Real> _sigma_a_g;
     std::vector<Real> _sigma_s_g;
     std::vector<Real> _sigma_s_g_prime_g_l;
@@ -32,7 +32,8 @@ protected:
   // The sum of all isotopic material properties are the actual properties provided to the transport
   // solver.
   std::vector<Real> _inv_v_g;
-  std::vector<Real> _sigma_r_g;
+  std::vector<Real> _sigma_t_g;
+  std::vector<Real> _diffusion_g;
   /*
    * We assume that the vector of scattering cross-sections is stored in the
    * order of initial group first, final group second, and Legendre polynomial
@@ -58,6 +59,10 @@ protected:
    * according to this arrangement.
    */
   std::vector<Real> _sigma_s_g_prime_g_l;
+  // Out-scattering scalar cross-section and within group scattering cross-section.
+  std::vector<Real> _sigma_s_g;
+  std::vector<Real> _sigma_s_g_g;
+
   unsigned int _anisotropy;
   unsigned int _max_moments;
 

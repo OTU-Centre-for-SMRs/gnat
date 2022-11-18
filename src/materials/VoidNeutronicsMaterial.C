@@ -39,6 +39,14 @@ VoidNeutronicsMaterial::VoidNeutronicsMaterial(const InputParameters & parameter
   // Force to 0.5 and 1.0 to stabilize this void region.
   _saaf_eta = 0.5;
   _saaf_c = 1.0;
+
+  // Compute neutron diffusion coefficients. TODO: Void stabilized neutron diffusion coefficients.
+  _diffusion_g.resize(_num_groups, 0.0);
+  for (unsigned int g = 0u; g < _diffusion_g.size(); ++g)
+    _diffusion_g[g] = 1.0 / (3.0 * libMesh::TOLERANCE);
+
+  mooseWarning("The VoidNeutronicsMaterial uses local diffusion coefficients with a value of 1 / "
+               "3 * libMesh::TOLERANCE.");
 }
 
 void
@@ -54,10 +62,12 @@ VoidNeutronicsMaterial::computeQpProperties()
   _mat_inv_v_g[_qp].resize(_num_groups, 0.0);
   _mat_sigma_t_g[_qp].resize(_num_groups, 0.0);
   _mat_sigma_r_g[_qp].resize(_num_groups, 0.0);
+  _mat_diffusion_g[_qp].resize(_num_groups, 0.0);
   for (unsigned int i = 0; i < _num_groups; ++i)
   {
     _mat_inv_v_g[_qp][i] = 1.0 / _v_g[i];
     _mat_sigma_t_g[_qp][i] = 0.0;
     _mat_sigma_r_g[_qp][i] = 0.0;
+    _mat_diffusion_g[_qp][i] = _diffusion_g[i];
   }
 }

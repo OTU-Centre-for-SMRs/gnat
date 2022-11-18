@@ -74,7 +74,7 @@ NeutronTransportAction::validParams()
   //----------------------------------------------------------------------------
   // Basic parameters for the neutron transport simulation.
   params.addRequiredParam<MooseEnum>("scheme",
-                                     MooseEnum("saaf_cfem upwinding_dfem"),
+                                     MooseEnum("saaf_cfem upwinding_dfem diffusion_cfem"),
                                      "The discretization and stabilization "
                                      "scheme for the transport equation.");
   params.addParamNamesToGroup("max_anisotropy block", "Simulation");
@@ -209,6 +209,9 @@ NeutronTransportAction::act()
     case Scheme::UpwindingDFEM:
       actUpwindDFEM();
       break;
+    case Scheme::DiffusionApprox:
+      actDiffusion();
+      break;
     default:
       break;
   }
@@ -240,173 +243,162 @@ NeutronTransportAction::applyQuadratureParameters(InputParameters & params)
 void
 NeutronTransportAction::initializeCommon()
 {
-  if (!_var_init)
-  {
-    // Warn the user about issues with certain schemes.
-    switch (_transport_scheme)
-    {
-      case Scheme::SAAFCFEM:
-        mooseWarning("The CGFEM-SAAF scheme currently has issues with negative "
-                     "fluxes.");
-
-        break;
-
-      case Scheme::UpwindingDFEM:
-        //
-        mooseWarning("The DGFEM-Upwinding scheme currently has issues with "
-                     "negative fluxes.");
-
-        break;
-
-      default:
-        break;
-    }
-
-    debugOutput("Transport System Initialization: ", "Transport System Initialization: ");
-
-    switch (_transport_scheme)
-    {
-      case Scheme::SAAFCFEM:
-        debugOutput("  - Scheme: SAAF-CGFEM", "  - Scheme: SAAF-CGFEM");
-        break;
-      case Scheme::UpwindingDFEM:
-        debugOutput("  - Scheme: Upwinding-DGFEM", "  - Scheme: Upwinding-DGFEM");
-        break;
-    }
-
-    debugOutput("  - Building the angular quadrature set...",
-                "  - Building the angular quadrature set...");
-
-    // Setup for all actions the NeutronTransport action performs.
-    // Initialize base neutron activation action parameters.
-    initializeBase();
-
-    switch (_p_type)
-    {
-      case ProblemType::Cartesian1D:
-        _num_flux_ordinates = 2u * _n_l;
-        break;
-
-      case ProblemType::Cartesian2D:
-        _num_flux_ordinates = 4u * _n_l * _n_c;
-        break;
-
-      case ProblemType::Cartesian3D:
-        _num_flux_ordinates = 8u * _n_l * _n_c;
-        break;
-
-      default:
-        mooseError("Unknown mesh dimensionality.");
-        break;
-    }
-
-    std::string set_info(
-        std::string("    - Angular quadrature set information:\n") +
-        std::string("      - Polar points per quadrant: ") + Moose::stringify(_n_l) +
-        std::string("\n      - Azimuthal points per quadrant: ") + Moose::stringify(_n_c) +
-        std::string("\n      - Total number of flux ordinates: ") +
-        Moose::stringify(_num_flux_ordinates));
-    debugOutput(set_info);
-
-    debugOutput("  - Determining variable names...", "  - Determining variable names...");
-    for (unsigned int g = 0; g < _num_groups; ++g)
-    {
-      // Set up variable names for the group angular fluxes.
-      _group_angular_fluxes.emplace(g, std::vector<VariableName>());
-      _group_angular_fluxes[g].reserve(_num_flux_ordinates);
-      for (unsigned int n = 1; n <= _num_flux_ordinates; ++n)
-      {
-        _group_angular_fluxes[g].emplace_back(_angular_flux_name + "_" + Moose::stringify(g + 1u) +
-                                              "_" + Moose::stringify(n));
-      }
-    }
-
-    _var_init = true;
-    debugOutput("  - Initializing flux groups...", "  - Initializing flux groups...");
-  }
-
-  // Loop over all groups.
-  for (unsigned int g = 0; g < _num_groups; ++g)
+  // Initial the diffusion approximation separately.
+  if (_transport_scheme == Scheme::DiffusionApprox)
   {
     if (!_var_init)
-      debugOutput("  - Initializing flux ordinates...");
-
-    // Loop over all the flux ordinates.
-    for (unsigned int n = 0; n < _num_flux_ordinates; ++n)
     {
-      const auto & var_name = _group_angular_fluxes[g][n];
+      debugOutput("  - Scheme: Diffusion-CGFEM", "  - Scheme: Diffusion-CGFEM");
 
-      // Add a non-linear variable.
-      if (_current_task == "add_variable")
+      // Setup for all actions the NeutronTransport action performs.
+      // Initialize base neutron activation action parameters.
+      initializeBase();
+
+      _var_init = true;
+      debugOutput("  - Initializing flux groups...", "  - Initializing flux groups...");
+    }
+  }
+  else
+  {
+    if (!_var_init)
+    {
+      // Warn the user about issues with certain schemes.
+      switch (_transport_scheme)
       {
-        if (g == 0u && n == 0u)
-          debugOutput("    - Adding variables...");
+        case Scheme::SAAFCFEM:
+          mooseWarning("The CGFEM-SAAF scheme currently has issues with negative "
+                       "fluxes.");
 
-        addVariable(var_name);
+          break;
+
+        case Scheme::UpwindingDFEM:
+          //
+          mooseWarning("The DGFEM-Upwinding scheme currently has issues with "
+                       "negative fluxes.");
+
+          break;
+
+        default:
+          break;
       }
 
-      // Add boundary conditions.
-      if (_current_task == "add_bc")
-      {
-        if (g == 0u && n == 0u)
-          debugOutput("    - Adding BCs...");
+      debugOutput("Transport System Initialization: ", "Transport System Initialization: ");
 
-        addBCs(var_name, g, n);
+      switch (_transport_scheme)
+      {
+        case Scheme::SAAFCFEM:
+          debugOutput("  - Scheme: SAAF-CGFEM", "  - Scheme: SAAF-CGFEM");
+          break;
+        case Scheme::UpwindingDFEM:
+          debugOutput("  - Scheme: Upwinding-DGFEM", "  - Scheme: Upwinding-DGFEM");
+          break;
+        default:
+          break;
       }
 
-      // Add initial conditions.
-      if (_current_task == "add_ic")
-      {
-        if (g == 0u && n == 0u)
-          debugOutput("    - Adding ICs...");
+      debugOutput("  - Building the angular quadrature set...",
+                  "  - Building the angular quadrature set...");
 
-        addICs(var_name, g, n);
+      // Setup for all actions the NeutronTransport action performs.
+      // Initialize base neutron activation action parameters.
+      initializeBase();
+
+      switch (_p_type)
+      {
+        case ProblemType::Cartesian1D:
+          _num_flux_ordinates = 2u * _n_l;
+          break;
+
+        case ProblemType::Cartesian2D:
+          _num_flux_ordinates = 4u * _n_l * _n_c;
+          break;
+
+        case ProblemType::Cartesian3D:
+          _num_flux_ordinates = 8u * _n_l * _n_c;
+          break;
+
+        default:
+          mooseError("Unknown mesh dimensionality.");
+          break;
       }
+
+      std::string set_info(
+          std::string("    - Angular quadrature set information:\n") +
+          std::string("      - Polar points per quadrant: ") + Moose::stringify(_n_l) +
+          std::string("\n      - Azimuthal points per quadrant: ") + Moose::stringify(_n_c) +
+          std::string("\n      - Total number of flux ordinates: ") +
+          Moose::stringify(_num_flux_ordinates));
+      debugOutput(set_info);
+
+      debugOutput("  - Determining variable names...", "  - Determining variable names...");
+      for (unsigned int g = 0; g < _num_groups; ++g)
+      {
+        // Set up variable names for the group angular fluxes.
+        _group_angular_fluxes.emplace(g, std::vector<VariableName>());
+        _group_angular_fluxes[g].reserve(_num_flux_ordinates);
+        for (unsigned int n = 1; n <= _num_flux_ordinates; ++n)
+        {
+          _group_angular_fluxes[g].emplace_back(
+              _angular_flux_name + "_" + Moose::stringify(g + 1u) + "_" + Moose::stringify(n));
+        }
+      }
+
+      _var_init = true;
+      debugOutput("  - Initializing flux groups...", "  - Initializing flux groups...");
     }
 
-    // Loop over all moments and set up auxvariables and auxkernels.
-    unsigned int moment_index = 0u;
-    switch (_p_type)
+    // Loop over all groups.
+    for (unsigned int g = 0; g < _num_groups; ++g)
     {
-      case ProblemType::Cartesian1D:
-        for (unsigned int l = 0; l <= _max_eval_anisotropy; ++l)
+      if (!_var_init)
+        debugOutput("  - Initializing flux ordinates...");
+
+      // Loop over all the flux ordinates.
+      for (unsigned int n = 0; n < _num_flux_ordinates; ++n)
+      {
+        const auto & var_name = _group_angular_fluxes[g][n];
+
+        // Add a non-linear variable.
+        if (_current_task == "add_variable")
         {
-          const auto & var_name = _group_flux_moments[g][moment_index];
+          if (g == 0u && n == 0u)
+            debugOutput("    - Adding variables...");
 
-          // Add auxvariables.
-          if (_current_task == "add_aux_variable")
-          {
-            if (g == 0u && l == 0u)
-              debugOutput("    - Adding auxvariables...");
-
-            addAuxVariables(var_name);
-          }
-
-          // Add auxkernels.
-          if (_current_task == "add_aux_kernel")
-          {
-            if (g == 0u && l == 0u)
-              debugOutput("    - Adding auxkernels...");
-
-            addAuxKernels(var_name, g, l, 0u);
-          }
-
-          moment_index++;
+          addVariable(var_name);
         }
-        moment_index = 0u;
-        break;
 
-      case ProblemType::Cartesian2D:
-        for (unsigned int l = 0u; l <= _max_eval_anisotropy; ++l)
+        // Add boundary conditions.
+        if (_current_task == "add_bc")
         {
-          for (int m = 0; m <= static_cast<int>(l); ++m)
+          if (g == 0u && n == 0u)
+            debugOutput("    - Adding BCs...");
+
+          addSNBCs(var_name, g, n);
+        }
+
+        // Add initial conditions.
+        if (_current_task == "add_ic")
+        {
+          if (g == 0u && n == 0u)
+            debugOutput("    - Adding ICs...");
+
+          addSNICs(var_name, g, n);
+        }
+      }
+
+      // Loop over all moments and set up auxvariables and auxkernels.
+      unsigned int moment_index = 0u;
+      switch (_p_type)
+      {
+        case ProblemType::Cartesian1D:
+          for (unsigned int l = 0; l <= _max_eval_anisotropy; ++l)
           {
             const auto & var_name = _group_flux_moments[g][moment_index];
 
             // Add auxvariables.
             if (_current_task == "add_aux_variable")
             {
-              if (g == 0u && l == 0u && m == 0u)
+              if (g == 0u && l == 0u)
                 debugOutput("    - Adding auxvariables...");
 
               addAuxVariables(var_name);
@@ -415,52 +407,83 @@ NeutronTransportAction::initializeCommon()
             // Add auxkernels.
             if (_current_task == "add_aux_kernel")
             {
-              if (g == 0u && l == 0u && m == 0u)
+              if (g == 0u && l == 0u)
                 debugOutput("    - Adding auxkernels...");
 
-              addAuxKernels(var_name, g, l, m);
+              addAuxKernels(var_name, g, l, 0u);
             }
 
             moment_index++;
           }
-        }
-        moment_index = 0u;
-        break;
+          moment_index = 0u;
+          break;
 
-      case ProblemType::Cartesian3D:
-        for (unsigned int l = 0; l <= _max_eval_anisotropy; ++l)
-        {
-          for (int m = -1 * static_cast<int>(l); m <= static_cast<int>(l); ++m)
+        case ProblemType::Cartesian2D:
+          for (unsigned int l = 0u; l <= _max_eval_anisotropy; ++l)
           {
-            const auto & var_name = _group_flux_moments[g][moment_index];
-
-            // Add auxvariables.
-            if (_current_task == "add_aux_variable")
+            for (int m = 0; m <= static_cast<int>(l); ++m)
             {
-              if (g == 0u && l == 0u && m == -1 * static_cast<int>(l))
-                debugOutput("    - Adding auxvariables...");
+              const auto & var_name = _group_flux_moments[g][moment_index];
 
-              addAuxVariables(var_name);
+              // Add auxvariables.
+              if (_current_task == "add_aux_variable")
+              {
+                if (g == 0u && l == 0u && m == 0u)
+                  debugOutput("    - Adding auxvariables...");
+
+                addAuxVariables(var_name);
+              }
+
+              // Add auxkernels.
+              if (_current_task == "add_aux_kernel")
+              {
+                if (g == 0u && l == 0u && m == 0u)
+                  debugOutput("    - Adding auxkernels...");
+
+                addAuxKernels(var_name, g, l, m);
+              }
+
+              moment_index++;
             }
-
-            // Add auxkernels.
-            if (_current_task == "add_aux_kernel")
-            {
-              if (g == 0u && l == 0u && m == -1 * static_cast<int>(l))
-                debugOutput("    - Adding auxkernels...");
-
-              addAuxKernels(var_name, g, l, m);
-            }
-
-            moment_index++;
           }
-        }
-        moment_index = 0u;
-        break;
+          moment_index = 0u;
+          break;
 
-      default:
-        mooseError("Unknown mesh dimensionality.");
-        break;
+        case ProblemType::Cartesian3D:
+          for (unsigned int l = 0; l <= _max_eval_anisotropy; ++l)
+          {
+            for (int m = -1 * static_cast<int>(l); m <= static_cast<int>(l); ++m)
+            {
+              const auto & var_name = _group_flux_moments[g][moment_index];
+
+              // Add auxvariables.
+              if (_current_task == "add_aux_variable")
+              {
+                if (g == 0u && l == 0u && m == -1 * static_cast<int>(l))
+                  debugOutput("    - Adding auxvariables...");
+
+                addAuxVariables(var_name);
+              }
+
+              // Add auxkernels.
+              if (_current_task == "add_aux_kernel")
+              {
+                if (g == 0u && l == 0u && m == -1 * static_cast<int>(l))
+                  debugOutput("    - Adding auxkernels...");
+
+                addAuxKernels(var_name, g, l, m);
+              }
+
+              moment_index++;
+            }
+          }
+          moment_index = 0u;
+          break;
+
+        default:
+          mooseError("Unknown mesh dimensionality.");
+          break;
+      }
     }
   }
 
@@ -563,6 +586,64 @@ NeutronTransportAction::actUpwindDFEM()
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
+// Initialize the diffusion approximation scheme.
+//------------------------------------------------------------------------------
+void
+NeutronTransportAction::actDiffusion()
+{
+  // Loop over all groups.
+  for (unsigned int g = 0; g < _num_groups; ++g)
+  {
+    const auto & var_name = _group_flux_moments[g][0];
+
+    // Add a non-linear variable.
+    if (_current_task == "add_variable")
+    {
+      if (g == 0u)
+        debugOutput("    - Adding variables...");
+
+      addVariable(var_name);
+    }
+
+    // Add boundary conditions.
+    if (_current_task == "add_bc")
+    {
+      if (g == 0u)
+        debugOutput("    - Adding BCs...");
+
+      addDiffusionBCs(var_name, g);
+    }
+
+    // Add initial conditions.
+    if (_current_task == "add_ic")
+    {
+      if (g == 0u)
+        debugOutput("    - Adding ICs...");
+
+      addDiffusionICs(var_name, g);
+    }
+
+    // Add kernels.
+    if (_current_task == "add_kernel")
+    {
+      if (g == 0u)
+        debugOutput("    - Adding kernels...");
+
+      addDiffusionKernels(var_name, g);
+    }
+  }
+
+  // Add Dirac kernels (point sources).
+  if (_current_task == "add_dirac_kernel")
+  {
+    debugOutput("    - Adding Dirac kernels...");
+
+    addDiffusionDiracKernels();
+  }
+}
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
 // Functions to add MOOSE objects common to all schemes.
 //------------------------------------------------------------------------------
 void
@@ -587,7 +668,7 @@ NeutronTransportAction::addOutputs()
 }
 
 void
-NeutronTransportAction::addBCs(const std::string & var_name, unsigned int g, unsigned int n)
+NeutronTransportAction::addSNBCs(const std::string & var_name, unsigned int g, unsigned int n)
 {
   // Add ADSNVacuumBC.
   if (_vacuum_side_sets.size() > 0u)
@@ -619,7 +700,7 @@ NeutronTransportAction::addBCs(const std::string & var_name, unsigned int g, uns
 
     params.set<std::vector<BoundaryName>>("boundary") = _source_side_sets;
 
-    _problem->addBoundaryCondition("ADSNMatSourceBC", "ADSNMatSourceBC" + var_name, params);
+    _problem->addBoundaryCondition("ADSNMatSourceBC", "ADSNMatSourceBC_" + var_name, params);
     debugOutput("Adding BC ADSNMatSourceBC for the variable " + var_name + ".");
   } // ADSNMatSourceBC
 
@@ -639,14 +720,14 @@ NeutronTransportAction::addBCs(const std::string & var_name, unsigned int g, uns
 
     params.set<std::vector<BoundaryName>>("boundary") = _reflective_side_sets;
 
-    _problem->addBoundaryCondition("ADSNReflectiveBC", "ADSNReflectiveBC" + var_name, params);
+    _problem->addBoundaryCondition("ADSNReflectiveBC", "ADSNReflectiveBC_" + var_name, params);
     debugOutput("Adding BC ADSNReflectiveBC for the variable " + var_name + ".");
   } // ADSNReflectiveBC
 }
 
 // TODO: Initial conditions.
 void
-NeutronTransportAction::addICs(const std::string & var_name, unsigned int g, unsigned int n)
+NeutronTransportAction::addSNICs(const std::string & var_name, unsigned int g, unsigned int n)
 {
   if (_exec_type != ExecutionType::Transient)
     return;
@@ -857,7 +938,7 @@ NeutronTransportAction::addSAAFKernels(const std::string & var_name, unsigned in
         auto params = _factory.getValidParams("ADSAAFExternalScattering");
         params.set<NonlinearVariableName>("variable") = var_name;
         // Group index and the number of groups are required to fetch the
-        // source moments for the proper spectral energy group.
+        // scattering cross-section moments.
         params.set<unsigned int>("group_index") = g;
         params.set<unsigned int>("num_groups") = _num_groups;
         // Ordinate index is required to fetch the neutron direction.
@@ -893,7 +974,7 @@ NeutronTransportAction::addSAAFKernels(const std::string & var_name, unsigned in
         auto params = _factory.getValidParams("ADSAAFInternalScattering");
         params.set<NonlinearVariableName>("variable") = var_name;
         // Group index and the number of groups are required to fetch the
-        // source moments for the proper spectral energy group.
+        // scattering cross-section moments.
         params.set<unsigned int>("group_index") = g;
         params.set<unsigned int>("num_groups") = _num_groups;
         // Ordinate index is required to fetch the neutron direction.
@@ -926,7 +1007,7 @@ NeutronTransportAction::addSAAFKernels(const std::string & var_name, unsigned in
         auto params = _factory.getValidParams("ADSAAFScattering");
         params.set<NonlinearVariableName>("variable") = var_name;
         // Group index and the number of groups are required to fetch the
-        // source moments for the proper spectral energy group.
+        // scattering cross-section moments.
         params.set<unsigned int>("group_index") = g;
         params.set<unsigned int>("num_groups") = _num_groups;
         // Ordinate index is required to fetch the neutron direction.
@@ -1148,7 +1229,7 @@ NeutronTransportAction::addDGFEMKernels(const std::string & var_name,
         auto params = _factory.getValidParams("ADDFEMExternalScattering");
         params.set<NonlinearVariableName>("variable") = var_name;
         // Group index and the number of groups are required to fetch the
-        // source moments for the proper spectral energy group.
+        // scattering cross-section moments.
         params.set<unsigned int>("group_index") = g;
         params.set<unsigned int>("num_groups") = _num_groups;
         // Ordinate index is required to fetch the neutron direction.
@@ -1184,7 +1265,7 @@ NeutronTransportAction::addDGFEMKernels(const std::string & var_name,
         auto params = _factory.getValidParams("ADDFEMInternalScattering");
         params.set<NonlinearVariableName>("variable") = var_name;
         // Group index and the number of groups are required to fetch the
-        // source moments for the proper spectral energy group.
+        // scattering cross-section moments.
         params.set<unsigned int>("group_index") = g;
         params.set<unsigned int>("num_groups") = _num_groups;
         // Ordinate index is required to fetch the neutron direction.
@@ -1217,7 +1298,7 @@ NeutronTransportAction::addDGFEMKernels(const std::string & var_name,
         auto params = _factory.getValidParams("ADDFEMScattering");
         params.set<NonlinearVariableName>("variable") = var_name;
         // Group index and the number of groups are required to fetch the
-        // source moments for the proper spectral energy group.
+        // scattering cross-section moments.
         params.set<unsigned int>("group_index") = g;
         params.set<unsigned int>("num_groups") = _num_groups;
         // Ordinate index is required to fetch the neutron direction.
@@ -1351,5 +1432,280 @@ NeutronTransportAction::addDGFEMDiracKernels()
       }
     }
   } // DFEMIsoPointSource
+}
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+// Functions to add MOOSE objects for the diffusion approximation scheme.
+//------------------------------------------------------------------------------
+void
+NeutronTransportAction::addDiffusionBCs(const std::string & var_name, unsigned int g)
+{
+  // Add ADDiffusionRobinBC for vacuum boundary conditions.
+  if (_vacuum_side_sets.size() > 0u)
+  {
+    auto params = _factory.getValidParams("ADDiffusionRobinBC");
+    params.set<NonlinearVariableName>("variable") = var_name;
+    params.set<Real>("incoming_partial_current") = 0.0;
+    params.set<Real>("boundary_transport_correction") = 1.0;
+
+    params.set<std::vector<BoundaryName>>("boundary") = _vacuum_side_sets;
+
+    _problem->addBoundaryCondition("ADDiffusionRobinBC", "ADDiffusionRobinBC_" + var_name, params);
+    debugOutput("      - Adding BC ADDiffusionRobinBC for the variable " + var_name + ".");
+  } // ADDiffusionRobinBC
+
+  // Add ADDiffusionRobinBC for surface source boundary conditions.
+  if (_source_side_sets.size() > 0u)
+  {
+    mooseError(
+        "The diffusion approximation scheme does not support surface source boundary conditions.");
+
+    auto params = _factory.getValidParams("ADDiffusionRobinBC");
+    params.set<NonlinearVariableName>("variable") = var_name;
+    // params.set<Real>("incoming_partial_current") = 0.0; // TODO: Implement me.
+    params.set<Real>("boundary_transport_correction") = 1.0;
+
+    params.set<std::vector<BoundaryName>>("boundary") = _source_side_sets;
+
+    _problem->addBoundaryCondition("ADDiffusionRobinBC", "ADDiffusionRobinBC_" + var_name, params);
+    debugOutput("      - Adding BC ADDiffusionRobinBC for the variable " + var_name + ".");
+  } // ADDiffusionRobinBC
+
+  // Add ADDiffusionNeumannBC for reflective boundaries.
+  if (_reflective_side_sets.size() > 0u)
+  {
+    auto params = _factory.getValidParams("ADDiffusionNeumannBC");
+    params.set<NonlinearVariableName>("variable") = var_name;
+    params.set<Real>("net_partial_current") = 0.0;
+
+    params.set<std::vector<BoundaryName>>("boundary") = _reflective_side_sets;
+
+    _problem->addBoundaryCondition(
+        "ADDiffusionNeumannBC", "ADDiffusionNeumannBC_" + var_name, params);
+    debugOutput("Adding BC ADDiffusionNeumannBC for the variable " + var_name + ".");
+  } // ADDiffusionNeumannBC
+}
+void
+NeutronTransportAction::addDiffusionICs(const std::string & var_name, unsigned int g)
+{
+  if (_exec_type != ExecutionType::Transient)
+    return;
+
+  switch (static_cast<int>(getParam<MooseEnum>("ic_type")))
+  {
+    case 0:
+      // Add ConstantIC.
+      {
+        auto params = _factory.getValidParams("ConstantIC");
+        params.set<VariableName>("variable") = var_name;
+
+        if (isParamValid("block"))
+        {
+          params.set<std::vector<SubdomainName>>("block") =
+              getParam<std::vector<SubdomainName>>("block");
+        }
+
+        const auto & const_ic = getParam<std::vector<Real>>("constant_ic");
+        if (const_ic.size() == 1)
+          params.set<Real>("value") = const_ic[0];
+        else if (const_ic.size() == _num_groups)
+          params.set<Real>("value") = const_ic[g];
+        else
+        {
+          mooseError("Size of 'constant_ic' does not match the declared number "
+                     "of neutron groups.");
+        }
+
+        _problem->addInitialCondition("ConstantIC", "ConstantIC_" + var_name, params);
+        debugOutput("Adding IC ConstantIC for the variable " + var_name + ".");
+      } // ConstantIC
+      break;
+
+    case 1:
+      mooseError("Function ICs are not currently supported.");
+      break;
+
+    case 2:
+      mooseError("File ICs are not currently supported.");
+      break;
+
+    default:
+      mooseError("Unknown IC type.");
+      break;
+  }
+}
+void
+NeutronTransportAction::addDiffusionKernels(const std::string & var_name, unsigned int g)
+{
+  // Add ADParticleTimeDerivative.
+  if (_exec_type == ExecutionType::Transient)
+  {
+    auto params = _factory.getValidParams("ADParticleTimeDerivative");
+    params.set<NonlinearVariableName>("variable") = var_name;
+    // Group index is required to fetch the group neutron velocity.
+    params.set<unsigned int>("group_index") = g;
+
+    if (isParamValid("block"))
+    {
+      params.set<std::vector<SubdomainName>>("block") =
+          getParam<std::vector<SubdomainName>>("block");
+    }
+
+    _problem->addKernel("ADParticleTimeDerivative", "ADParticleTimeDerivative_" + var_name, params);
+    debugOutput("      - Adding kernel ADParticleTimeDerivative for the variable " + var_name +
+                ".");
+  } // ADParticleTimeDerivative
+
+  // Add ADDiffusionApprox.
+  {
+    auto params = _factory.getValidParams("ADDiffusionApprox");
+    params.set<NonlinearVariableName>("variable") = var_name;
+    // Group index is required to fetch the group neutron diffusion coefficient.
+    params.set<unsigned int>("group_index") = g;
+
+    if (isParamValid("block"))
+    {
+      params.set<std::vector<SubdomainName>>("block") =
+          getParam<std::vector<SubdomainName>>("block");
+    }
+
+    _problem->addKernel("ADDiffusionApprox", "ADDiffusionApprox_" + var_name, params);
+    debugOutput("      - Adding kernel ADDiffusionApprox for the variable " + var_name + ".");
+  } // ADDiffusionApprox
+
+  // Add ADDiffusionMaterialSource.
+  {
+    auto params = _factory.getValidParams("ADDiffusionMaterialSource");
+    params.set<NonlinearVariableName>("variable") = var_name;
+    // Group index and the number of groups are required to fetch the
+    // source moments for the proper spectral energy group.
+    params.set<unsigned int>("group_index") = g;
+    params.set<unsigned int>("num_groups") = _num_groups;
+
+    if (isParamValid("block"))
+    {
+      params.set<std::vector<SubdomainName>>("block") =
+          getParam<std::vector<SubdomainName>>("block");
+    }
+
+    _problem->addKernel(
+        "ADDiffusionMaterialSource", "ADDiffusionMaterialSource_" + var_name, params);
+    debugOutput("      - Adding kernel ADDiffusionMaterialSource for the variable " + var_name +
+                ".");
+  } // ADDiffusionMaterialSource
+
+  // Add ADDiffusionRemoval.
+  {
+    auto params = _factory.getValidParams("ADDiffusionRemoval");
+    params.set<NonlinearVariableName>("variable") = var_name;
+    // Group index is required to fetch the group neutron diffusion coefficient.
+    params.set<unsigned int>("group_index") = g;
+
+    if (isParamValid("block"))
+    {
+      params.set<std::vector<SubdomainName>>("block") =
+          getParam<std::vector<SubdomainName>>("block");
+    }
+
+    _problem->addKernel("ADDiffusionRemoval", "ADDiffusionRemoval_" + var_name, params);
+    debugOutput("      - Adding kernel ADDiffusionRemoval for the variable " + var_name + ".");
+  } // ADDiffusionRemoval
+
+  // Add ADDiffusionScattering.
+  if (_num_groups > 1u)
+  {
+    auto params = _factory.getValidParams("ADDiffusionScattering");
+    params.set<NonlinearVariableName>("variable") = var_name;
+    // Group index and the number of groups are required to fetch the
+    // scattering cross-section moments.
+    params.set<unsigned int>("group_index") = g;
+    params.set<unsigned int>("num_groups") = _num_groups;
+
+    // Copy all of the group flux ordinate names into the variable
+    // parameter.
+    auto & scalar_flux_names = params.set<std::vector<VariableName>>("group_scalar_fluxes");
+    for (unsigned int g_prime = 0; g_prime < _num_groups; ++g_prime)
+      scalar_flux_names.emplace_back(_group_flux_moments[g_prime][0u]);
+
+    if (isParamValid("block"))
+    {
+      params.set<std::vector<SubdomainName>>("block") =
+          getParam<std::vector<SubdomainName>>("block");
+    }
+
+    _problem->addKernel("ADDiffusionScattering", "ADDiffusionScattering_" + var_name, params);
+    debugOutput("      - Adding kernel ADDiffusionScattering for the variable " + var_name + ".");
+  } // ADDiffusionScattering
+}
+void
+NeutronTransportAction::addDiffusionDiracKernels()
+{
+  // Add DiffusionIsoPointSource.
+  {
+    const auto & source_locations = getParam<std::vector<Point>>("point_source_locations");
+    const auto & source_intensities = getParam<std::vector<Real>>("point_source_intensities");
+    const auto & source_groups = getParam<std::vector<unsigned int>>("point_source_groups");
+
+    if (source_locations.size() != source_intensities.size() ||
+        source_intensities.size() != source_groups.size())
+    {
+      mooseWarning("The number of provided parameters for the isotropic point "
+                   "sources do not match. Some sources will be ignored and "
+                   "others may be mismatched between their locations, "
+                   "intensities, and emission groups.");
+    }
+
+    // Loop over the vector of group indices to bin the source indices by the
+    // group they emit into.
+    std::unordered_map<unsigned int, std::vector<unsigned int>> group_map;
+    const unsigned int num_sources = std::min(
+        std::min(source_locations.size(), source_intensities.size()), source_groups.size());
+    for (unsigned int i = 0; i < num_sources; ++i)
+    {
+      if (source_groups[i] > _num_groups)
+      {
+        mooseWarning("Group " + Moose::stringify(source_groups[i]) +
+                     " exceeds "
+                     "the number of groups requested. Ignoring this source.");
+        continue;
+      }
+
+      if (group_map.count(source_groups[i]) > 0u)
+        group_map.emplace(source_groups[i] - 1u, std::vector<unsigned int>());
+      else
+        group_map[source_groups[i] - 1u].emplace_back(i);
+    }
+
+    // Loop over the sorted groups and assign dirac kernels to each flux group.
+    for (const auto & [g, mapping] : group_map)
+    {
+      const auto & var_name = _group_flux_moments[g][0];
+
+      auto params = _factory.getValidParams("DiffusionIsoPointSource");
+      params.set<NonlinearVariableName>("variable") = var_name;
+      params.set<MooseEnum>("point_not_found_behavior") =
+          MooseEnum("ERROR WARNING IGNORE", "WARNING");
+
+      // Set the intensities and points for the group g.
+      for (const auto & index : mapping)
+      {
+        params.set<std::vector<Point>>("points").emplace_back(source_locations[index]);
+        params.set<std::vector<Real>>("intensities").emplace_back(source_intensities[index]);
+      }
+
+      if (isParamValid("block"))
+      {
+        params.set<std::vector<SubdomainName>>("block") =
+            getParam<std::vector<SubdomainName>>("block");
+      }
+
+      _problem->addDiracKernel(
+          "DiffusionIsoPointSource", "DiffusionIsoPointSource_" + var_name, params);
+      debugOutput("      - Adding Dirac kernel DiffusionIsoPointSource for the "
+                  "variable " +
+                  var_name + ".");
+    }
+  } // DiffusionIsoPointSource
 }
 //------------------------------------------------------------------------------

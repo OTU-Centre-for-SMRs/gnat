@@ -31,11 +31,12 @@ protected:
   // Individual act functions for each scheme.
   void actSAAFCFEM();
   void actUpwindDFEM();
+  void actDiffusion();
 
   // Member functions to initialize the MOOSE objects required for all schemes.
   void addOutputs();
-  void addBCs(const std::string & var_name, unsigned int g, unsigned int n);
-  void addICs(const std::string & var_name, unsigned int g, unsigned int n);
+  void addSNBCs(const std::string & var_name, unsigned int g, unsigned int n);
+  void addSNICs(const std::string & var_name, unsigned int g, unsigned int n);
   void addAuxVariables(const std::string & var_name);
   // is_output = true as a default parameter.
   // TODO: Fix this for scattering moments.
@@ -51,6 +52,13 @@ protected:
   void addDGFEMKernels(const std::string & var_name, unsigned int g, unsigned int n);
   void addDGFEMDGKernels(const std::string & var_name, unsigned int g, unsigned int n);
   void addDGFEMDiracKernels();
+
+  // Member functions to initialize the MOOSE objects required for the
+  // diffusion approximation scheme.
+  void addDiffusionBCs(const std::string & var_name, unsigned int g);
+  void addDiffusionICs(const std::string & var_name, unsigned int g);
+  void addDiffusionKernels(const std::string & var_name, unsigned int g);
+  void addDiffusionDiracKernels();
 
   const Scheme _transport_scheme;
 

@@ -121,7 +121,7 @@ FileNeutronicsMaterial::FileNeutronicsMaterial(const InputParameters & parameter
     mooseError("Failed to open file " + _file_name + " to read material properties.");
 
   // Resize the properties and initialize with 0.0.
-  _sigma_r_g.resize(_num_groups, 0.0);
+  _sigma_t_g.resize(_num_groups, 0.0);
   _sigma_s_g_prime_g_l.resize(_num_groups * _num_groups * (_anisotropy + 1u), 0.0);
 
   // Convert per-nuclide cross-sections to bulk material cross-sections.
@@ -149,19 +149,19 @@ FileNeutronicsMaterial::FileNeutronicsMaterial(const InputParameters & parameter
 
     // SigmaR.
     {
-      if (data._sigma_r_g.size() < _num_groups)
+      if (data._sigma_t_g.size() < _num_groups)
       {
         mooseError("Number of group-wise removal cross-sections is smaller then the number of "
                    "groups declared in the simulation properties.");
       }
-      else if (data._sigma_r_g.size() > _num_groups)
+      else if (data._sigma_t_g.size() > _num_groups)
         mooseWarning(
             "Number of group-wise removal cross-sections is greater then then number of groups "
             "declared in the simulation properties. The number of group-wise removal "
             "cross-sections will be truncated.");
 
-      for (unsigned int i = 0u; i < _sigma_r_g.size(); ++i)
-        _sigma_r_g[i] += data._sigma_r_g[i];
+      for (unsigned int i = 0u; i < _sigma_t_g.size(); ++i)
+        _sigma_t_g[i] += data._sigma_t_g[i];
     }
 
     // SigmaSMatrix.
@@ -216,6 +216,59 @@ FileNeutronicsMaterial::FileNeutronicsMaterial(const InputParameters & parameter
     // Error if the user did not provide enough parameters.
     if (_source_moments.size() < _max_source_moments)
       mooseError("Not enough source moments have been provided.");
+  }
+
+  // Required for neutron diffusion coefficients and removal cross-sections.
+
+  // Compute the out-scattering cross-section. This is the sum of the 0'th
+  // moments of the scattering cross-sections from the current group into all
+  // other groups (excluding the current group).
+  _sigma_s_g.resize(_num_groups, 0.0);
+  _sigma_s_g_g.resize(_num_groups, 0.0);
+  for (unsigned int g = 0u; g < _num_groups; ++g)
+  {
+    for (unsigned int g_prime = 0u; g_prime < _num_groups; ++g_prime)
+      _sigma_s_g[g] += _sigma_s_g_prime_g_l[g_prime * _num_groups * _anisotropy + g * _anisotropy];
+
+    _sigma_s_g_g[g] = _sigma_s_g_prime_g_l[g * _num_groups * _anisotropy + g * _anisotropy];
+  }
+
+  // Recompute the neutron diffusion coefficients to account for scattering (transport
+  // approximation).
+  // Sum the first order Legendre out-scattering cross-sections for all groups.
+  if (_diffusion_g.size() > 0u)
+  {
+    std::vector<Real> _sigma_s_g_prime_g_1;
+    _sigma_s_g_prime_g_1.resize(_num_groups, 0.0);
+    if (_anisotropy > 0u)
+    {
+      for (unsigned int g = 0u; g < _num_groups; ++g)
+      {
+        for (unsigned int g_prime = 0u; g_prime < _num_groups; ++g_prime)
+        {
+          _sigma_s_g[g] +=
+              _sigma_s_g_prime_g_l[g_prime * _num_groups * _anisotropy + g * _anisotropy + 1u];
+        }
+      }
+    }
+
+    _diffusion_g.resize(_num_groups, 0.0);
+    bool warning = false;
+    for (unsigned int g = 0u; g < _diffusion_g.size(); ++g)
+    {
+      if (3.0 * (_sigma_t_g[g] - _sigma_s_g_prime_g_1[g]) < 10.0 * libMesh::TOLERANCE)
+      {
+        _diffusion_g[g] = 1.0 / (10.0 * libMesh::TOLERANCE);
+        warning = true;
+      }
+      else
+        _diffusion_g[g] = 1.0 / (3.0 * (_sigma_t_g[g] - _sigma_s_g_prime_g_1[g]));
+    }
+    if (warning)
+      mooseWarning(
+          "3.0 * (_sigma_t_g[g] - _sigma_s_g_prime_g_1[g]) < 10.0 * libMesh::TOLERANCE for the "
+          "provided cross-section(s). Using a diffusion coefficient of 1 / "
+          "10.0 * libMesh::TOLERANCE for those values.");
   }
 }
 
@@ -362,7 +415,7 @@ FileNeutronicsMaterial::parseOpenMCProperty(const PropertyType & type,
              row <= static_cast<unsigned int>(max_row);
              ++row)
         {
-          _material_properties[reader.getEntry("nuclide", row)]._sigma_r_g.emplace_back(
+          _material_properties[reader.getEntry("nuclide", row)]._sigma_t_g.emplace_back(
               std::stod(values[row]));
         }
         break;
@@ -421,10 +474,17 @@ FileNeutronicsMaterial::computeQpProperties()
 
   _mat_inv_v_g[_qp].resize(_num_groups, 0.0);
   _mat_sigma_t_g[_qp].resize(_num_groups, 0.0);
+  _mat_sigma_r_g[_qp].resize(_num_groups, 0.0);
+  _mat_diffusion_g[_qp].resize(_num_groups, 0.0);
   for (unsigned int i = 0; i < _num_groups; ++i)
   {
     _mat_inv_v_g[_qp][i] = _inv_v_g[i];
-    _mat_sigma_t_g[_qp][i] = _sigma_r_g[i];
+    _mat_sigma_t_g[_qp][i] = _sigma_t_g[i];
+    // Have to sum the absorption and out-scattering cross-section to form the
+    // total cross-section. This sums all g -> g_prime scattering cross-sections and then subtracts
+    // the g -> g cross-section.
+    _mat_sigma_r_g[_qp][i] = _sigma_t_g[i] - _sigma_s_g_g[i];
+    _mat_diffusion_g[_qp][i] = _diffusion_g[i];
   }
 
   // Scattering moments and anisotropy.

@@ -14,4 +14,5 @@ protected:
 
   std::vector<Real> _v_g;
   std::vector<Real> _sigma_a_g;
+  std::vector<Real> _diffusion_g;
 }; // class AbsorbingNeutronicsMaterial
