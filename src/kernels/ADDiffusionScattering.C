@@ -31,9 +31,9 @@ ADDiffusionScattering::validParams()
 
 ADDiffusionScattering::ADDiffusionScattering(const InputParameters & parameters)
   : ADKernel(parameters),
-    _sigma_s_g_prime_g_l(getADMaterialProperty<std::vector<Real>>("scattering_matrix")),
     _group_index(getParam<unsigned int>("group_index")),
     _num_groups(getParam<unsigned int>("num_groups")),
+    _sigma_s_g_prime_g_l(getADMaterialProperty<std::vector<Real>>("scattering_matrix")),
     _anisotropy(getMaterialProperty<unsigned int>("medium_anisotropy"))
 {
   if (_group_index >= _num_groups)

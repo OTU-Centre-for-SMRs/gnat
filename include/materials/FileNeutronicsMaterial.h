@@ -16,8 +16,6 @@ protected:
   void parseGnatProperty(const PropertyType & type, const std::string & property_file);
   void parseOpenMCProperty(const PropertyType & type, const std::string & property_file);
 
-  CrossSectionSource _xs_source;
-
   // Nuclear properties for individual isotopes.
   struct NuclideProperties
   {
@@ -66,11 +64,12 @@ protected:
   unsigned int _anisotropy;
   unsigned int _max_moments;
 
-  std::vector<Real> _source_moments;
+  const std::vector<Real> & _source_moments;
   const unsigned int _source_anisotropy;
   unsigned int _max_source_moments;
   bool _has_volumetric_source;
 
+  CrossSectionSource _xs_source;
   const std::string & _file_name;
   const std::string & _source_material_id;
 }; // class FileNeutronicsMaterial

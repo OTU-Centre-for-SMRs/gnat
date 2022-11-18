@@ -7,19 +7,22 @@
 //------------------------------------------------------------------------------
 // Legendre polynomials here.
 //------------------------------------------------------------------------------
-LegendrePolynomial::LegendrePolynomial(unsigned int degree)
-  : _degree(std::move(degree))
+LegendrePolynomial::LegendrePolynomial(unsigned int degree) : _degree(std::move(degree))
 {
   // Precompute and store the roots of the polynomial using Newton's method.
   _roots.resize(degree, 0.0);
   _weights.resize(degree, 0.0);
 
-  Real dr, x, v, d;
-  for (int i = 1; i <= _degree; ++i)
+  Real dr = 0.0;
+  Real x = 0.0;
+  Real v = 0.0;
+  Real d = 0.0;
+  for (unsigned int i = 1; i <= _degree; ++i)
   {
     dr = 1;
 
-    x = std::cos(M_PI * (i - 0.25) / (_degree + 0.5)); // Magical initial guess.
+    x = std::cos(M_PI * (static_cast<Real>(i - 0.25)) /
+                 (static_cast<Real>(_degree) + 0.5)); // Magical initial guess.
     v = evaluate(x);
     d = evaluateDerivative(x);
 
@@ -29,8 +32,7 @@ LegendrePolynomial::LegendrePolynomial(unsigned int degree)
       x -= dr; // x_{i+1} = x_{i} - f(x_{i}) / f'(x_{i})
       v = evaluate(x);
       d = evaluateDerivative(x);
-    }
-    while (std::abs(dr) > 2e-16);
+    } while (std::abs(dr) > 2e-16);
 
     _roots[i - 1u] = x;
     _weights[i - 1u] = 2.0 / ((1.0 - x * x) * d * d);
@@ -50,11 +52,11 @@ LegendrePolynomial::evaluate(Real x)
   Real v = 1.0;
   Real v_sub_1 = x;
   Real v_sub_2 = 1.0;
-  Real f = 1.0 / (x * x - 1.0);
 
-  for (int i = 2; i <= _degree; ++i)
+  for (unsigned int i = 2; i <= _degree; ++i)
   {
-    v = ((2.0 * i - 1.0) * x * v_sub_1 - (i - 1.0) * v_sub_2) / i;
+    v = ((2.0 * static_cast<Real>(i) - 1.0) * x * v_sub_1 - (i - 1.0) * v_sub_2) /
+        static_cast<Real>(i);
 
     v_sub_2 = v_sub_1;
     v_sub_1 = v;
@@ -79,10 +81,12 @@ LegendrePolynomial::evaluateDerivative(Real x)
   Real v_sub_2 = 1.0;
   Real f = 1.0 / (x * x - 1.0);
 
-  for (int i = 2; i <= _degree; ++i)
+  for (unsigned int i = 2; i <= _degree; ++i)
   {
-    v = ((2.0 * i - 1.0) * x * v_sub_1 - (i - 1.0) * v_sub_2) / i;
-    d = i * f * (x * v - v_sub_1);
+    v = ((2.0 * static_cast<Real>(i) - 1.0) * x * v_sub_1 -
+         (static_cast<Real>(i) - 1.0) * v_sub_2) /
+        static_cast<Real>(i);
+    d = static_cast<Real>(i) * f * (x * v - v_sub_1);
 
     v_sub_2 = v_sub_1;
     v_sub_1 = v;

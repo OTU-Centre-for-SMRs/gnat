@@ -104,6 +104,7 @@ AddMobileIsotopeAction::validParams()
 
 AddMobileIsotopeAction::AddMobileIsotopeAction(const InputParameters & params)
   : GnatBaseAction(params),
+    _hl_units(getParam<MooseEnum>("half_life_units").getEnum<HalfLifeUnits>()),
     _isotope_name(getParam<VariableName>("isotope_name")),
     _decay_parents(getParam<std::vector<VariableName>>("decay_parents")),
     _activation_parents(getParam<std::vector<VariableName>>("activation_parents")),
@@ -111,7 +112,6 @@ AddMobileIsotopeAction::AddMobileIsotopeAction(const InputParameters & params)
     _diffusion_coefficient_base(getParam<Real>("diffusion_coefficient_base")),
     _sigma_a(getParam<std::vector<Real>>("absorption_cross_sections")),
     _half_life(0.0),
-    _hl_units(getParam<MooseEnum>("half_life_units").getEnum<HalfLifeUnits>()),
     _parent_branching_fractions(getParam<std::vector<Real>>("parent_branching_factors")),
     _parent_sigma_act(getParam<std::vector<Real>>("activation_cross_sections")),
     _first_action(true)

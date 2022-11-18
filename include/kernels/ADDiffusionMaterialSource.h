@@ -12,8 +12,9 @@ public:
 protected:
   virtual ADReal computeQpResidual() override;
 
-  const unsigned int _group_index; // g
-  const unsigned int _num_groups;  // G
+  // The current group (g) and the number of spectral energy groups (G).
+  const unsigned int _group_index;
+  const unsigned int _num_groups;
 
   /*
    * We assume that the vector of source moments is stored in order of group first,

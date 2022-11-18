@@ -382,7 +382,7 @@ NeutronTransportAction::initializeCommon()
           if (g == 0u && n == 0u)
             debugOutput("    - Adding ICs...");
 
-          addSNICs(var_name, g, n);
+          addSNICs(var_name, g);
         }
       }
 
@@ -565,7 +565,7 @@ NeutronTransportAction::actUpwindDFEM()
         if (g == 0u && n == 0u)
           debugOutput("    - Adding DG kernels...");
 
-        addDGFEMDGKernels(var_name, g, n);
+        addDGFEMDGKernels(var_name, n);
 
         if (g == _num_groups - 1u && n == _num_flux_ordinates - 1u)
           debugOutput("-----------------------------------------------------",
@@ -611,7 +611,7 @@ NeutronTransportAction::actDiffusion()
       if (g == 0u)
         debugOutput("    - Adding BCs...");
 
-      addDiffusionBCs(var_name, g);
+      addDiffusionBCs(var_name);
     }
 
     // Add initial conditions.
@@ -727,7 +727,7 @@ NeutronTransportAction::addSNBCs(const std::string & var_name, unsigned int g, u
 
 // TODO: Initial conditions.
 void
-NeutronTransportAction::addSNICs(const std::string & var_name, unsigned int g, unsigned int n)
+NeutronTransportAction::addSNICs(const std::string & var_name, unsigned int g)
 {
   if (_exec_type != ExecutionType::Transient)
     return;
@@ -1333,9 +1333,7 @@ NeutronTransportAction::addDGFEMKernels(const std::string & var_name,
 }
 
 void
-NeutronTransportAction::addDGFEMDGKernels(const std::string & var_name,
-                                          unsigned int g,
-                                          unsigned int n)
+NeutronTransportAction::addDGFEMDGKernels(const std::string & var_name, unsigned int n)
 {
   // Add ADDFEMUpwinding.
   {
@@ -1439,7 +1437,7 @@ NeutronTransportAction::addDGFEMDiracKernels()
 // Functions to add MOOSE objects for the diffusion approximation scheme.
 //------------------------------------------------------------------------------
 void
-NeutronTransportAction::addDiffusionBCs(const std::string & var_name, unsigned int g)
+NeutronTransportAction::addDiffusionBCs(const std::string & var_name)
 {
   // Add ADDiffusionRobinBC for vacuum boundary conditions.
   if (_vacuum_side_sets.size() > 0u)

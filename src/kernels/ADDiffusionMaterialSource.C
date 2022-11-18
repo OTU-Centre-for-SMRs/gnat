@@ -28,10 +28,10 @@ ADDiffusionMaterialSource::validParams()
 
 ADDiffusionMaterialSource::ADDiffusionMaterialSource(const InputParameters & parameters)
   : ADKernel(parameters),
-    _source_moments(getADMaterialProperty<std::vector<Real>>("source_moments")),
-    _anisotropy(getMaterialProperty<unsigned int>("medium_source_anisotropy")),
     _group_index(getParam<unsigned int>("group_index")),
-    _num_groups(getParam<unsigned int>("num_groups"))
+    _num_groups(getParam<unsigned int>("num_groups")),
+    _source_moments(getADMaterialProperty<std::vector<Real>>("source_moments")),
+    _anisotropy(getMaterialProperty<unsigned int>("medium_source_anisotropy"))
 {
   if (_group_index >= _num_groups)
     mooseError("The group index exceeds the number of energy groups.");

@@ -36,7 +36,7 @@ protected:
   // Member functions to initialize the MOOSE objects required for all schemes.
   void addOutputs();
   void addSNBCs(const std::string & var_name, unsigned int g, unsigned int n);
-  void addSNICs(const std::string & var_name, unsigned int g, unsigned int n);
+  void addSNICs(const std::string & var_name, unsigned int g);
   void addAuxVariables(const std::string & var_name);
   // is_output = true as a default parameter.
   // TODO: Fix this for scattering moments.
@@ -50,12 +50,12 @@ protected:
   // Member functions to initialize the MOOSE objects required for the
   // DGFEM-upwinding scheme.
   void addDGFEMKernels(const std::string & var_name, unsigned int g, unsigned int n);
-  void addDGFEMDGKernels(const std::string & var_name, unsigned int g, unsigned int n);
+  void addDGFEMDGKernels(const std::string & var_name, unsigned int n);
   void addDGFEMDiracKernels();
 
   // Member functions to initialize the MOOSE objects required for the
   // diffusion approximation scheme.
-  void addDiffusionBCs(const std::string & var_name, unsigned int g);
+  void addDiffusionBCs(const std::string & var_name);
   void addDiffusionICs(const std::string & var_name, unsigned int g);
   void addDiffusionKernels(const std::string & var_name, unsigned int g);
   void addDiffusionDiracKernels();

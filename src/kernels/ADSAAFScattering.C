@@ -41,10 +41,10 @@ ADSAAFScattering::validParams()
 
 ADSAAFScattering::ADSAAFScattering(const InputParameters & parameters)
   : ADSAAFBaseKernel(parameters),
-    _sigma_s_g_prime_g_l(getADMaterialProperty<std::vector<Real>>("scattering_matrix")),
-    _anisotropy(getMaterialProperty<unsigned int>("medium_anisotropy")),
     _num_groups(getParam<unsigned int>("num_groups")),
-    _max_anisotropy(getParam<unsigned int>("max_anisotropy"))
+    _max_anisotropy(getParam<unsigned int>("max_anisotropy")),
+    _sigma_s_g_prime_g_l(getADMaterialProperty<std::vector<Real>>("scattering_matrix")),
+    _anisotropy(getMaterialProperty<unsigned int>("medium_anisotropy"))
 {
   if (_group_index >= _num_groups)
     mooseError("The group index exceeds the number of energy groups.");

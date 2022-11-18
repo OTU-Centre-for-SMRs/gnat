@@ -32,8 +32,6 @@ EmptyNeutronicsMaterial::validParams()
 EmptyNeutronicsMaterial::EmptyNeutronicsMaterial(const InputParameters & parameters)
   : Material(parameters),
     _num_groups(getParam<unsigned int>("num_groups")),
-    _saaf_eta(getParam<Real>("saaf_eta")),
-    _saaf_c(getParam<Real>("saaf_c")),
     _mat_inv_v_g(declareADProperty<std::vector<Real>>("inv_v_g")),
     _mat_sigma_t_g(declareADProperty<std::vector<Real>>("total_xs_g")),
     _mat_sigma_r_g(declareADProperty<std::vector<Real>>("removal_xs_g")),
@@ -44,7 +42,9 @@ EmptyNeutronicsMaterial::EmptyNeutronicsMaterial(const InputParameters & paramet
     _mat_source_moments(declareADProperty<std::vector<Real>>("source_moments")),
     _mat_src_anisotropy(declareProperty<unsigned int>("medium_source_anisotropy")),
     _mat_saaf_eta(declareADProperty<Real>("saaf_eta")),
-    _mat_saaf_c(declareADProperty<Real>("saaf_c"))
+    _mat_saaf_c(declareADProperty<Real>("saaf_c")),
+    _saaf_eta(getParam<Real>("saaf_eta")),
+    _saaf_c(getParam<Real>("saaf_c"))
 {
 }
 

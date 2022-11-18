@@ -43,8 +43,8 @@ ADIsotopeBaseBC::validParams()
 ADIsotopeBaseBC::ADIsotopeBaseBC(const InputParameters & parameters)
   : ADIntegratedBC(parameters),
     _vel_type(VelocityType::Constant),
-    _mesh_dims(_fe_problem.mesh().dimension()),
-    _constant_vel(getParam<RealVectorValue>("constant_velocity"))
+    _constant_vel(getParam<RealVectorValue>("constant_velocity")),
+    _mesh_dims(_fe_problem.mesh().dimension())
 {
   switch (getParam<MooseEnum>("velocity_type").getEnum<MooseEnumVelocityType>())
   {

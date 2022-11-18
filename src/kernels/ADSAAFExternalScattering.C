@@ -33,9 +33,10 @@ ADSAAFExternalScattering::validParams()
 
 ADSAAFExternalScattering::ADSAAFExternalScattering(const InputParameters & parameters)
   : ADSAAFBaseKernel(parameters),
+    _num_groups(getParam<unsigned int>("num_groups")),
+    _provided_moment_degree(0u),
     _sigma_s_g_prime_g_l(getADMaterialProperty<std::vector<Real>>("scattering_matrix")),
-    _anisotropy(getMaterialProperty<unsigned int>("medium_anisotropy")),
-    _num_groups(getParam<unsigned int>("num_groups"))
+    _anisotropy(getMaterialProperty<unsigned int>("medium_anisotropy"))
 {
   if (_group_index >= _num_groups)
     mooseError("The group index exceeds the number of energy groups.");

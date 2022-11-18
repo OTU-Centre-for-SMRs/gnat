@@ -33,9 +33,9 @@ AddIsotopeBCAction::validParams()
 
 AddIsotopeBCAction::AddIsotopeBCAction(const InputParameters & parameters)
   : MooseObjectAction(parameters),
+    _p_type(ProblemType::Cartesian1D),
     _master_isotope_list(getParam<std::vector<VariableName>>("nuclides")),
-    _exclude(getParam<std::vector<VariableName>>("excluded_nuclides")),
-    _p_type(ProblemType::Cartesian1D)
+    _exclude(getParam<std::vector<VariableName>>("excluded_nuclides"))
 {
   // Check if a container block exists with isotope parameters. If yes, apply them.
   // FIX THIS: The most janky way to fix this breaking MOOSE change.

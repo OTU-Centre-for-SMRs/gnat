@@ -49,11 +49,13 @@ GnatBaseAction::validParams()
 
 GnatBaseAction::GnatBaseAction(const InputParameters & params)
   : Action(params),
+    _exec_type(ExecutionType::SteadySource),
+    _debug_level(getParam<MooseEnum>("debug_verbosity").getEnum<DebugVerbosity>()),
     _num_groups(0u),
     _max_eval_anisotropy(0u),
-    _exec_type(ExecutionType::SteadySource),
     _flux_moment_name(getParam<std::string>("flux_moment_names")),
-    _debug_level(getParam<MooseEnum>("debug_verbosity").getEnum<DebugVerbosity>())
+    _p_type(ProblemType::Cartesian1D),
+    _num_group_moments(0u)
 {
   // Check if a container block exists with common parameters. If yes, apply them.
   // Check if a container block exists with isotope parameters. If yes, apply them.

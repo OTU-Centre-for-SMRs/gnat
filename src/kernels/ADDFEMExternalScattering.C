@@ -42,11 +42,12 @@ ADDFEMExternalScattering::validParams()
 
 ADDFEMExternalScattering::ADDFEMExternalScattering(const InputParameters & parameters)
   : ADSNBaseKernel(parameters),
-    _sigma_s_g_prime_g_l(getADMaterialProperty<std::vector<Real>>("scattering_matrix")),
-    _anisotropy(getMaterialProperty<unsigned int>("medium_anisotropy")),
     _ordinate_index(getParam<unsigned int>("ordinate_index")),
     _group_index(getParam<unsigned int>("group_index")),
-    _num_groups(getParam<unsigned int>("num_groups"))
+    _num_groups(getParam<unsigned int>("num_groups")),
+    _provided_moment_degree(0u),
+    _sigma_s_g_prime_g_l(getADMaterialProperty<std::vector<Real>>("scattering_matrix")),
+    _anisotropy(getMaterialProperty<unsigned int>("medium_anisotropy"))
 {
   if (_group_index >= _num_groups)
     mooseError("The group index exceeds the number of energy groups.");

@@ -12,9 +12,9 @@ public:
 protected:
   virtual ADReal computeQpResidual() override;
 
-  // Number of spectral energy groups (G) and the current group (g).
-  const unsigned int _num_groups;
+  // The current group (g) and the number of spectral energy groups (G).
   const unsigned int _group_index;
+  const unsigned int _num_groups;
 
   /*
    * Vector of the scalar fluxes (0th degree and moment of the angular flux). We assume that the
