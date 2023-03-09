@@ -20,13 +20,19 @@ ADParticleTimeDerivative::validParams()
                                                     "The energy group index "
                                                     "of the current "
                                                     "angular flux.");
+  params.addParam<std::string>(
+      "transport_system",
+      "",
+      "Name of the transport system which will consume the provided material properties. If one is "
+      "not provided the first transport system will be used.");
   return params;
 }
 
 ADParticleTimeDerivative::ADParticleTimeDerivative(const InputParameters & parameters)
   : ADTimeDerivative(parameters),
     _group_index(getParam<unsigned int>("group_index")),
-    _inv_v_g(getADMaterialProperty<std::vector<Real>>("inv_v_g"))
+    _inv_v_g(getADMaterialProperty<std::vector<Real>>(getParam<std::string>("transport_system") +
+                                                      "inv_v_g"))
 {
 }
 

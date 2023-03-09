@@ -27,20 +27,15 @@ GnatApp::~GnatApp() {}
 static void
 associateSyntaxInner(Syntax & syntax, ActionFactory & /*action_factory*/)
 {
-  // Common syntax.
-  syntax.registerActionSyntax("CommonGnatAction", "NeutronActivationStudy");
-
-  // Neutron transport syntax.
-  syntax.registerActionSyntax("NeutronTransportAction", "NeutronActivationStudy/TransportSystem");
+  // TransportSystem syntax.
+  syntax.registerActionSyntax("AddTransportMaterialAction", "TransportMaterials/*");
+  syntax.registerActionSyntax("TransportAction", "TransportSystems/*");
 
   // Mass transport syntax.
-  syntax.registerActionSyntax("SetupNuclideSystemAction", "NeutronActivationStudy/NuclideSystem");
-  syntax.registerActionSyntax("NuclideSystemAction", "NeutronActivationStudy/NuclideSystem");
+  syntax.registerActionSyntax("SetupNuclideSystemAction", "NuclideSystem");
+  syntax.registerActionSyntax("NuclideSystemAction", "NuclideSystem");
 
-  syntax.registerActionSyntax("AddMobileIsotopeAction",
-                              "NeutronActivationStudy/NuclideSystem/AddMobileNuclides/*");
-  syntax.registerActionSyntax("AddIsotopeBCAction",
-                              "NeutronActivationStudy/NuclideSystem/AddNuclideBCs/*");
+  syntax.registerActionSyntax("AddIsotopeBCAction", "NuclideSystem/AddNuclideBCs/*");
 }
 
 void

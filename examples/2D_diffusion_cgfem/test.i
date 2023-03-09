@@ -7,17 +7,16 @@
     dim = 2
     dx = 10
     dy = 10
-    ix = 100
-    iy = 100
+    ix = 101
+    iy = 101
   []
 []
 
-[NeutronActivationStudy]
-  execution_type = steady
-  num_groups = 1
-
-  [TransportSystem]
+[TransportSystems]
+  [Neutron]
+    num_groups = 1
     scheme = diffusion_cfem
+    particle_type = neutron
 
     order = FIRST
     family = LAGRANGE
@@ -31,11 +30,11 @@
   []
 []
 
-[Materials]
+[TransportMaterials]
   [Domain]
     type = AbsorbingNeutronicsMaterial
-    num_groups = 1
-    group_absorption = 0.01
+    transport_system = Neutron
+    group_absorption = 1.0
     group_speeds = 2200.0
   []
 []

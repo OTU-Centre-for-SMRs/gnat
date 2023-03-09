@@ -20,6 +20,11 @@ SAAFBaseDiracKernel::validParams()
                                                     "The discrete ordinate index "
                                                     "$n$ of the current angular "
                                                     "flux.");
+  params.addParam<std::string>(
+      "transport_system",
+      "",
+      "Name of the transport system which will consume the provided material properties. If one is "
+      "not provided the first transport system will be used.");
 
   return params;
 }
@@ -28,9 +33,10 @@ SAAFBaseDiracKernel::SAAFBaseDiracKernel(const InputParameters & parameters)
   : SNBaseDiracKernel(parameters),
     _ordinate_index(getParam<unsigned int>("ordinate_index")),
     _group_index(getParam<unsigned int>("group_index")),
-    _sigma_r_g(getADMaterialProperty<std::vector<Real>>("total_xs_g")),
-    _saaf_eta(getADMaterialProperty<Real>("saaf_eta")),
-    _saaf_c(getADMaterialProperty<Real>("saaf_c"))
+    _sigma_r_g(getADMaterialProperty<std::vector<Real>>(getParam<std::string>("transport_system") +
+                                                        "total_xs_g")),
+    _saaf_eta(getADMaterialProperty<Real>(getParam<std::string>("transport_system") + "saaf_eta")),
+    _saaf_c(getADMaterialProperty<Real>(getParam<std::string>("transport_system") + "saaf_c"))
 {
 }
 

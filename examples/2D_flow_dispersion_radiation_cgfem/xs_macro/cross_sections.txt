@@ -1,0 +1,7 @@
+openmc
+InvVelocity: inv_velocity.csv
+SigmaR: total.csv
+SigmaA: absorption.csv
+SigmaS: scattering.csv
+SigmaSMatrix: scattering_matrix.csv
+Diffusion: diff.csv

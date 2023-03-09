@@ -53,7 +53,6 @@ GaussAngularQuadrature::generateWeightOrdiantePair(unsigned int i, unsigned int 
   {
     case ProblemType::Cartesian1D:
       _quadrature_set_omega.emplace_back(RealVectorValue(_polar_quadrature.root(i - 1u), 0.0, 0.0));
-      _quadrature_set_omega.back() /= _quadrature_set_omega.back().norm();
       _quadrature_set_weight.emplace_back(_polar_quadrature.weight(i - 1u));
       break;
 
@@ -63,7 +62,6 @@ GaussAngularQuadrature::generateWeightOrdiantePair(unsigned int i, unsigned int 
       omega = _azimuthal_quadrature.angularRoot(j - 1u);
       _quadrature_set_omega.emplace_back(
           RealVectorValue(mu, std::sqrt(1.0 - (mu * mu)) * std::cos(omega), 0.0));
-      //_quadrature_set_omega.back() /= _quadrature_set_omega.back().norm();
       _quadrature_set_weight.emplace_back(weight);
 
       break;

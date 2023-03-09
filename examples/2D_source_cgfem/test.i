@@ -16,12 +16,11 @@
   []
 []
 
-[NeutronActivationStudy]
-  [TransportSystem]
+[TransportSystems]
+  [Neutron]
     scheme = saaf_cfem
-    execution_type = steady
+    particle_type = neutron
     num_groups = 1
-    output_angular_fluxes = true
 
     order = FIRST
     family = LAGRANGE
@@ -31,29 +30,24 @@
 
     max_anisotropy = 0
     vacuum_boundaries = 'left right top bottom'
-
-    debug_verbosity = level0
   []
 []
 
-[Materials]
+[TransportMaterials]
   [Domain]
-    type = ConstantNeutronicsMaterial
-    num_groups = 1
-    group_absorption = 1.0
-    anisotropy = 0
-    group_scattering = 1.0
+    type = VoidNeutronicsMaterial
+    transport_system = Neutron
     group_speeds = 220000.0
     block = '1'
   []
   [Source]
     type = SourceNeutronicsMaterial
-    num_groups = 1
-    group_absorption = 1.0
+    transport_system = Neutron
+    group_absorption = 0.0
     source_anisotropy = 0
-    group_source = 1
+    group_source = 1000.0
     anisotropy = 0
-    group_scattering = 1.0
+    group_scattering = 0.0
     group_speeds = 220000.0
     block = '2'
   []

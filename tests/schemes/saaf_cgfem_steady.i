@@ -36,7 +36,6 @@
     dimensionality = 1D_cartesian
     degree = 0
     order = 0
-    normalize_output = true
   []
 []
 

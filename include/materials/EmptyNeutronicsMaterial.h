@@ -2,6 +2,8 @@
 
 #include "Material.h"
 
+#include "GnatBase.h"
+
 class EmptyNeutronicsMaterial : public Material
 {
 public:
@@ -13,6 +15,7 @@ protected:
   virtual void computeQpProperties() override;
 
   const unsigned int _num_groups;
+  const Particletype _particle;
 
   // Material properties that neutronics materials are expected to provide.
   ADMaterialProperty<std::vector<Real>> & _mat_inv_v_g;

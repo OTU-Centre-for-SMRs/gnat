@@ -18,12 +18,21 @@ enum class ProblemType
   Cartesian3D = 2u
 }; // enum class ProblemType
 
-// An enum for schemes. Either SAAF with CGFEM or Upwinding with DGFEM.
+// An enum for particle types. Either neutron or photon.
+enum class Particletype
+{
+  Neutron = 0u,
+  GammaPhoton = 1u
+};
+// enum class Particletype
+
+// An enum for schemes.
 enum class Scheme
 {
   SAAFCFEM = 0u,
   UpwindingDFEM = 1u,
-  DiffusionApprox = 2u
+  DiffusionApprox = 2u,
+  FluxMomentTransfer = 3u
 }; // enum class Scheme
 
 // An enum for the execution type of the problem. Either steady-state or

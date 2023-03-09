@@ -89,20 +89,26 @@ AddIsotopeBCAction::applyIsotopeParameters(InputParameters & params)
         switch (_p_type)
         {
           case ProblemType::Cartesian1D:
-            params.set<VariableName>("u_var") = getParam<VariableName>("u_var");
+            params.set<std::vector<VariableName>>("u_var").emplace_back(
+                getParam<VariableName>("u_var"));
 
             break;
 
           case ProblemType::Cartesian2D:
-            params.set<VariableName>("u_var") = getParam<VariableName>("u_var");
-            params.set<VariableName>("v_var") = getParam<VariableName>("v_var");
+            params.set<std::vector<VariableName>>("u_var").emplace_back(
+                getParam<VariableName>("u_var"));
+            params.set<std::vector<VariableName>>("v_var").emplace_back(
+                getParam<VariableName>("v_var"));
 
             break;
 
           case ProblemType::Cartesian3D:
-            params.set<VariableName>("u_var") = getParam<VariableName>("u_var");
-            params.set<VariableName>("v_var") = getParam<VariableName>("v_var");
-            params.set<VariableName>("w_var") = getParam<VariableName>("w_var");
+            params.set<std::vector<VariableName>>("u_var").emplace_back(
+                getParam<VariableName>("u_var"));
+            params.set<std::vector<VariableName>>("v_var").emplace_back(
+                getParam<VariableName>("v_var"));
+            params.set<std::vector<VariableName>>("w_var").emplace_back(
+                getParam<VariableName>("w_var"));
 
             break;
 
@@ -111,7 +117,8 @@ AddIsotopeBCAction::applyIsotopeParameters(InputParameters & params)
         }
       }
       else
-        params.set<VariableName>("vector_velocity") = getParam<VariableName>("vector_velocity");
+        params.set<std::vector<VariableName>>("vector_velocity")
+            .emplace_back(getParam<VariableName>("vector_velocity"));
       break;
   }
 }

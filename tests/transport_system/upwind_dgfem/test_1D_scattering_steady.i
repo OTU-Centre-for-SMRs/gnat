@@ -10,14 +10,14 @@
     type = CartesianMeshGenerator
     dim = 1
     dx = 10
-    ix = 100
+    ix = 101
   []
 []
 
-[NeutronActivationStudy]
-  [TransportSystem]
+[TransportSystems]
+  [Neutron]
     scheme = upwinding_dfem
-    execution_type = steady
+    particle_type = neutron
     output_angular_fluxes = true
 
     order = FIRST
@@ -37,9 +37,10 @@
   []
 []
 
-[Materials]
+[TransportMaterials]
   [Domain1]
     type = ConstantNeutronicsMaterial
+    transport_system = Neutron
     anisotropy = 0
     group_absorption = 1.0
     group_scattering = 1.0

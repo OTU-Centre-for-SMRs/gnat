@@ -1,0 +1,4 @@
+openmc
+SigmaR: air_total.csv
+SigmaA: air_absorption.csv
+SigmaS: air_scattering.csv

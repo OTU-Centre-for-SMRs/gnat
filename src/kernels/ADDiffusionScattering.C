@@ -25,6 +25,11 @@ ADDiffusionScattering::validParams()
                                                     "num_groups >= 1",
                                                     "The number of spectral "
                                                     "energy groups.");
+  params.addParam<std::string>(
+      "transport_system",
+      "",
+      "Name of the transport system which will consume the provided material properties. If one is "
+      "not provided the first transport system will be used.");
 
   return params;
 }
@@ -33,8 +38,10 @@ ADDiffusionScattering::ADDiffusionScattering(const InputParameters & parameters)
   : ADKernel(parameters),
     _group_index(getParam<unsigned int>("group_index")),
     _num_groups(getParam<unsigned int>("num_groups")),
-    _sigma_s_g_prime_g_l(getADMaterialProperty<std::vector<Real>>("scattering_matrix")),
-    _anisotropy(getMaterialProperty<unsigned int>("medium_anisotropy"))
+    _sigma_s_g_prime_g_l(getADMaterialProperty<std::vector<Real>>(
+        getParam<std::string>("transport_system") + "scattering_matrix")),
+    _anisotropy(getMaterialProperty<unsigned int>(getParam<std::string>("transport_system") +
+                                                  "medium_anisotropy"))
 {
   if (_group_index >= _num_groups)
     mooseError("The group index exceeds the number of energy groups.");

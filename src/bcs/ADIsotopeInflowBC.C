@@ -27,5 +27,7 @@ ADIsotopeInflowBC::ADIsotopeInflowBC(const InputParameters & parameters)
 ADReal
 ADIsotopeInflowBC::computeQpResidual()
 {
-  return computeQpTests() * getQpVelocity() * _normals[_qp] * _inflow_rate;
+  ADRealVectorValue vel = getQpVelocity();
+  ADReal n_dot_v = vel * _normals[_qp];
+  return _inflow_rate * n_dot_v * _test[_i][_qp];
 }

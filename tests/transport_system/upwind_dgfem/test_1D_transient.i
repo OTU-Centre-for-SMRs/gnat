@@ -10,10 +10,10 @@
   []
 []
 
-[NeutronActivationStudy]
-  [TransportSystem]
+[TransportSystems]
+  [Neutron]
     scheme = upwinding_dfem
-    execution_type = transient
+    particle_type = neutron
     num_groups = 1
     output_angular_fluxes = true
 
@@ -36,10 +36,10 @@
   []
 []
 
-[Materials]
+[TransportMaterials]
   [Domain]
     type = AbsorbingNeutronicsMaterial
-    num_groups = 1
+    transport_system = Neutron
     group_absorption = 1.0
     group_speeds = 220000.0
   []
@@ -54,11 +54,11 @@
   num_steps = 15
   solve_type = NEWTON
 
-  [./TimeIntegrator]
+  [TimeIntegrator]
     type = ImplicitEuler
   []
 
-  [./TimeStepper]
+  [TimeStepper]
     type = ConstantDT
     dt = 0.000004545
   []

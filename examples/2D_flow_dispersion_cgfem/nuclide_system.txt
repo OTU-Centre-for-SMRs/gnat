@@ -1,0 +1,4 @@
+Begin: Ar40
+DiffusionCoefficient: 1.0
+WeightFraction: 1.0
+End: Ar40

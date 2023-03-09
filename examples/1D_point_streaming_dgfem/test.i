@@ -6,14 +6,14 @@
     type = CartesianMeshGenerator
     dim = 1
     dx = 10
-    ix = 100
+    ix = 101
   []
 []
 
-[NeutronActivationStudy]
-  [TransportSystem]
+[TransportSystems]
+  [Neutron]
     scheme = upwinding_dfem
-    execution_type = steady
+    particle_type = neutron
     num_groups = 1
     output_angular_fluxes = true
 
@@ -30,15 +30,14 @@
     point_source_intensities = '1000.0'
     point_source_groups = '1'
 
-    debug_verbosity = level0
     debug_disable_scattering = true
   []
 []
 
-[Materials]
+[TransportMaterials]
   [Domain]
     type = AbsorbingNeutronicsMaterial
-    num_groups = 1
+    transport_system = Neutron
     group_absorption = 1.0
     group_speeds = 2200.0
     saaf_eta = 0.0

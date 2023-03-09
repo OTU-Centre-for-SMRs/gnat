@@ -19,7 +19,8 @@ SAAFIsoPointSource::validParams()
                                              "Number of provided intensities "
                                              "must match the number of points "
                                              "in 'points'.");
-  params.addRequiredParam<std::vector<Point>>("points", "All isotropic point source "
+  params.addRequiredParam<std::vector<Point>>("points",
+                                              "All isotropic point source "
                                               "locations. Number of provided "
                                               "points must match the number of "
                                               "provided intensities in "
@@ -29,9 +30,9 @@ SAAFIsoPointSource::validParams()
 }
 
 SAAFIsoPointSource::SAAFIsoPointSource(const InputParameters & parameters)
-  : SAAFBaseDiracKernel(parameters)
-  , _source_intensities(getParam<std::vector<Real>>("intensities"))
-  , _source_locations(getParam<std::vector<Point>>("points"))
+  : SAAFBaseDiracKernel(parameters),
+    _source_intensities(getParam<std::vector<Real>>("intensities")),
+    _source_locations(getParam<std::vector<Point>>("points"))
 {
   if (_source_intensities.size() != _source_locations.size())
   {
@@ -54,9 +55,8 @@ SAAFIsoPointSource::addPoints()
 Real
 SAAFIsoPointSource::computeQpResidual()
 {
-  Real res = (-1.0 / (4.0 * M_PI)) * computeQPTests()
-             * _source_intensities[_point_intensity_mapping[_current_point]]
-             * _symmetry_factor;
+  Real res = (-1.0 / (4.0 * M_PI)) * computeQPTests() *
+             _source_intensities[_point_intensity_mapping[_current_point]] * _symmetry_factor;
 
   return res;
 }

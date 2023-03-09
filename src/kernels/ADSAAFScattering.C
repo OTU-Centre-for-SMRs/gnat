@@ -43,8 +43,10 @@ ADSAAFScattering::ADSAAFScattering(const InputParameters & parameters)
   : ADSAAFBaseKernel(parameters),
     _num_groups(getParam<unsigned int>("num_groups")),
     _max_anisotropy(getParam<unsigned int>("max_anisotropy")),
-    _sigma_s_g_prime_g_l(getADMaterialProperty<std::vector<Real>>("scattering_matrix")),
-    _anisotropy(getMaterialProperty<unsigned int>("medium_anisotropy"))
+    _sigma_s_g_prime_g_l(getADMaterialProperty<std::vector<Real>>(
+        getParam<std::string>("transport_system") + "scattering_matrix")),
+    _anisotropy(getMaterialProperty<unsigned int>(getParam<std::string>("transport_system") +
+                                                  "medium_anisotropy"))
 {
   if (_group_index >= _num_groups)
     mooseError("The group index exceeds the number of energy groups.");
@@ -67,23 +69,23 @@ ADSAAFScattering::computeFluxMoment(unsigned int g_prime, unsigned int l, int m)
   ADReal moment = 0.0;
   Real omega = 0.0;
   Real mu = 0.0;
-  for (unsigned int i = 0; i < _quadrature_set.totalOrder(); ++i)
+  for (unsigned int n = 0; n < _quadrature_set.totalOrder(); ++n)
   {
-    mu = _quadrature_set.getPolarRoot(i);
-    omega = _quadrature_set.getAzimuthalAngularRoot(i);
-    // cartesianToSpherical(_quadrature_set.direction(i), mu, omega);
+    mu = _quadrature_set.getPolarRoot(n);
+    omega = _quadrature_set.getAzimuthalAngularRoot(n);
 
-    if (i == _ordinate_index)
+    if (n == _ordinate_index && g_prime == _group_index)
     {
       moment +=
-          RealSphericalHarmonics::evaluate(l, m, mu, omega) * _u[_qp] * _quadrature_set.weight(i);
-      continue;
+          RealSphericalHarmonics::evaluate(l, m, mu, omega) * _u[_qp] * _quadrature_set.weight(n);
     }
-
-    const unsigned int base_n = g_prime * (_group_flux_ordinates.size() / _num_groups);
-    moment += RealSphericalHarmonics::evaluate(l, m, mu, omega) *
-              MetaPhysicL::raw_value(std::max((*_group_flux_ordinates[base_n + i])[_qp], 0.0)) *
-              _quadrature_set.weight(i);
+    else
+    {
+      moment += RealSphericalHarmonics::evaluate(l, m, mu, omega) *
+                MetaPhysicL::raw_value(
+                    (*_group_flux_ordinates[g_prime * _quadrature_set.totalOrder() + n])[_qp]) *
+                _quadrature_set.weight(n);
+    }
   }
 
   return moment;
@@ -152,9 +154,8 @@ ADSAAFScattering::computeQpResidual()
       }
 
       res += (2.0 * static_cast<Real>(l) + 1.0) / (4.0 * M_PI) *
-             _sigma_s_g_prime_g_l[_qp][scattering_index] * moment_l * _symmetry_factor;
+             _sigma_s_g_prime_g_l[_qp][scattering_index + l] * moment_l * _symmetry_factor;
 
-      scattering_index++;
       moment_l = 0.0;
     }
   }

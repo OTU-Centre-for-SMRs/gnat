@@ -2,8 +2,6 @@
 
 #include "ActionWarehouse.h"
 
-#include "AddMobileIsotopeAction.h"
-
 registerMooseAction("GnatApp", SetupNuclideSystemAction, "meta_action");
 
 InputParameters
@@ -31,18 +29,18 @@ SetupNuclideSystemAction::validParams()
   params.addParam<FunctionName>("w_function",
                                 "The z-component of the function "
                                 "velocity field.");
-  params.addCoupledVar("u_var",
-                       "The x-component of the variable velocity "
-                       "field.");
-  params.addCoupledVar("v_var",
-                       "The y-component of the variable velocity "
-                       "field.");
-  params.addCoupledVar("w_var",
-                       "The z-component of the variable velocity "
-                       "field.");
-  params.addCoupledVar("vector_velocity",
-                       "A vector variable velocity field as opposed to using "
-                       "individual velocity components.");
+  params.addParam<VariableName>("u_var",
+                                "The x-component of the variable velocity "
+                                "field.");
+  params.addParam<VariableName>("v_var",
+                                "The y-component of the variable velocity "
+                                "field.");
+  params.addParam<VariableName>("w_var",
+                                "The z-component of the variable velocity "
+                                "field.");
+  params.addParam<VariableName>("vector_velocity",
+                                "A vector variable velocity field as opposed to using "
+                                "individual velocity components.");
 
   return params;
 }

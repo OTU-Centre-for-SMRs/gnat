@@ -22,16 +22,15 @@ ADSNVacuumBC::validParams()
 }
 
 ADSNVacuumBC::ADSNVacuumBC(const InputParameters & parameters)
-  : ADSNBaseBC(parameters)
-  , _ordinate_index(getParam<unsigned int>("ordinate_index"))
-{ }
+  : ADSNBaseBC(parameters), _ordinate_index(getParam<unsigned int>("ordinate_index"))
+{
+  if (_ordinate_index >= _quadrature_set.totalOrder())
+    mooseError("The ordinates index exceeds the number of quadrature points.");
+}
 
 ADReal
 ADSNVacuumBC::computeQpResidual()
 {
-  if (_ordinate_index >= _quadrature_set.totalOrder())
-    mooseError("The ordinates index exceeds the number of quadrature points.");
-
   ADReal res = 0.0;
   ADReal n_dot_omega = _quadrature_set.direction(_ordinate_index) * _normals[_qp];
   if (n_dot_omega >= 0.0)

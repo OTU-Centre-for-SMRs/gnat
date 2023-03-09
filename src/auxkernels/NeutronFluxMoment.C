@@ -41,10 +41,12 @@ NeutronFluxMoment::validParams()
                                         "Degree of this angular flux "
                                         "moment.");
   params.addRequiredParam<int>("order", "Order of this angular flux moment.");
-  params.addParam<bool>("normalize_output",
-                        false,
-                        "Divide the flux moment by the spherical harmonics "
-                        "weights.");
+
+  params.addParam<MooseEnum>("negative_flux_handling",
+                             MooseEnum("max abs none", "max"),
+                             "The method of handling negative angular fluxes.");
+
+  params.set<ExecFlagEnum>("execute_on").addAvailableFlags(EXEC_INITIAL, EXEC_LINEAR, EXEC_FINAL);
 
   return params;
 }
@@ -55,6 +57,7 @@ NeutronFluxMoment::NeutronFluxMoment(const InputParameters & parameters)
                     getParam<unsigned int>("n_l"),
                     getParam<MooseEnum>("major_axis").getEnum<MajorAxis>(),
                     getParam<MooseEnum>("dimensionality").getEnum<ProblemType>()),
+    _flux_handling(getParam<MooseEnum>("negative_flux_handling").getEnum<NegativeFluxHandling>()),
     _degree(getParam<unsigned int>("degree")),
     _order(getParam<int>("order")),
     _symmetry_factor(1.0)
@@ -119,14 +122,42 @@ NeutronFluxMoment::computeValue()
   Real moment = 0.0;
   Real omega = 0.0;
   Real mu = 0.0;
-  for (unsigned int i = 0; i < _quadrature_set.totalOrder(); ++i)
+  switch (_flux_handling)
   {
-    mu = _quadrature_set.getPolarRoot(i);
-    omega = _quadrature_set.getAzimuthalAngularRoot(i);
-    // cartesianToSpherical(_quadrature_set.direction(i), mu, omega);
-    moment += RealSphericalHarmonics::evaluate(_degree, _order, mu, omega) *
-              std::max(MetaPhysicL::raw_value((*_flux_ordinates[i])[_qp]), 0.0) *
-              _quadrature_set.weight(i);
+    case NegativeFluxHandling::Max:
+      for (unsigned int i = 0; i < _quadrature_set.totalOrder(); ++i)
+      {
+        mu = _quadrature_set.getPolarRoot(i);
+        omega = _quadrature_set.getAzimuthalAngularRoot(i);
+        // cartesianToSpherical(_quadrature_set.direction(i), mu, omega);
+        moment += RealSphericalHarmonics::evaluate(_degree, _order, mu, omega) *
+                  std::max(MetaPhysicL::raw_value((*_flux_ordinates[i])[_qp]), 0.0) *
+                  _quadrature_set.weight(i);
+      }
+      break;
+
+    case NegativeFluxHandling::Abs:
+      for (unsigned int i = 0; i < _quadrature_set.totalOrder(); ++i)
+      {
+        mu = _quadrature_set.getPolarRoot(i);
+        omega = _quadrature_set.getAzimuthalAngularRoot(i);
+        // cartesianToSpherical(_quadrature_set.direction(i), mu, omega);
+        moment += RealSphericalHarmonics::evaluate(_degree, _order, mu, omega) *
+                  std::abs(MetaPhysicL::raw_value((*_flux_ordinates[i])[_qp])) *
+                  _quadrature_set.weight(i);
+      }
+      break;
+
+    default:
+      for (unsigned int i = 0; i < _quadrature_set.totalOrder(); ++i)
+      {
+        mu = _quadrature_set.getPolarRoot(i);
+        omega = _quadrature_set.getAzimuthalAngularRoot(i);
+        // cartesianToSpherical(_quadrature_set.direction(i), mu, omega);
+        moment += RealSphericalHarmonics::evaluate(_degree, _order, mu, omega) *
+                  MetaPhysicL::raw_value((*_flux_ordinates[i])[_qp]) * _quadrature_set.weight(i);
+      }
+      break;
   }
 
   return moment;

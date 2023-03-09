@@ -40,5 +40,9 @@ protected:
   std::vector<const Function *> _function_vel;
   const RealVectorValue _constant_vel;
 
+  // Diffusion coefficients for stabilization.
+  const ADMaterialProperty<Real> & _mat_diff;
+  const VariableValue * const _eddy_diffusivity;
+
   const unsigned int _mesh_dims;
 }; // class ADIsotopeBase

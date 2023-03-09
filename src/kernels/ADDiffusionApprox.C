@@ -18,6 +18,11 @@ ADDiffusionApprox::validParams()
                                                     "The energy group index "
                                                     "of the current angular "
                                                     "flux.");
+  params.addParam<std::string>(
+      "transport_system",
+      "",
+      "Name of the transport system which will consume the provided material properties. If one is "
+      "not provided the first transport system will be used.");
 
   return params;
 }
@@ -25,7 +30,8 @@ ADDiffusionApprox::validParams()
 ADDiffusionApprox::ADDiffusionApprox(const InputParameters & parameters)
   : ADKernel(parameters),
     _group_index(getParam<unsigned int>("group_index")),
-    _diffusion_g(getADMaterialProperty<std::vector<Real>>("diffusion_g"))
+    _diffusion_g(getADMaterialProperty<std::vector<Real>>(
+        getParam<std::string>("transport_system") + "diffusion_g"))
 {
 }
 

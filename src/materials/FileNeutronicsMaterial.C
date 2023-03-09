@@ -236,7 +236,7 @@ FileNeutronicsMaterial::FileNeutronicsMaterial(const InputParameters & parameter
   // Recompute the neutron diffusion coefficients to account for scattering (transport
   // approximation).
   // Sum the first order Legendre out-scattering cross-sections for all groups.
-  if (_diffusion_g.size() > 0u)
+  if (_diffusion_g.size() == 0u)
   {
     std::vector<Real> _sigma_s_g_prime_g_1;
     _sigma_s_g_prime_g_1.resize(_num_groups, 0.0);

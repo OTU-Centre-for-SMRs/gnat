@@ -7,10 +7,10 @@
   []
 []
 
-[NeutronActivationStudy]
-  [TransportSystem]
+[TransportSystems]
+  [Neutron]
     scheme = saaf_cfem
-    execution_type = steady
+    particle_type = neutron
     num_groups = 1
     output_angular_fluxes = true
 
@@ -32,10 +32,10 @@
   []
 []
 
-[Materials]
+[TransportMaterials]
   [Domain]
     type = AbsorbingNeutronicsMaterial
-    num_groups = 1
+    transport_system = Neutron
     group_absorption = 1.0
     group_speeds = 2200.0
   []

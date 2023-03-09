@@ -22,6 +22,11 @@ ADDiffusionMaterialSource::validParams()
                                                     "num_groups >= 1",
                                                     "The number of spectral "
                                                     "energy groups.");
+  params.addParam<std::string>(
+      "transport_system",
+      "",
+      "Name of the transport system which will consume the provided material properties. If one is "
+      "not provided the first transport system will be used.");
 
   return params;
 }
@@ -30,8 +35,10 @@ ADDiffusionMaterialSource::ADDiffusionMaterialSource(const InputParameters & par
   : ADKernel(parameters),
     _group_index(getParam<unsigned int>("group_index")),
     _num_groups(getParam<unsigned int>("num_groups")),
-    _source_moments(getADMaterialProperty<std::vector<Real>>("source_moments")),
-    _anisotropy(getMaterialProperty<unsigned int>("medium_source_anisotropy"))
+    _source_moments(getADMaterialProperty<std::vector<Real>>(
+        getParam<std::string>("transport_system") + "source_moments")),
+    _anisotropy(getMaterialProperty<unsigned int>(getParam<std::string>("transport_system") +
+                                                  "medium_source_anisotropy"))
 {
   if (_group_index >= _num_groups)
     mooseError("The group index exceeds the number of energy groups.");

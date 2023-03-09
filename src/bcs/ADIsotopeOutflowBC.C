@@ -23,9 +23,10 @@ ADReal
 ADIsotopeOutflowBC::computeQpResidual()
 {
   ADReal res = 0.0;
-  ADReal n_dot_v = getQpVelocity() * _normals[_qp];
+  ADRealVectorValue vel = getQpVelocity();
+  ADReal n_dot_v = vel * _normals[_qp];
   if (n_dot_v >= 0.0)
-    res += computeQpTests() * n_dot_v * _u[_qp];
+    res += n_dot_v * _u[_qp] * _test[_i][_qp];
 
   return res;
 }

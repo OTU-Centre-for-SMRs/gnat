@@ -16,13 +16,12 @@
   []
 []
 
-[NeutronActivationStudy]
-  execution_type = steady
-  num_groups = 2
-  max_anisotropy = 1
-
-  [TransportSystem]
+[TransportSystems]
+  [Neutron]
+    num_groups = 2
+    max_anisotropy = 0
     scheme = saaf_cfem
+    particle_type = neutron
     output_angular_fluxes = false
 
     order = FIRST
@@ -34,15 +33,15 @@
     vacuum_boundaries = 'left right top bottom'
 
     point_source_locations = '5.0 5.0 0.0'
-    point_source_intensities = '1000.0'
+    point_source_intensities = '1000000.0'
     point_source_groups = '1'
   []
 []
 
-[Materials]
+[TransportMaterials]
   [Water]
     type = FileNeutronicsMaterial
-    num_groups = 2
+    transport_system = Neutron
     file_name = './examples/2D_water_steady_cgfem/cross_sections/cross_sections.txt'
     source_material_id = '1'
     block = '2'
@@ -50,7 +49,7 @@
 
   [Air]
     type = FileNeutronicsMaterial
-    num_groups = 2
+    transport_system = Neutron
     file_name = './examples/2D_air_steady_cgfem/cross_sections/cross_sections.txt'
     source_material_id = '1'
     block = '1'

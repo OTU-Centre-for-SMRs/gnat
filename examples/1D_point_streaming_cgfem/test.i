@@ -6,17 +6,15 @@
     type = CartesianMeshGenerator
     dim = 1
     dx = 10
-    ix = 100
+    ix = 101
   []
 []
 
-[NeutronActivationStudy]
-  num_groups = 1
-  execution_type = steady
-  debug_verbosity = level0
-
-  [TransportSystem]
+[TransportSystems]
+  [Neutron]
+    num_groups = 1
     scheme = saaf_cfem
+    particle_type = neutron
     output_angular_fluxes = true
 
     order = FIRST
@@ -33,10 +31,10 @@
   []
 []
 
-[Materials]
+[TransportMaterials]
   [Domain]
     type = AbsorbingNeutronicsMaterial
-    num_groups = 1
+    transport_system = Neutron
     group_absorption = 0.0
     group_speeds = 2200.0
   []

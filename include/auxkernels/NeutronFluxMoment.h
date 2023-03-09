@@ -14,10 +14,11 @@ public:
 protected:
   virtual Real computeValue() override;
 
-  void cartesianToSpherical(const RealVectorValue & ordinate, Real & mu,
-                            Real & omega);
+  void cartesianToSpherical(const RealVectorValue & ordinate, Real & mu, Real & omega);
 
   const GaussAngularQuadrature _quadrature_set;
+
+  const enum class NegativeFluxHandling { Max = 0u, Abs = 1u, None = 2u } _flux_handling;
 
   std::vector<const ADVariableValue *> _flux_ordinates;
 

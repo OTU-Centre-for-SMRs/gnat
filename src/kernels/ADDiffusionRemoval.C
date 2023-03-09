@@ -17,6 +17,11 @@ ADDiffusionRemoval::validParams()
                                                     "The energy group index "
                                                     "of the current angular "
                                                     "flux.");
+  params.addParam<std::string>(
+      "transport_system",
+      "",
+      "Name of the transport system which will consume the provided material properties. If one is "
+      "not provided the first transport system will be used.");
 
   return params;
 }
@@ -24,7 +29,8 @@ ADDiffusionRemoval::validParams()
 ADDiffusionRemoval::ADDiffusionRemoval(const InputParameters & parameters)
   : ADKernel(parameters),
     _group_index(getParam<unsigned int>("group_index")),
-    _sigma_r_g(getADMaterialProperty<std::vector<Real>>("removal_xs_g"))
+    _sigma_r_g(getADMaterialProperty<std::vector<Real>>(getParam<std::string>("transport_system") +
+                                                        "removal_xs_g"))
 {
 }
 

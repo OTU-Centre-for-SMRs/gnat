@@ -1,0 +1,6 @@
+openmc
+InvVelocity: rpv_inv_velocity.csv
+SigmaR: rpv_total.csv
+SigmaA: rpv_absorption.csv
+SigmaS: rpv_scattering.csv
+SigmaSMatrix: rpv_scattering_matrix.csv

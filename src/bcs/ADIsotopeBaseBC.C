@@ -108,7 +108,9 @@ ADIsotopeBaseBC::ADIsotopeBaseBC(const InputParameters & parameters)
         if (_variable_comp_vel.size() != _mesh_dims)
         {
           mooseError("The number of provided velocity component variables does "
-                     "not match the mesh dimensionality.");
+                     "not match the mesh dimensionality. Components: " +
+                     Moose::stringify(_variable_comp_vel.size()) +
+                     ". Mesh dimensions:  " + Moose::stringify(_mesh_dims) + ".");
         }
       }
       break;

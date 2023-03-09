@@ -1,5 +1,5 @@
-# A simple test case with a purely absorbing medium and a point source in the
-# middle of the domain.
+# This test case currently doesn't work.
+# TODO: Fix this.
 
 [Mesh]
   [domain]
@@ -17,12 +17,12 @@
 []
 
 [NeutronActivationStudy]
-  execution_type = steady
   num_groups = 2
   max_anisotropy = 0
 
   [TransportSystem]
     scheme = saaf_cfem
+    particle_type = neutron
     output_angular_fluxes = false
 
     order = FIRST

@@ -16,12 +16,11 @@
   []
 []
 
-[NeutronActivationStudy]
-  execution_type = steady
-  num_groups = 2
-
-  [TransportSystem]
+[TransportSystems]
+  [Neutron]
+    num_groups = 2
     scheme = diffusion_cfem
+    particle_type = neutron
 
     order = FIRST
     family = LAGRANGE
@@ -34,10 +33,10 @@
   []
 []
 
-[Materials]
+[TransportMaterials]
   [Water]
     type = FileNeutronicsMaterial
-    num_groups = 2
+    transport_system = Neutron
     file_name = './examples/2D_water_steady_cgfem/cross_sections/cross_sections.txt'
     source_material_id = '1'
     block = '1'

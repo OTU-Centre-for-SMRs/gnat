@@ -7,21 +7,18 @@
     dim = 2
     dx = 10
     dy = 10
-    ix = 100
-    iy = 100
+    ix = 101
+    iy = 101
   []
 []
 
-[NeutronActivationStudy]
-  execution_type = steady
-  num_groups = 1
-  max_anisotropy = 0
-
-  debug_verbosity = level0
-
-  [TransportSystem]
+[TransportSystems]
+  [Neutron]
+    num_groups = 1
+    max_anisotropy = 0
     scheme = upwinding_dfem
-    output_angular_fluxes = true
+    particle_type = neutron
+    debug_enable_scattering_jacobian = true
 
     order = FIRST
     family = MONOMIAL
@@ -37,10 +34,10 @@
   []
 []
 
-[Materials]
+[TransportMaterials]
   [Domain]
     type = ConstantNeutronicsMaterial
-    num_groups = 1
+    transport_system = Neutron
     anisotropy = 0
     group_absorption = 1.0
     group_scattering = 1.0

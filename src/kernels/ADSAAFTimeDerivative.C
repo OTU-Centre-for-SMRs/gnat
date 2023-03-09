@@ -30,7 +30,7 @@ ADSAAFTimeDerivative::validParams()
 ADSAAFTimeDerivative::ADSAAFTimeDerivative(const InputParameters & parameters)
   : ADSAAFBaseKernel(parameters),
     _u_dot(_var.adUDot()),
-    _inv_v_g(getADMaterialProperty<std::vector<Real>>("inv_v_g"))
+    _inv_v_g(getADMaterialProperty<std::vector<Real>>(getParam<std::string>("transport_system") + "inv_v_g"))
 {
 }
 

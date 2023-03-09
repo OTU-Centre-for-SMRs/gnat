@@ -5,6 +5,7 @@
 
 #include "AddVariableAction.h"
 #include "SetupNuclideSystemAction.h"
+#include "TransportAction.h"
 #include "ADIsotopeBase.h"
 #include "InputParameterWarehouse.h"
 
@@ -24,6 +25,10 @@ NuclideSystemAction::validParams()
       "contained in the provided cross-section files, alongside the kernels required to describe "
       "the time evolution of those isotopes.");
 
+  // The coupled TransportSystem.
+  params.addParam<std::string>(
+      "transport_system", "", "Name of the transport system which will provide scalar fluxes.");
+
   //----------------------------------------------------------------------------
   // Parameters for variables.
   params.addRequiredParam<MooseEnum>("family",
@@ -40,6 +45,11 @@ NuclideSystemAction::validParams()
                         1.0,
                         "Specifies a scaling factor to apply to "
                         "this variable.");
+
+  //----------------------------------------------------------------------------
+  // Turbulence modelling parameters.
+  params.addParam<std::vector<VariableName>>(
+      "eddy_diffusivity", "The eddy diffusivity computed with turbulence modelling.");
 
   //----------------------------------------------------------------------------
   // Cross-section file information.
@@ -101,21 +111,13 @@ NuclideSystemAction::NuclideSystemAction(const InputParameters & parameters)
     _xs_source_material_id(getParam<std::string>("xs_source_material_id")),
     _hl_units(getParam<MooseEnum>("half_life_units").getEnum<HalfLifeUnits>()),
     _nuclide_prop_file_name(getParam<std::string>("nuclide_prop_file_name")),
+    _transport_system(getParam<std::string>("transport_system")),
+    _has_transport_system(true),
     _first_action(true)
 {
   if (_xs_type == CrossSectionType::Macro)
     mooseError("Parsing of macroscopic cross-sections for mobile nuclides is currently not "
                "supported. Please provide microscopic cross-sections.");
-
-  // Check if a container block exists with isotope parameters. If yes, apply them.
-  // FIX THIS: The most janky way to fix this breaking MOOSE change.
-  auto isotope_system_actions = _awh.getActions<SetupNuclideSystemAction>();
-  if (isotope_system_actions.size() == 1)
-  {
-    const auto & params = _app.getInputParameterWarehouse().getInputParameters();
-    InputParameters & pars(*(params.find(uniqueActionName())->second.get()));
-    pars.applyParameters(isotope_system_actions[0]->parameters());
-  }
 
   // Setup the nuclide name list.
   for (const auto & name : getParam<std::vector<VariableName>>("nuclides"))
@@ -225,7 +227,8 @@ NuclideSystemAction::NuclideSystemAction(const InputParameters & parameters)
             continue;
 
           properties._parent_decay_constants.emplace_back(
-              std::log(2.0) / (_nuclide_properties[decay_parent]._half_life * 60.0 * 60.0 * 24.0));
+              std::log(2.0) /
+              (_nuclide_properties[decay_parent]._half_life * 60.0 * 60.0 * 24.0 * 365.0));
         }
       }
       break;
@@ -239,6 +242,10 @@ void
 NuclideSystemAction::applyIsotopeParameters(InputParameters & params)
 {
   params.set<MooseEnum>("velocity_type") = getParam<MooseEnum>("velocity_type");
+
+  if (isParamValid("eddy_diffusivity"))
+    params.set<std::vector<VariableName>>("eddy_diffusivity") =
+        getParam<std::vector<VariableName>>("eddy_diffusivity");
 
   switch (getParam<MooseEnum>("velocity_type").getEnum<ADIsotopeBase::MooseEnumVelocityType>())
   {
@@ -276,20 +283,26 @@ NuclideSystemAction::applyIsotopeParameters(InputParameters & params)
         switch (_p_type)
         {
           case ProblemType::Cartesian1D:
-            params.set<VariableName>("u_var") = getParam<VariableName>("u_var");
+            params.set<std::vector<VariableName>>("u_var").emplace_back(
+                getParam<VariableName>("u_var"));
 
             break;
 
           case ProblemType::Cartesian2D:
-            params.set<VariableName>("u_var") = getParam<VariableName>("u_var");
-            params.set<VariableName>("v_var") = getParam<VariableName>("v_var");
+            params.set<std::vector<VariableName>>("u_var").emplace_back(
+                getParam<VariableName>("u_var"));
+            params.set<std::vector<VariableName>>("v_var").emplace_back(
+                getParam<VariableName>("v_var"));
 
             break;
 
           case ProblemType::Cartesian3D:
-            params.set<VariableName>("u_var") = getParam<VariableName>("u_var");
-            params.set<VariableName>("v_var") = getParam<VariableName>("v_var");
-            params.set<VariableName>("w_var") = getParam<VariableName>("w_var");
+            params.set<std::vector<VariableName>>("u_var").emplace_back(
+                getParam<VariableName>("u_var"));
+            params.set<std::vector<VariableName>>("v_var").emplace_back(
+                getParam<VariableName>("v_var"));
+            params.set<std::vector<VariableName>>("w_var").emplace_back(
+                getParam<VariableName>("w_var"));
 
             break;
 
@@ -298,7 +311,8 @@ NuclideSystemAction::applyIsotopeParameters(InputParameters & params)
         }
       }
       else
-        params.set<VariableName>("vector_velocity") = getParam<VariableName>("vector_velocity");
+        params.set<std::vector<VariableName>>("vector_velocity")
+            .emplace_back(getParam<VariableName>("vector_velocity"));
       break;
   }
 }
@@ -306,9 +320,6 @@ NuclideSystemAction::applyIsotopeParameters(InputParameters & params)
 void
 NuclideSystemAction::addICs(const std::string & var_name, const NuclideProperties & properties)
 {
-  if (_exec_type != ExecutionType::Transient)
-    return;
-
   switch (static_cast<int>(getParam<MooseEnum>("ic_type")))
   {
     case 0:
@@ -348,7 +359,7 @@ void
 NuclideSystemAction::addKernels(const std::string & var_name, const NuclideProperties & properties)
 {
   // Add ADIsotopeActivation.
-  if (properties._activation_parents.size() > 0u)
+  if (properties._activation_parents.size() > 0u && _has_transport_system)
   {
     auto params = _factory.getValidParams("ADIsotopeActivation");
     params.set<NonlinearVariableName>("variable") = var_name;
@@ -366,7 +377,7 @@ NuclideSystemAction::addKernels(const std::string & var_name, const NuclidePrope
     auto & scalar_flux_names = params.set<std::vector<VariableName>>("group_scalar_fluxes");
     scalar_flux_names.reserve(_num_groups);
     for (unsigned int g = 0u; g < _num_groups; ++g)
-      scalar_flux_names.emplace_back(_group_flux_moments[g][g * _num_group_moments]);
+      scalar_flux_names.emplace_back(_group_flux_moments[g]); // Problem line.
 
     if (isParamValid("block"))
     {
@@ -444,7 +455,7 @@ NuclideSystemAction::addKernels(const std::string & var_name, const NuclidePrope
   } // ADIsotopeDecaySource
 
   // Add ADIsotopeDepletion.
-  if (properties._sigma_a_g.size() > 0u)
+  if (properties._sigma_a_g.size() > 0u && _has_transport_system)
   {
     auto params = _factory.getValidParams("ADIsotopeDepletion");
     params.set<NonlinearVariableName>("variable") = var_name;
@@ -460,7 +471,7 @@ NuclideSystemAction::addKernels(const std::string & var_name, const NuclidePrope
     auto & scalar_flux_names = params.set<std::vector<VariableName>>("group_scalar_fluxes");
     scalar_flux_names.reserve(_num_groups);
     for (unsigned int g = 0u; g < _num_groups; ++g)
-      scalar_flux_names.emplace_back(_group_flux_moments[g][g * _num_group_moments]);
+      scalar_flux_names.emplace_back(_group_flux_moments[g]); // Problem line.
 
     if (isParamValid("block"))
     {
@@ -865,6 +876,30 @@ NuclideSystemAction::parseOpenMCProperty(const PropertyType & /*type*/,
     mooseError("Failed to open cross-section file: " + dir.string());
 }
 
+// Fetch properties from the coupled TransportSystem.
+void
+NuclideSystemAction::fetchTransportProperties()
+{
+  if (_transport_system == "")
+  {
+    // Doesn't add any kernels related to neutron activation / depletion.
+    _has_transport_system = false;
+    return;
+  }
+
+  // Fetches the required parameters from the coupled TransportSystem and prepares variable names.
+  const auto & transport_action = _awh.getAction<TransportAction>(_transport_system);
+  _num_groups = transport_action.getParam<unsigned int>("num_groups");
+  const std::string & flux_moment_name =
+      transport_action.getParam<std::string>("flux_moment_names");
+  for (unsigned int g = 0; g < _num_groups; ++g)
+  {
+    // Set up variable names for the group flux moments.
+    _group_flux_moments.emplace_back(flux_moment_name + "_" + Moose::stringify(g + 1u) + "_" +
+                                     Moose::stringify(0) + "_" + Moose::stringify(0));
+  }
+}
+
 void
 NuclideSystemAction::act()
 {
@@ -873,6 +908,8 @@ NuclideSystemAction::act()
     debugOutput("Initializing a mass transport system: ", "Initializing a mass transport system: ");
 
     initializeBase();
+
+    fetchTransportProperties();
 
     _first_action = false;
   }

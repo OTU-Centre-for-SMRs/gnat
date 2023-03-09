@@ -18,8 +18,6 @@ ADIsotopeDiffusion::validParams()
 
 ADIsotopeDiffusion::ADIsotopeDiffusion(const InputParameters & parameters)
   : ADIsotopeBase(parameters),
-    _mat_diff(getADMaterialProperty<Real>(
-        "isotope_diff_" + Moose::stringify(getParam<NonlinearVariableName>("variable")))),
     _grad_mat_diff(getADMaterialProperty<RealVectorValue>(
         "grad_isotope_diff_" + Moose::stringify(getParam<NonlinearVariableName>("variable"))))
 {
@@ -28,11 +26,15 @@ ADIsotopeDiffusion::ADIsotopeDiffusion(const InputParameters & parameters)
 ADReal
 ADIsotopeDiffusion::computeQpResidual()
 {
+  ADReal eddy_diff = 0.0;
+  if (_eddy_diffusivity)
+    eddy_diff = (*_eddy_diffusivity)[_qp];
+
   const ADRealVectorValue vel = getQpVelocity();
   // Unstabilized contribution.
-  ADReal res = _grad_test[_i][_qp] * _mat_diff[_qp] * _grad_u[_qp];
+  ADReal res = _grad_test[_i][_qp] * (_mat_diff[_qp] + eddy_diff) * _grad_u[_qp];
   // Stabilizing upwind diffusion.
-  res -= computeQpTau() * vel * _grad_test[_i][_qp] * _grad_mat_diff[_qp] * _grad_u[_qp];
+  res -= computeQpTau() * vel * _grad_test[_i][_qp] * (_grad_mat_diff[_qp]) * _grad_u[_qp];
 
   return res;
 }

@@ -1,0 +1,6 @@
+openmc
+InvVelocity: walls_inv_velocity.csv
+SigmaR: walls_total.csv
+SigmaA: walls_absorption.csv
+SigmaS: walls_scattering.csv
+SigmaSMatrix: walls_scattering_matrix.csv

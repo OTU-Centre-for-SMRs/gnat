@@ -24,6 +24,11 @@ ADSNBaseKernel::validParams()
                              "axis with minimal heterogeneity. Default is the "
                              "x-axis. This parameter is ignored for 1D and 2D "
                              "problems.");
+  params.addParam<std::string>(
+      "transport_system",
+      "",
+      "Name of the transport system which will consume the provided material properties. If one is "
+      "not provided the first transport system will be used.");
   params.addRequiredParam<MooseEnum>("dimensionality",
                                      MooseEnum("1D_cartesian 2D_cartesian 3D_cartesian"),
                                      "Dimensionality and the coordinate system of the "

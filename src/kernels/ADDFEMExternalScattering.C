@@ -46,8 +46,10 @@ ADDFEMExternalScattering::ADDFEMExternalScattering(const InputParameters & param
     _group_index(getParam<unsigned int>("group_index")),
     _num_groups(getParam<unsigned int>("num_groups")),
     _provided_moment_degree(0u),
-    _sigma_s_g_prime_g_l(getADMaterialProperty<std::vector<Real>>("scattering_matrix")),
-    _anisotropy(getMaterialProperty<unsigned int>("medium_anisotropy"))
+    _sigma_s_g_prime_g_l(getADMaterialProperty<std::vector<Real>>(
+        getParam<std::string>("transport_system") + "scattering_matrix")),
+    _anisotropy(getMaterialProperty<unsigned int>(getParam<std::string>("transport_system") +
+                                                  "medium_anisotropy"))
 {
   if (_group_index >= _num_groups)
     mooseError("The group index exceeds the number of energy groups.");
@@ -175,9 +177,8 @@ ADDFEMExternalScattering::computeQpResidual()
       }
 
       res += (2.0 * static_cast<Real>(l) + 1.0) / (4.0 * M_PI) *
-             _sigma_s_g_prime_g_l[_qp][scattering_index] * moment_l * _symmetry_factor;
+             _sigma_s_g_prime_g_l[_qp][scattering_index + l] * moment_l * _symmetry_factor;
 
-      scattering_index++;
       moment_l = 0.0;
     }
   }

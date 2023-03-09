@@ -37,6 +37,20 @@ ADIsotopeBase::validParams()
                        "A vector variable velocity field as opposed to using "
                        "individual velocity components.");
 
+  params.addCoupledVar("eddy_diffusivity",
+                       "The eddy diffusivity computed with turbulence modelling.");
+  // We need some ghosting for the finite volume fields (we use neighbor information to compute
+  // gradients).
+  params.addParam<unsigned short>("ghost_layers", 2, "The number of layers of elements to ghost.");
+  params.addRelationshipManager(
+      "ElementSideNeighborLayers",
+      Moose::RelationshipManagerType::GEOMETRIC | Moose::RelationshipManagerType::ALGEBRAIC,
+      [](const InputParameters & obj_params, InputParameters & rm_params)
+      {
+        rm_params.set<unsigned short>("layers") = obj_params.get<unsigned short>("ghost_layers");
+        rm_params.set<bool>("use_displaced_mesh") = obj_params.get<bool>("use_displaced_mesh");
+      });
+
   return params;
 }
 
@@ -44,6 +58,10 @@ ADIsotopeBase::ADIsotopeBase(const InputParameters & parameters)
   : ADKernel(parameters),
     _vel_type(VelocityType::Constant),
     _constant_vel(getParam<RealVectorValue>("constant_velocity")),
+    _mat_diff(getADMaterialProperty<Real>(
+        "isotope_diff_" + Moose::stringify(getParam<NonlinearVariableName>("variable")))),
+    _eddy_diffusivity(isParamValid("eddy_diffusivity") ? &coupledValue("eddy_diffusivity")
+                                                       : nullptr),
     _mesh_dims(_fe_problem.mesh().dimension())
 {
   switch (getParam<MooseEnum>("velocity_type").getEnum<MooseEnumVelocityType>())
@@ -108,7 +126,9 @@ ADIsotopeBase::ADIsotopeBase(const InputParameters & parameters)
         if (_variable_comp_vel.size() != _mesh_dims)
         {
           mooseError("The number of provided velocity component variables does "
-                     "not match the mesh dimensionality.");
+                     "not match the mesh dimensionality. Components: " +
+                     Moose::stringify(_variable_comp_vel.size()) +
+                     ". Mesh dimensions:  " + Moose::stringify(_mesh_dims) + ".");
         }
       }
       break;
@@ -146,16 +166,31 @@ ADIsotopeBase::getQpVelocity()
 ADReal
 ADIsotopeBase::computeQpTau()
 {
-  ADReal tau = _current_elem->hmin() / 2.0;
-  tau /= (getQpVelocity() + ADRealVectorValue(libMesh::TOLERANCE * libMesh::TOLERANCE)).norm();
-  return tau;
+  ADReal inv_tau_sq = 0.0;
+
+  const auto h_min = _current_elem->hmin();
+  const auto h2 = h_min * h_min;
+
+  // Advection contribution.
+  const auto speed =
+      (getQpVelocity() + ADRealVectorValue(libMesh::TOLERANCE * libMesh::TOLERANCE)).norm();
+  inv_tau_sq += 4.0 * speed * speed / h2;
+
+  // Transient contribution.
+  if (_is_transient)
+    inv_tau_sq += 4.0 / (_dt * _dt);
+
+  // Diffusive contribution.
+  if (_eddy_diffusivity)
+    inv_tau_sq += 4.0 * (*_eddy_diffusivity)[_qp] / h2;
+  inv_tau_sq += 4.0 * _mat_diff[_qp] / h2;
+
+  return 1.0 / std::sqrt(inv_tau_sq);
 }
 
 ADReal
 ADIsotopeBase::computeQpTests()
 {
-  ADReal tau = _current_elem->hmin() / 2.0;
-  tau /= (getQpVelocity() + ADRealVectorValue(libMesh::TOLERANCE * libMesh::TOLERANCE)).norm();
-
+  ADReal tau = computeQpTau();
   return _test[_i][_qp] + tau * getQpVelocity() * _grad_test[_i][_qp];
 }

@@ -7,7 +7,7 @@ ADDFEMStreaming::validParams()
 {
   auto params = ADSNBaseKernel::validParams();
   params.addClassDescription("Computes the streaming term for the "
-                             "discrete ordinates neutron transport equation. "
+                             "discrete ordinates transport equation. "
                              "The weak form is given by "
                              "$-(\\nabla \\psi_{j}\\cdot\\vec{\\Omega}, "
                              "\\Psi_{g, n}^{k})$. "
@@ -23,9 +23,9 @@ ADDFEMStreaming::validParams()
 }
 
 ADDFEMStreaming::ADDFEMStreaming(const InputParameters & parameters)
-  : ADSNBaseKernel(parameters)
-  , _ordinate_index(getParam<unsigned int>("ordinate_index"))
-{ }
+  : ADSNBaseKernel(parameters), _ordinate_index(getParam<unsigned int>("ordinate_index"))
+{
+}
 
 ADReal
 ADDFEMStreaming::computeQpResidual()
@@ -33,8 +33,7 @@ ADDFEMStreaming::computeQpResidual()
   if (_ordinate_index >= _quadrature_set.totalOrder())
     mooseError("The ordinates index exceeds the number of quadrature points.");
 
-  ADReal res = -1.0 * _grad_test[_i][_qp] * _quadrature_set.direction(_ordinate_index)
-               * _u[_qp];
+  ADReal res = -1.0 * _grad_test[_i][_qp] * _quadrature_set.direction(_ordinate_index) * _u[_qp];
 
   return res;
 }

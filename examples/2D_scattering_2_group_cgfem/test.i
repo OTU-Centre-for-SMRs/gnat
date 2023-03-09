@@ -7,18 +7,17 @@
     dim = 2
     dx = 10
     dy = 10
-    ix = 100
-    iy = 100
+    ix = 101
+    iy = 101
   []
 []
 
-[NeutronActivationStudy]
-  execution_type = steady
-  num_groups = 2
-  max_anisotropy = 0
-
-  [TransportSystem]
+[TransportSystems]
+  [Neutron]
+    num_groups = 2
+    max_anisotropy = 0
     scheme = saaf_cfem
+    particle_type = neutron
     output_angular_fluxes = false
 
     order = FIRST
@@ -35,9 +34,10 @@
   []
 []
 
-[Materials]
+[TransportMaterials]
   [Domain]
     type = ConstantNeutronicsMaterial
+    transport_system = Neutron
     anisotropy = 0
     group_absorption = '0.1 1.0'
     group_scattering = '0.5 1.0 0.0 0.0'

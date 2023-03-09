@@ -1,0 +1,17 @@
+Begin: H1
+DiffusionCoefficient: 0.001
+WeightFraction: 0.11186823
+End: H1
+
+Begin: H2
+DiffusionCoefficient: 0.001
+WeightFraction: 0.000034823
+ActivationParents: H1
+End: H2
+
+Begin: H3
+DiffusionCoefficient: 0.001
+WeightFraction: 0.0
+ActivationParents: H2
+HalfLife: 12.32
+End: H3

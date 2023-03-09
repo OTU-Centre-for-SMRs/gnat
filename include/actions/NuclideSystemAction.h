@@ -44,6 +44,15 @@ protected:
   void parseNuclideSystem();
   void parseCrossSections();
 
+  // Fetch properties from the coupled TransportSystem.
+  void fetchTransportProperties();
+
+  // The coupled TransportSystem properties.
+  const std::string & _transport_system;
+  bool _has_transport_system;
+  unsigned int _num_groups;
+  std::vector<VariableName> _group_flux_moments;
+
   Real _density;
 
   // Properties for individual isotopes.

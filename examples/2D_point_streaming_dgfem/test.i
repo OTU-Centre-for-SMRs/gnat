@@ -7,23 +7,22 @@
     dim = 2
     dx = 10
     dy = 10
-    ix = 100
-    iy = 100
+    ix = 101
+    iy = 101
   []
 []
 
-[NeutronActivationStudy]
-  execution_type = steady
-  num_groups = 1
-
-  [TransportSystem]
+[TransportSystems]
+  [Neutron]
+    num_groups = 1
     scheme = upwinding_dfem
+    particle_type = neutron
 
     order = FIRST
-    family = LAGRANGE
+    family = MONOMIAL
 
-    n_azimuthal = 4
-    n_polar = 4
+    n_azimuthal = 3
+    n_polar = 3
 
     max_anisotropy = 0
     vacuum_boundaries = 'left right top bottom'
@@ -36,10 +35,10 @@
   []
 []
 
-[Materials]
+[TransportMaterials]
   [Domain]
     type = AbsorbingNeutronicsMaterial
-    num_groups = 1
+    transport_system = Neutron
     group_absorption = 2.0
     group_speeds = 2200.0
   []
