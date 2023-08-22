@@ -5,16 +5,15 @@
 
 #include <vector>
 
-#include "Moose.h"
 #include "MooseTypes.h"
 #include "libmesh/vector_value.h"
 
 #include "LegendrePolynomial.h"
 #include "ChebyshevPolynomial.h"
 
-#include "GnatBase.h"
+#include "AngularQuadrature.h"
 
-class GaussAngularQuadrature
+class GaussAngularQuadrature : public AngularQuadrature
 {
 public:
   GaussAngularQuadrature(unsigned int n_c,
@@ -22,25 +21,20 @@ public:
                          MajorAxis axis = MajorAxis::X,
                          ProblemType type = ProblemType::Cartesian3D);
 
-  unsigned int totalOrder() const { return _quadrature_set_omega.size(); }
-  unsigned int chebyshevOrder() const { return _n_c; }
+  unsigned int totalOrder() const override;
+  const RealVectorValue & direction(unsigned int n) const override;
+  const Real & weight(unsigned int n) const override;
+  const std::vector<RealVectorValue> & getDirections() const override;
+  const std::vector<Real> & getWeights() const override;
+
+  const Real & getPolarRoot(unsigned int n) const override;
+  const Real & getAzimuthalAngularRoot(unsigned int n) const override;
+
   unsigned int legendreOrder() const { return _n_l; }
-  MajorAxis getAxis() const { return _axis; }
-  ProblemType getProblemType() const { return _type; }
-
-  RealVectorValue direction(unsigned int n) const { return _quadrature_set_omega[n]; }
-  Real weight(unsigned int n) const { return _quadrature_set_weight[n]; }
-
-  std::vector<RealVectorValue> & getDirections() { return _quadrature_set_omega; }
-  std::vector<Real> & getWeights() { return _quadrature_set_weight; }
-
   LegendrePolynomial getPolarLegendre() const { return _polar_quadrature; }
+
+  unsigned int chebyshevOrder() const { return _n_c; }
   ChebyshevPolynomial getAzimuthalChebyshev() const { return _azimuthal_quadrature; }
-  Real getPolarRoot(unsigned int n) const { return _polar_quadrature.root(n / _n_l); }
-  Real getAzimuthalAngularRoot(unsigned int n) const
-  {
-    return _azimuthal_quadrature.angularRoot(n % _n_c);
-  }
 
 private:
   // Generate a weight-ordinate pair for 1-3 dimensional problems.
@@ -50,8 +44,6 @@ private:
   // points, respectively.
   const unsigned int _n_c;
   const unsigned int _n_l;
-  const MajorAxis _axis;
-  const ProblemType _type;
 
   LegendrePolynomial _polar_quadrature;
   ChebyshevPolynomial _azimuthal_quadrature;

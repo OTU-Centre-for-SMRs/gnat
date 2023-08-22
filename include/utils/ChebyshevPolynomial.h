@@ -13,13 +13,13 @@ public:
   ChebyshevPolynomial(unsigned int degree);
 
   unsigned int degree() const { return _degree; }
-  Real root(unsigned int index) const { return _roots[index]; }
-  Real angularRoot(unsigned int index) const { return _angular_roots[index]; }
-  Real weight(unsigned int index) const { return _weights[index]; }
+  const Real & root(unsigned int index) const { return _roots[index]; }
+  const Real & angularRoot(unsigned int index) const { return _angular_roots[index]; }
+  const Real & weight(unsigned int index) const { return _weights[index]; }
 
-  std::vector<Real> getRoots() const { return _roots; }
-  std::vector<Real> getAngularRoots() const { return _angular_roots; }
-  std::vector<Real> getWeights() const { return _weights; }
+  const std::vector<Real> & getRoots() const { return _roots; }
+  const std::vector<Real> & getAngularRoots() const { return _angular_roots; }
+  const std::vector<Real> & getWeights() const { return _weights; }
 
 private:
   const unsigned int _degree;

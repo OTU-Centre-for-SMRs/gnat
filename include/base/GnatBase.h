@@ -26,13 +26,12 @@ enum class Particletype
 };
 // enum class Particletype
 
-// An enum for schemes.
-enum class Scheme
+// An enum for radiation transport schemes.
+enum class TransportScheme
 {
   SAAFCFEM = 0u,
-  UpwindingDFEM = 1u,
-  DiffusionApprox = 2u,
-  FluxMomentTransfer = 3u
+  DiffusionApprox = 1u,
+  FluxMomentTransfer = 2u
 }; // enum class Scheme
 
 // An enum for the execution type of the problem. Either steady-state or
@@ -51,16 +50,6 @@ enum class DebugVerbosity
   Level1 = 1u
 }; // enum class DebugVerbosity
 
-// An enum to make input easier for the mobile isotope system.
-enum class HalfLifeUnits
-{
-  Seconds = 0u,
-  Minutes = 1u,
-  Hours = 2u,
-  Days = 3u,
-  Years = 4u
-}; // enum class HalfLifeUnits
-
 // An enum to make the parsing code for cross-section files cleaner.
 enum class PropertyType
 {
@@ -68,7 +57,9 @@ enum class PropertyType
   SigmaR = 1u,
   SigmaA = 2u,
   SigmaS = 3u,
-  SigmaSMatrix = 4u
+  SigmaSMatrix = 4u,
+  NuSigmaF = 5u,
+  ChiF = 6u
 }; // enum class PropertyType
 
 // An enum to make the parsing code for cross-section files cleaner.

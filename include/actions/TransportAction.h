@@ -19,23 +19,20 @@ public:
   virtual void act() override;
 
 protected:
-  using Action::addRelationshipManagers;
-  void addRelationshipManagers(Moose::RelationshipManagerType when_type) override;
-
   // Helper member function to initialize SN quadrature parameters.
   void applyQuadratureParameters(InputParameters & params);
 
   // Member function to initialize common scheme parameters.
-  void initializeCommon();
+  void actCommon();
 
   // Individual act functions for each scheme.
   void actSAAFCFEM();
-  void actUpwindDFEM();
   void actDiffusion();
   void actTransfer();
 
   // Member functions to initialize the MOOSE objects required for all schemes.
-  void addOutputs();
+  void modifyOutputs();
+  void addSNUserObjects();
   void addSNBCs(const std::string & var_name, unsigned int g, unsigned int n);
   void addSNICs(const std::string & var_name, unsigned int g);
   void addAuxVariables(const std::string & var_name);
@@ -46,26 +43,25 @@ protected:
   // Member functions to initialize the MOOSE objects required for the
   // CGFEM-SAAF scheme.
   void addSAAFKernels(const std::string & var_name, unsigned int g, unsigned int n);
-  void addSAAFDiracKernels();
-
-  // Member functions to initialize the MOOSE objects required for the
-  // DGFEM-upwinding scheme.
-  void addDGFEMKernels(const std::string & var_name, unsigned int g, unsigned int n);
-  void addDGFEMDGKernels(const std::string & var_name, unsigned int n);
-  void addDGFEMDiracKernels();
+  void addSAAFDiracKernels(const std::string & var_name, unsigned int g, unsigned int n);
 
   // Member functions to initialize the MOOSE objects required for the
   // diffusion approximation scheme.
   void addDiffusionBCs(const std::string & var_name);
   void addDiffusionICs(const std::string & var_name, unsigned int g);
   void addDiffusionKernels(const std::string & var_name, unsigned int g);
-  void addDiffusionDiracKernels();
+  void addDiffusionDiracKernels(const std::string & var_name, unsigned int g);
 
   // Member functions to add transfers.
   void addTransfers(const std::string & to_var_name, const std::string & source_var_name);
 
-  const Scheme _transport_scheme;
+  // Member function to add conservative transfer post-processors.
+  void addDestinationConservativePP(const std::string & to_var_name);
+  void addSourceConservativePP(const std::string & source_var_name);
+
+  const TransportScheme _transport_scheme;
   const Particletype _particle;
+  const bool _is_eigen;
 
   // Number of discrete ordinates, flux moments, and quadrature parameters.
   const unsigned int _n_l;
@@ -93,11 +89,26 @@ protected:
   // Boundary side-sets.
   const std::vector<BoundaryName> _vacuum_side_sets;
   const std::vector<BoundaryName> _source_side_sets;
+  const std::vector<BoundaryName> _current_side_sets;
   const std::vector<BoundaryName> _reflective_side_sets;
 
+  // Point source moments.
+  const std::vector<Point> & _point_source_locations;
+  std::vector<std::vector<Real>> _point_source_moments;
+  const std::vector<unsigned int> & _point_source_anisotropy;
+
   // Boundary source properties.
-  const std::vector<std::vector<Real>> _boundary_source_moments;
-  const std::vector<unsigned int> _boundary_source_anisotropy;
+  std::vector<std::vector<Real>> _boundary_source_moments;
+  const std::vector<unsigned int> & _boundary_source_anisotropy;
+
+  // Boundary current properties.
+  std::vector<std::vector<Real>> _boundary_currents;
+  const std::vector<unsigned int> & _boundary_current_anisotropy;
+
+  // Volumetric sources.
+  const std::vector<SubdomainName> & _volumetric_source_blocks;
+  std::vector<std::vector<Real>> _volumetric_source_moments;
+  const std::vector<unsigned int> & _volumetric_source_anisotropy;
 
   // Multi-app properties.
   const MultiAppName & _from_multi_app_name;
@@ -107,5 +118,9 @@ protected:
   // List of the names for all angular flux variables and flux moments.
   std::unordered_map<unsigned int, std::vector<VariableName>> _group_angular_fluxes;
   std::unordered_map<unsigned int, std::vector<VariableName>> _group_flux_moments;
+
+  // Source scaling.
+  Real _source_scale_factor;
+
   bool _var_init;
 }; // class TransportAction

@@ -29,6 +29,8 @@ SourceNeutronicsMaterial::SourceNeutronicsMaterial(const InputParameters & param
     _source_moments(getParam<std::vector<Real>>("group_source")),
     _source_anisotropy(getParam<unsigned int>("source_anisotropy"))
 {
+  mooseDeprecated("SourceNeutronicsMaterial is deprecated and will be removed in future versions.");
+
   switch (_mesh.dimension())
   {
     case 1u:
@@ -67,26 +69,57 @@ SourceNeutronicsMaterial::SourceNeutronicsMaterial(const InputParameters & param
 void
 SourceNeutronicsMaterial::computeQpProperties()
 {
-  // SAAF stabilization properties.
-  _mat_saaf_eta[_qp] = _saaf_eta;
-  _mat_saaf_c[_qp] = _saaf_c;
+  EmptyNeutronicsMaterial::computeQpProperties();
+
+  // SAAF tau.
+  if (_is_saaf)
+  {
+    (*_mat_saaf_tau)[_qp].resize(_num_groups, 0.0);
+
+    auto h = _current_elem->hmin();
+    for (unsigned int g = 0; g < _num_groups; ++g)
+    {
+      if (_sigma_t_g[g] * _saaf_c * h >= _saaf_eta)
+        (*_mat_saaf_tau)[_qp][g] = 1.0 / (_sigma_t_g[g] * _saaf_c);
+      else
+        (*_mat_saaf_tau)[_qp][g] = h / _saaf_eta;
+    }
+  }
 
   // Speeds and removal cross-sections.
-  _mat_inv_v_g[_qp].resize(_num_groups, 0.0);
   _mat_sigma_t_g[_qp].resize(_num_groups, 0.0);
-  _mat_sigma_r_g[_qp].resize(_num_groups, 0.0);
-  _mat_diffusion_g[_qp].resize(_num_groups, 0.0);
   for (unsigned int i = 0; i < _num_groups; ++i)
   {
-    _mat_inv_v_g[_qp][i] = 1.0 / _v_g[i];
     // Have to sum the absorption and group g cross-section to form the
     // total cross-section.
-    _mat_sigma_t_g[_qp][i] = _sigma_a_g[i] + _sigma_s_g[i];
-    // Have to sum the absorption and out-scattering cross-section to form the
-    // total cross-section. This sums all g -> g_prime scattering cross-sections and then subtracts
-    // the g -> g cross-section.
-    _mat_sigma_r_g[_qp][i] = _sigma_a_g[i] + _sigma_s_g[i] - _sigma_s_g_g[i];
-    _mat_diffusion_g[_qp][i] = _diffusion_g[i];
+    _mat_sigma_t_g[_qp][i] = _sigma_t_g[i];
+  }
+
+  if (_is_diffusion)
+  {
+    (*_mat_sigma_r_g)[_qp].resize(_num_groups, 0.0);
+    (*_mat_diffusion_g)[_qp].resize(_num_groups, 0.0);
+    for (unsigned int i = 0; i < _num_groups; ++i)
+    {
+      // Have to sum the absorption and out-scattering cross-section to form the
+      // total cross-section. This sums all g -> g_prime scattering cross-sections and then
+      // subtracts the g -> g cross-section.
+      (*_mat_sigma_r_g)[_qp][i] = _sigma_a_g[i] + _sigma_s_g[i] - _sigma_s_g_g[i];
+      (*_mat_diffusion_g)[_qp][i] = _diffusion_g[i];
+    }
+  }
+
+  // Particle speeds.
+  _mat_inv_v_g[_qp].resize(_num_groups, 0.0);
+  if (_particle == Particletype::Neutron)
+  {
+    for (unsigned int i = 0; i < _num_groups; ++i)
+      _mat_inv_v_g[_qp][i] = 1.0 / _v_g[i];
+  }
+  if (_particle == Particletype::GammaPhoton)
+  {
+    for (unsigned int i = 0; i < _num_groups; ++i)
+      _mat_inv_v_g[_qp][i] = _inv_c_cm;
   }
 
   // Scattering moments and anisotropy.

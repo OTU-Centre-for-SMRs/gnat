@@ -22,8 +22,9 @@
     vacuum_boundaries = 'left right'
 
     point_source_locations = '5.0 0.0 0.0'
-    point_source_intensities = '1000.0'
-    point_source_groups = '1'
+    point_source_moments = '1000.0'
+    point_source_anisotropies = '0'
+    scale_sources = true
   []
 []
 
@@ -36,8 +37,8 @@
   []
 []
 
-[Problem]
-  type = FEProblem
+[Outputs]
+  exodus = true
 []
 
 [Executioner]

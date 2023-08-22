@@ -6,7 +6,7 @@
     type = CartesianMeshGenerator
     dim = 1
     dx = 10
-    ix = 101
+    ix = 1001
   []
 []
 
@@ -15,19 +15,19 @@
     num_groups = 1
     scheme = saaf_cfem
     particle_type = neutron
-    output_angular_fluxes = true
+    output_angular_fluxes = false
 
     order = FIRST
     family = LAGRANGE
 
-    n_azimuthal = 1
-    n_polar = 1
+    n_polar = 100
 
     vacuum_boundaries = 'left right'
 
     point_source_locations = '5.0 0.0 0.0'
-    point_source_intensities = '1000.0'
-    point_source_groups = '1'
+    point_source_moments = '1.0'
+    point_source_anisotropies = '1'
+    scale_sources = true
   []
 []
 
@@ -35,7 +35,7 @@
   [Domain]
     type = AbsorbingNeutronicsMaterial
     transport_system = Neutron
-    group_absorption = 0.0
+    group_absorption = 0.1
     group_speeds = 2200.0
   []
 []
@@ -44,7 +44,11 @@
   type = FEProblem
 []
 
+[Outputs]
+  exodus = true
+[]
+
 [Executioner]
   type = Steady
-  solve_type = NEWTON
+  solve_type = PJFNK
 []

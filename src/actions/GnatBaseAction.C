@@ -89,7 +89,9 @@ GnatBaseAction::initializeBase()
 }
 
 void
-GnatBaseAction::debugOutput(const std::string & level0, const std::string & level1)
+GnatBaseAction::debugOutput(const std::string & level0,
+                            const std::string & level1,
+                            const std::string & color)
 {
   switch (_debug_level)
   {
@@ -97,9 +99,9 @@ GnatBaseAction::debugOutput(const std::string & level0, const std::string & leve
       if (level0 != "")
       {
         if (level0 == "\n")
-          _console << std::endl;
+          _console << COLOR_DEFAULT << std::endl;
         else
-          _console << level0 << std::endl;
+          _console << color << level0 << COLOR_DEFAULT << std::endl;
       }
       break;
 
@@ -107,9 +109,9 @@ GnatBaseAction::debugOutput(const std::string & level0, const std::string & leve
       if (level1 != "")
       {
         if (level1 == "\n")
-          _console << std::endl;
+          _console << COLOR_DEFAULT << std::endl;
         else
-          _console << level1 << std::endl;
+          _console << color << level1 << COLOR_DEFAULT << std::endl;
       }
       break;
 

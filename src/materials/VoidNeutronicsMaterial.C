@@ -41,33 +41,57 @@ VoidNeutronicsMaterial::VoidNeutronicsMaterial(const InputParameters & parameter
   _saaf_c = 1.0;
 
   // Compute neutron diffusion coefficients. TODO: Void stabilized neutron diffusion coefficients.
-  _diffusion_g.resize(_num_groups, 0.0);
-  for (unsigned int g = 0u; g < _diffusion_g.size(); ++g)
-    _diffusion_g[g] = 1.0 / (3.0 * libMesh::TOLERANCE);
+  if (_is_diffusion)
+  {
+    _diffusion_g.resize(_num_groups, 0.0);
+    for (unsigned int g = 0u; g < _diffusion_g.size(); ++g)
+      _diffusion_g[g] = 1.0 / (3.0 * libMesh::TOLERANCE);
 
-  mooseWarning("The VoidNeutronicsMaterial uses local diffusion coefficients with a value of 1 / "
-               "3 * libMesh::TOLERANCE.");
+    mooseWarning("The VoidNeutronicsMaterial uses local diffusion coefficients with a value of 1 / "
+                 "3 * libMesh::TOLERANCE.");
+  }
 }
 
 void
 VoidNeutronicsMaterial::computeQpProperties()
 {
-  _mat_anisotropy[_qp] = 0u;
-  _mat_src_anisotropy[_qp] = 0u;
+  EmptyNeutronicsMaterial::computeQpProperties();
 
-  // SAAF stabilization properties.
-  _mat_saaf_eta[_qp] = _saaf_eta;
-  _mat_saaf_c[_qp] = _saaf_c;
-
-  _mat_inv_v_g[_qp].resize(_num_groups, 0.0);
-  _mat_sigma_t_g[_qp].resize(_num_groups, 0.0);
-  _mat_sigma_r_g[_qp].resize(_num_groups, 0.0);
-  _mat_diffusion_g[_qp].resize(_num_groups, 0.0);
-  for (unsigned int i = 0; i < _num_groups; ++i)
+  // SAAF tau.
+  if (_is_saaf)
   {
-    _mat_inv_v_g[_qp][i] = 1.0 / _v_g[i];
+    (*_mat_saaf_tau)[_qp].resize(_num_groups, 0.0);
+
+    auto h = _current_elem->hmin();
+    for (unsigned int g = 0; g < _num_groups; ++g)
+      (*_mat_saaf_tau)[_qp][g] = h / _saaf_eta;
+  }
+
+  _mat_sigma_t_g[_qp].resize(_num_groups, 0.0);
+  for (unsigned int i = 0; i < _num_groups; ++i)
     _mat_sigma_t_g[_qp][i] = 0.0;
-    _mat_sigma_r_g[_qp][i] = 0.0;
-    _mat_diffusion_g[_qp][i] = _diffusion_g[i];
+
+  if (_is_diffusion)
+  {
+    (*_mat_sigma_r_g)[_qp].resize(_num_groups, 0.0);
+    (*_mat_diffusion_g)[_qp].resize(_num_groups, 0.0);
+    for (unsigned int i = 0; i < _num_groups; ++i)
+    {
+      (*_mat_sigma_r_g)[_qp][i] = 0.0;
+      (*_mat_diffusion_g)[_qp][i] = _diffusion_g[i];
+    }
+  }
+
+  // Particle speeds.
+  _mat_inv_v_g[_qp].resize(_num_groups, 0.0);
+  if (_particle == Particletype::Neutron)
+  {
+    for (unsigned int i = 0; i < _num_groups; ++i)
+      _mat_inv_v_g[_qp][i] = 1.0 / _v_g[i];
+  }
+  if (_particle == Particletype::GammaPhoton)
+  {
+    for (unsigned int i = 0; i < _num_groups; ++i)
+      _mat_inv_v_g[_qp][i] = _inv_c_cm;
   }
 }

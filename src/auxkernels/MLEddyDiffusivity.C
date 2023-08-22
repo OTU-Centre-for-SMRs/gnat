@@ -65,7 +65,7 @@ Real
 MLEddyDiffusivity::computeValue()
 {
   constexpr Real offset = 1e-15; // Prevents the explosion of the derivative of sqrt(x).
-  Real eddy_diffusivity = 0.0;
+  Real eddy_viscosity = 0.0;
   Real symmetric_strain_tensor_norm = 0.0;
 
   using MetaPhysicL::raw_value;
@@ -73,16 +73,16 @@ MLEddyDiffusivity::computeValue()
   {
     const auto qp_arg = std::make_tuple(_current_elem, _qp, _qrule);
 
-    const auto grad_u = _u.gradient(qp_arg);
+    const auto grad_u = _u.gradient(qp_arg, 0u);
     symmetric_strain_tensor_norm += 2.0 * Utility::pow<2>(raw_value(grad_u(0)));
     if (_mesh_dims >= 2)
     {
-      const auto grad_v = _v->gradient(qp_arg);
+      const auto grad_v = _v->gradient(qp_arg, 0u);
       symmetric_strain_tensor_norm += 2.0 * Utility::pow<2>(raw_value(grad_v(1))) +
                                       Utility::pow<2>(raw_value(grad_v(0)) + raw_value(grad_u(1)));
       if (_mesh_dims >= 3)
       {
-        const auto grad_w = _w->gradient(qp_arg);
+        const auto grad_w = _w->gradient(qp_arg, 0u);
         symmetric_strain_tensor_norm +=
             2.0 * Utility::pow<2>(raw_value(grad_w(2))) +
             Utility::pow<2>(raw_value(grad_u(2)) + raw_value(grad_w(0))) +
@@ -92,23 +92,23 @@ MLEddyDiffusivity::computeValue()
 
     symmetric_strain_tensor_norm = std::sqrt(symmetric_strain_tensor_norm + offset);
 
-    eddy_diffusivity = symmetric_strain_tensor_norm * raw_value(_mixing_len(qp_arg)) *
-                       raw_value(_mixing_len(qp_arg));
+    eddy_viscosity = symmetric_strain_tensor_norm * raw_value(_mixing_len(qp_arg, 0u)) *
+                     raw_value(_mixing_len(qp_arg, 0u));
   }
   else
   {
     const auto elem_arg = makeElemArg(_current_elem);
 
-    const auto grad_u = _u.gradient(elem_arg);
+    const auto grad_u = _u.gradient(elem_arg, 0u);
     symmetric_strain_tensor_norm += 2.0 * Utility::pow<2>(raw_value(grad_u(0)));
     if (_mesh_dims >= 2)
     {
-      const auto grad_v = _v->gradient(elem_arg);
+      const auto grad_v = _v->gradient(elem_arg, 0u);
       symmetric_strain_tensor_norm += 2.0 * Utility::pow<2>(raw_value(grad_v(1))) +
                                       Utility::pow<2>(raw_value(grad_v(0)) + raw_value(grad_u(1)));
       if (_mesh_dims >= 3)
       {
-        const auto grad_w = _w->gradient(elem_arg);
+        const auto grad_w = _w->gradient(elem_arg, 0u);
         symmetric_strain_tensor_norm +=
             2.0 * Utility::pow<2>(raw_value(grad_w(2))) +
             Utility::pow<2>(raw_value(grad_u(2)) + raw_value(grad_w(0))) +
@@ -118,9 +118,9 @@ MLEddyDiffusivity::computeValue()
 
     symmetric_strain_tensor_norm = std::sqrt(symmetric_strain_tensor_norm + offset);
 
-    eddy_diffusivity = symmetric_strain_tensor_norm * raw_value(_mixing_len(elem_arg)) *
-                       raw_value(_mixing_len(elem_arg));
+    eddy_viscosity = symmetric_strain_tensor_norm * raw_value(_mixing_len(elem_arg, 0u)) *
+                     raw_value(_mixing_len(elem_arg, 0u));
   }
 
-  return eddy_diffusivity / _schmidt_number;
+  return eddy_viscosity / _schmidt_number;
 }

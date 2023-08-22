@@ -15,7 +15,9 @@ protected:
   // Helper member function to initialize base parameters.
   void initializeBase();
   // Helper member function for debug output.
-  void debugOutput(const std::string & level0 = "", const std::string & level1 = "");
+  void debugOutput(const std::string & level0 = "",
+                   const std::string & level1 = "",
+                   const std::string & color = COLOR_DEFAULT);
 
   // Add a variables.
   void addVariable(const std::string & var_name);

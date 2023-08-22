@@ -1,0 +1,8 @@
+openmc
+InvVelocity: mod_inv_velocity.csv
+SigmaR: mod_total.csv
+SigmaA: mod_absorption.csv
+SigmaS: mod_scattering.csv
+SigmaSMatrix: mod_scattering_matrix.csv
+NuSigmaF: mod_fission.csv
+ChiF: mod_chi.csv

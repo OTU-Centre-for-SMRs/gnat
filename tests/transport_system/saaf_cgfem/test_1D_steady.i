@@ -24,8 +24,8 @@
     vacuum_boundaries = 'left right'
 
     point_source_locations = '5.0 0.0 0.0'
-    point_source_intensities = '1000.0'
-    point_source_groups = '1'
+    point_source_moments = '1000.0'
+    point_source_anisotropies = '1'
 
     debug_verbosity = level0
     debug_disable_scattering = true
@@ -43,6 +43,10 @@
 
 [Problem]
   type = FEProblem
+[]
+
+[Outputs]
+  exodus = true
 []
 
 [Executioner]

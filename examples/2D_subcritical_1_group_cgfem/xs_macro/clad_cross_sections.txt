@@ -1,0 +1,6 @@
+openmc
+InvVelocity: clad_inv_velocity.csv
+SigmaR: clad_total.csv
+SigmaA: clad_absorption.csv
+SigmaS: clad_scattering.csv
+SigmaSMatrix: clad_scattering_matrix.csv

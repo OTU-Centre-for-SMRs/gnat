@@ -2,6 +2,8 @@
 
 #include "SNBaseKernel.h"
 
+// A class which provides common functionality to discrete ordinates kernels which have been
+// stabilized with the self-adjoint angular flux method.
 class SAAFBaseKernel : public SNBaseKernel
 {
 public:
@@ -10,20 +12,17 @@ public:
   SAAFBaseKernel(const InputParameters & parameters);
 
 protected:
-  // Computes $\tau$ for the current quadrature point.
-  Real computeQPTau();
   // Computes $\phi_{j} + \tau_{g}\vec{\nabla}\phi_{j}\cdot\hat{\Omega}$ for the
   // current quadrature point.
-  Real computeQPTests();
+  Real computeQpTests();
 
   // n
   const unsigned int _ordinate_index;
   // g
   const unsigned int _group_index;
 
-  const ADMaterialProperty<std::vector<Real>> & _sigma_r_g;
+  const ADMaterialProperty<std::vector<Real>> & _sigma_t_g;
 
   // SAAF stabilization parameters.
-  const ADMaterialProperty<Real> & _saaf_eta;
-  const ADMaterialProperty<Real> & _saaf_c;
+  const ADMaterialProperty<std::vector<Real>> & _saaf_tau;
 }; // class SAAFBaseKernel

@@ -12,6 +12,8 @@ public:
 protected:
   virtual void computeQpProperties() override;
 
+  std::vector<Real> _sigma_t_g;
+
   /*
    * We assume that the vector of scattering cross-sections is stored in the
    * order of initial group first, final group second, and Legendre polynomial

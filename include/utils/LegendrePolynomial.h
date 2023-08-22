@@ -15,11 +15,11 @@ public:
   LegendrePolynomial(unsigned int degree);
 
   unsigned int degree() const { return _degree; }
-  Real root(unsigned int index) const { return _roots[index]; }
-  Real weight(unsigned int index) const { return _weights[index]; }
+  const Real & root(unsigned int index) const { return _roots[index]; }
+  const Real & weight(unsigned int index) const { return _weights[index]; }
 
-  std::vector<Real> getRoots() const { return _roots; }
-  std::vector<Real> getWeights() const { return _weights; }
+  const std::vector<Real> & getRoots() const { return _roots; }
+  const std::vector<Real> & getWeights() const { return _weights; }
 
 private:
   // Evaluate the value of a Legendre polynomial at x using the recurrance

@@ -7,10 +7,9 @@ GaussAngularQuadrature::GaussAngularQuadrature(unsigned int n_c,
                                                unsigned int n_l,
                                                MajorAxis axis,
                                                ProblemType type)
-  : _n_c(std::move(n_c)),
+  : AngularQuadrature(std::move(axis), std::move(type)),
+    _n_c(std::move(n_c)),
     _n_l(std::move(n_l)),
-    _axis(std::move(axis)),
-    _type(std::move(type)),
     _polar_quadrature(std::move(n_l)),
     _azimuthal_quadrature(std::move(n_c))
 {
@@ -40,6 +39,43 @@ GaussAngularQuadrature::GaussAngularQuadrature(unsigned int n_c,
 
       break;
   }
+}
+
+unsigned int
+GaussAngularQuadrature::totalOrder() const
+{
+  return _quadrature_set_omega.size();
+}
+const RealVectorValue &
+GaussAngularQuadrature::direction(unsigned int n) const
+{
+  return _quadrature_set_omega[n];
+}
+const Real &
+GaussAngularQuadrature::weight(unsigned int n) const
+{
+  return _quadrature_set_weight[n];
+}
+const std::vector<RealVectorValue> &
+GaussAngularQuadrature::getDirections() const
+{
+  return _quadrature_set_omega;
+}
+const std::vector<Real> &
+GaussAngularQuadrature::getWeights() const
+{
+  return _quadrature_set_weight;
+}
+
+const Real &
+GaussAngularQuadrature::getPolarRoot(unsigned int n) const
+{
+  return _polar_quadrature.root(n / _n_l);
+}
+const Real &
+GaussAngularQuadrature::getAzimuthalAngularRoot(unsigned int n) const
+{
+  return _azimuthal_quadrature.angularRoot(n % _n_c);
 }
 
 void

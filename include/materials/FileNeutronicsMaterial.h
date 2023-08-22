@@ -24,6 +24,8 @@ protected:
     std::vector<Real> _sigma_a_g;
     std::vector<Real> _sigma_s_g;
     std::vector<Real> _sigma_s_g_prime_g_l;
+    std::vector<Real> _nu_sigma_f_g;
+    std::vector<Real> _chi_f_g;
   };
   std::unordered_map<std::string, NuclideProperties> _material_properties;
 
@@ -31,7 +33,13 @@ protected:
   // solver.
   std::vector<Real> _inv_v_g;
   std::vector<Real> _sigma_t_g;
+  std::vector<Real> _sigma_a_g;
+  // std::vector<Real> _sigma_s_g;
+  std::vector<Real> _sigma_s_g_matrix;
+  std::vector<Real> _sigma_s_g_g;
   std::vector<Real> _diffusion_g;
+  std::vector<Real> _nu_sigma_f_g;
+  std::vector<Real> _chi_f_g;
   /*
    * We assume that the vector of scattering cross-sections is stored in the
    * order of initial group first, final group second, and Legendre polynomial
@@ -57,9 +65,6 @@ protected:
    * according to this arrangement.
    */
   std::vector<Real> _sigma_s_g_prime_g_l;
-  // Out-scattering scalar cross-section and within group scattering cross-section.
-  std::vector<Real> _sigma_s_g;
-  std::vector<Real> _sigma_s_g_g;
 
   unsigned int _anisotropy;
   unsigned int _max_moments;
@@ -70,6 +75,6 @@ protected:
   bool _has_volumetric_source;
 
   CrossSectionSource _xs_source;
-  const std::string & _file_name;
+  const std::string _file_name;
   const std::string & _source_material_id;
 }; // class FileNeutronicsMaterial

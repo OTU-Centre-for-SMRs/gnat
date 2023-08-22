@@ -2,36 +2,36 @@
   [./saaf_1D_steady]
     type = 'Exodiff'
     input = 'test_1D_steady.i'
-    exodiff = 'test_1D_steady_t_out.e'
+    exodiff = 'test_1D_steady_out.e'
   [../]
 
   [./saaf_1D_reflected_boundary]
     type = 'Exodiff'
     input = 'test_1D_reflected_boundary.i'
-    exodiff = 'test_1D_reflected_boundary_t_out.e'
+    exodiff = 'test_1D_reflected_boundary_out.e'
   [../]
 
   [./saaf_1D_steady_void]
     type = 'Exodiff'
     input = 'test_1D_steady_void.i'
-    exodiff = 'test_1D_steady_void_t_out.e'
+    exodiff = 'test_1D_steady_void_out.e'
   [../]
 
   [./saaf_1D_transient]
     type = 'Exodiff'
     input = 'test_1D_transient.i'
-    exodiff = 'test_1D_transient_t_out.e'
+    exodiff = 'test_1D_transient_out.e'
   [../]
 
   [./saaf_1D_steady_scattering]
     type = 'Exodiff'
     input = 'test_1D_scattering_steady.i'
-    exodiff = 'test_1D_scattering_steady_t_out.e'
+    exodiff = 'test_1D_scattering_steady_out.e'
   [../]
 
   [./saaf_2D_steady]
     type = 'Exodiff'
     input = 'test_2D_steady.i'
-    exodiff = 'test_2D_steady_t_out.e'
+    exodiff = 'test_2D_steady_out.e'
   [../]
 []

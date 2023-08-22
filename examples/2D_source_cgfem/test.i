@@ -5,13 +5,13 @@
   [domain]
     type = CartesianMeshGenerator
     dim = 2
-    dx = '4 2 4'
-    dy = '4 2 4'
-    ix = '40 20 40'
-    iy = '40 20 40'
+    dx = '4 20 20'
+    dy = '4 20 20'
+    ix = '4 20 20'
+    iy = '4 20 20'
     subdomain_id = '
+      2 1 1
       1 1 1
-      1 2 1
       1 1 1'
   []
 []
@@ -21,47 +21,44 @@
     scheme = saaf_cfem
     particle_type = neutron
     num_groups = 1
+    max_anisotropy = 0
 
     order = FIRST
     family = LAGRANGE
 
-    n_azimuthal = 2
-    n_polar = 2
+    n_azimuthal = 20
+    n_polar = 20
 
-    max_anisotropy = 0
+    volumetric_source_blocks = '2'
+    volumetric_source_moments = '1e0'
+    volumetric_source_anisotropies = '0'
+    scale_sources = true
+
     vacuum_boundaries = 'left right top bottom'
   []
 []
 
 [TransportMaterials]
   [Domain]
-    type = VoidNeutronicsMaterial
+    type = ConstantNeutronicsMaterial
     transport_system = Neutron
     group_speeds = 220000.0
-    block = '1'
+    group_absorption = '1e-7'
+    group_scattering = '1e-6'
+    block = '1 2'
   []
-  [Source]
-    type = SourceNeutronicsMaterial
-    transport_system = Neutron
-    group_absorption = 0.0
-    source_anisotropy = 0
-    group_source = 1000.0
-    anisotropy = 0
-    group_scattering = 0.0
-    group_speeds = 220000.0
-    block = '2'
-  []
-[]
-
-[Problem]
-  type = FEProblem
 []
 
 [Executioner]
   type = Steady
   solve_type = PJFNK
-  petsc_options_iname = '-pc_type -pc_hypre_type -ksp_gmres_restart'
-  petsc_options_value = 'hypre boomeramg 10'
+  petsc_options_iname = '-pc_type -pc_factor_shift_type'
+  petsc_options_value = ' lu       NONZERO'
+
   l_max_its = 50
   nl_rel_tol = 1e-12
+[]
+
+[Outputs]
+  exodus = true
 []

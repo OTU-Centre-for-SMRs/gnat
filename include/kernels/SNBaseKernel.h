@@ -2,7 +2,7 @@
 
 #include "Kernel.h"
 
-#include "GaussAngularQuadrature.h"
+#include "AQProvider.h"
 
 // A base class for all neutron transport kernels which provides basic
 // components that appear in the terms of the SN neutron transport equation weak
@@ -17,6 +17,6 @@ public:
 protected:
   void cartesianToSpherical(const RealVectorValue & ordinate, Real & mu, Real & omega);
 
-  const GaussAngularQuadrature _quadrature_set;
+  const AQProvider & _aq;
   Real _symmetry_factor;
 }; // class SNBaseKernel

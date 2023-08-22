@@ -29,9 +29,9 @@ protected:
    * _group_flux_ordinates[0] = Psi_{1, 1}
    * _group_flux_ordinates[0] = Psi_{1, 2}
    * _group_flux_ordinates[0] = Psi_{2, 1}
-   * _group_flux_ordinates[0] = Psi_{2, 1}
+   * _group_flux_ordinates[0] = Psi_{2, 2}
    */
-  std::vector<unsigned int> _group_flux_ordinate_ids;
+  std::map<unsigned int, std::pair<unsigned int, unsigned int>> _jvar_map;
   std::vector<const VariableValue *> _group_flux_ordinates;
 
   /*

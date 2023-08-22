@@ -47,44 +47,73 @@ AbsorbingNeutronicsMaterial::AbsorbingNeutronicsMaterial(const InputParameters &
     mooseError("Not enough neutron absorption cross-sections have been provided.");
 
   // Compute the neutron diffusion coefficient.
-  _diffusion_g.resize(_num_groups, 0.0);
-  bool warning = false;
-  for (unsigned int g = 0u; g < _diffusion_g.size(); ++g)
+  if (_is_diffusion)
   {
-    if (3.0 * _sigma_a_g[g] < 3.0 * libMesh::TOLERANCE)
+    _diffusion_g.resize(_num_groups, 0.0);
+    bool warning = false;
+    for (unsigned int g = 0u; g < _diffusion_g.size(); ++g)
     {
-      _diffusion_g[g] = 1.0 / (3.0 * libMesh::TOLERANCE);
-      warning = true;
+      if (3.0 * _sigma_a_g[g] < 3.0 * libMesh::TOLERANCE)
+      {
+        _diffusion_g[g] = 1.0 / (3.0 * libMesh::TOLERANCE);
+        warning = true;
+      }
+      else
+        _diffusion_g[g] = 1.0 / (3.0 * _sigma_a_g[g]);
     }
-    else
-      _diffusion_g[g] = 1.0 / (3.0 * _sigma_a_g[g]);
-  }
 
-  if (warning)
-    mooseWarning(
-        "3.0 * _sigma_a_g[i] < 3.0 * libMesh::TOLERANCE for the provided cross-section(s). "
-        "Using a diffusion coefficient of 1 / 3.0 * libMesh::TOLERANCE for those values.");
+    if (warning)
+      mooseWarning(
+          "3.0 * _sigma_a_g[i] < 3.0 * libMesh::TOLERANCE for the provided cross-section(s). "
+          "Using a diffusion coefficient of 1 / 3.0 * libMesh::TOLERANCE for those values.");
+  }
 }
 
 void
 AbsorbingNeutronicsMaterial::computeQpProperties()
 {
-  _mat_anisotropy[_qp] = 0u;
-  _mat_src_anisotropy[_qp] = 0u;
+  EmptyNeutronicsMaterial::computeQpProperties();
 
-  // SAAF stabilization properties.
-  _mat_saaf_eta[_qp] = _saaf_eta;
-  _mat_saaf_c[_qp] = _saaf_c;
-
-  _mat_inv_v_g[_qp].resize(_num_groups, 0.0);
-  _mat_sigma_t_g[_qp].resize(_num_groups, 0.0);
-  _mat_sigma_r_g[_qp].resize(_num_groups, 0.0);
-  _mat_diffusion_g[_qp].resize(_num_groups, 0.0);
-  for (unsigned int i = 0; i < _num_groups; ++i)
+  // SAAF tau.
+  if (_is_saaf)
   {
-    _mat_inv_v_g[_qp][i] = 1.0 / _v_g[i];
-    _mat_sigma_t_g[_qp][i] = _sigma_a_g[i];
-    _mat_sigma_r_g[_qp][i] = _sigma_a_g[i];
-    _mat_diffusion_g[_qp][i] = _diffusion_g[i];
+    (*_mat_saaf_tau)[_qp].resize(_num_groups, 0.0);
+
+    auto h = _current_elem->hmin();
+    for (unsigned int g = 0; g < _num_groups; ++g)
+    {
+      if (_sigma_a_g[g] * _saaf_c * h >= _saaf_eta)
+        (*_mat_saaf_tau)[_qp][g] = 1.0 / (_sigma_a_g[g] * _saaf_c);
+      else
+        (*_mat_saaf_tau)[_qp][g] = h / _saaf_eta;
+    }
+  }
+
+  _mat_sigma_t_g[_qp].resize(_num_groups, 0.0);
+  for (unsigned int g = 0; g < _num_groups; ++g)
+    _mat_sigma_t_g[_qp][g] = _sigma_a_g[g];
+
+  if (_is_diffusion)
+  {
+    (*_mat_sigma_r_g)[_qp].resize(_num_groups, 0.0);
+    (*_mat_diffusion_g)[_qp].resize(_num_groups, 0.0);
+    for (unsigned int g = 0; g < _num_groups; ++g)
+    {
+      (*_mat_sigma_r_g)[_qp][g] = _sigma_a_g[g];
+      (*_mat_diffusion_g)[_qp][g] = _diffusion_g[g];
+    }
+  }
+
+  // Particle speeds.
+  _mat_inv_v_g[_qp].resize(_num_groups, 0.0);
+  if (_particle == Particletype::Neutron)
+  {
+    for (unsigned int g = 0; g < _num_groups; ++g)
+      _mat_inv_v_g[_qp][g] = 1.0 / _v_g[g];
+  }
+  if (_particle == Particletype::GammaPhoton)
+  {
+    for (unsigned int g = 0; g < _num_groups; ++g)
+      _mat_inv_v_g[_qp][g] = _inv_c_cm;
   }
 }

@@ -18,7 +18,6 @@
     scheme = saaf_cfem
     particle_type = neutron
     flux_moment_names = sub_flux_moment
-    disable_output = true
 
     order = FIRST
     family = LAGRANGE
@@ -30,10 +29,9 @@
     vacuum_boundaries = 'left right top bottom'
 
     point_source_locations = '5.0 5.0 0.0'
-    point_source_intensities = '1000.0'
-    point_source_groups = '1'
-
-    debug_disable_scattering = true
+    point_source_moments = '1000.0'
+    point_source_anisotropies = '0'
+    scale_sources = true
   []
 []
 

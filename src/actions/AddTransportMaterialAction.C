@@ -24,6 +24,8 @@ AddTransportMaterialAction::AddTransportMaterialAction(const InputParameters & p
     _parent_transport_system(getParam<std::string>("transport_system")),
     _num_groups(0u),
     _particle(MooseEnum("neutron photon", "neutron")),
+    _scheme(MooseEnum("saaf_cfem diffusion_cfem flux_moment_transfer")),
+    _disable_fission(true),
     _is_init(false)
 {
 }
@@ -43,6 +45,9 @@ AddTransportMaterialAction::act()
       {
         _num_groups = transport_actions[0u]->getParam<unsigned int>("num_groups");
         _particle = transport_actions[0u]->getParam<MooseEnum>("particle_type");
+        _scheme = transport_actions[0u]->getParam<MooseEnum>("scheme");
+        _disable_fission = transport_actions[0u]->getParam<bool>("debug_disable_fission");
+
         _parent_transport_system = transport_actions[0u]->name();
       }
       else if (transport_actions.size() == 0u)
@@ -56,10 +61,15 @@ AddTransportMaterialAction::act()
       const auto & transport_action = _awh.getAction<TransportAction>(_parent_transport_system);
       _num_groups = transport_action.getParam<unsigned int>("num_groups");
       _particle = transport_action.getParam<MooseEnum>("particle_type");
+      _scheme = transport_action.getParam<MooseEnum>("scheme");
+      _disable_fission = transport_action.getParam<bool>("debug_disable_fission");
     }
 
     _moose_object_pars.set<unsigned int>("num_groups") = _num_groups;
     _moose_object_pars.set<MooseEnum>("particle_type") = _particle;
+    _moose_object_pars.set<bool>("is_saaf") = _scheme == "saaf_cfem";
+    _moose_object_pars.set<bool>("is_diffusion") = _scheme == "diffusion_cfem";
+    _moose_object_pars.set<bool>("has_fission") = _particle == "neutron" && !_disable_fission;
     _moose_object_pars.set<std::string>("transport_system") = _parent_transport_system;
 
     _is_init = true;

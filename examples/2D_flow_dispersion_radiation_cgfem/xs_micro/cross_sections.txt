@@ -1,4 +1,0 @@
-openmc
-SigmaR: total.csv
-SigmaA: absorption.csv
-SigmaS: scattering.csv

@@ -2,7 +2,7 @@
 
 #include "DiracKernel.h"
 
-#include "GaussAngularQuadrature.h"
+#include "AQProvider.h"
 
 class SNBaseDiracKernel : public DiracKernel
 {
@@ -15,6 +15,6 @@ protected:
   void cartesianToSpherical(const RealVectorValue & ordinate, Real & mu,
                             Real & omega);
 
-  const GaussAngularQuadrature _quadrature_set;
+  const AQProvider & _aq;
   Real _symmetry_factor;
 }; // class SNBaseDiracKernel

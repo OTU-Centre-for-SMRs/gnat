@@ -5,14 +5,12 @@
   [domain]
     type = CartesianMeshGenerator
     dim = 2
-    dx = '3.5 3 3.5'
-    dy = '3.5 3 3.5'
-    ix = '35 31 35'
-    iy = '35 31 35'
+    dx = '10.0'
+    dy = '10.0'
+    ix = '101'
+    iy = '101'
     subdomain_id = '
-      1 1 1
-      1 1 1
-      1 1 1'
+      1'
   []
 []
 
@@ -22,40 +20,43 @@
     particle_type = neutron
     num_groups = 2
     max_anisotropy = 0
-    output_angular_fluxes = false
-    angular_flux_names = angular_flux_sn
-    flux_moment_names = flux_moment_sn
+    angular_flux_names = neutron_angular_flux
+    flux_moment_names = neutron_flux_moment
 
     order = FIRST
     family = LAGRANGE
 
-    n_azimuthal = 1
-    n_polar = 1
+    n_azimuthal = 3
+    n_polar = 3
 
     vacuum_boundaries = 'left right top bottom'
 
     point_source_locations = '5.0 5.0 0.0'
-    point_source_intensities = '1000.0'
-    point_source_groups = '1'
+    point_source_moments = '1.0 0.0'
+    point_source_anisotropies = '0'
+    scale_sources = true
   []
 
-  [NeutronDiff]
-    scheme = diffusion_cfem
-    particle_type = neutron
+  [PhotonSN]
+    scheme = saaf_cfem
+    particle_type = Photon
     num_groups = 2
     max_anisotropy = 0
-    output_angular_fluxes = false
-    angular_flux_names = angular_flux_diff
-    flux_moment_names = flux_moment_diff
+    angular_flux_names = photon_angular_flux
+    flux_moment_names = photon_flux_moment
 
     order = FIRST
     family = LAGRANGE
 
+    n_azimuthal = 3
+    n_polar = 3
+
     vacuum_boundaries = 'left right top bottom'
 
     point_source_locations = '5.0 5.0 0.0'
-    point_source_intensities = '1000.0'
-    point_source_groups = '1'
+    point_source_moments = '0.0 1.0'
+    point_source_anisotropies = '0'
+    scale_sources = true
   []
 []
 
@@ -63,29 +64,30 @@
   [Water1]
     type = FileNeutronicsMaterial
     transport_system = NeutronSN
-    file_name = './examples/2D_multisystem_cgfem/cross_sections/cross_sections.txt'
+    file_name = './cross_sections/cross_sections.txt'
     source_material_id = '1'
     block = '1'
   []
 
   [Water2]
     type = FileNeutronicsMaterial
-    transport_system = NeutronDiff
-    file_name = './examples/2D_multisystem_cgfem/cross_sections/cross_sections.txt'
+    transport_system = PhotonSN
+    file_name = './cross_sections/cross_sections.txt'
     source_material_id = '1'
     block = '1'
   []
 []
 
-[Problem]
-  type = FEProblem
+[Outputs]
+  exodus = true
 []
 
 [Executioner]
   type = Steady
   solve_type = PJFNK
-  petsc_options_iname = '-pc_type -pc_hypre_type -ksp_gmres_restart'
-  petsc_options_value = 'hypre boomeramg 10'
+  petsc_options_iname = '-pc_type -pc_factor_shift_type'
+  petsc_options_value = ' lu       NONZERO'
+
   l_max_its = 50
   nl_rel_tol = 1e-12
 []

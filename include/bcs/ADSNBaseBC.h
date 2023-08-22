@@ -2,7 +2,7 @@
 
 #include "ADIntegratedBC.h"
 
-#include "GaussAngularQuadrature.h"
+#include "AQProvider.h"
 
 class ADSNBaseBC : public ADIntegratedBC
 {
@@ -12,9 +12,8 @@ public:
   ADSNBaseBC(const InputParameters & parameters);
 
 protected:
-  void cartesianToSpherical(const RealVectorValue & ordinate,
-                            Real & mu, Real & omega);
+  void cartesianToSpherical(const RealVectorValue & ordinate, Real & mu, Real & omega);
 
-  const GaussAngularQuadrature _quadrature_set;
+  const AQProvider & _aq;
   Real _symmetry_factor;
 }; // class ADSNBaseBC

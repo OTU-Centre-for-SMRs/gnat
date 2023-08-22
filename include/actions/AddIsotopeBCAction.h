@@ -14,11 +14,5 @@ public:
   virtual void act() override;
 
 protected:
-  void applyIsotopeParameters(InputParameters & params);
-
-  // The coordinate system type and dimensionality.
-  ProblemType _p_type;
-
-  const std::vector<VariableName> & _master_isotope_list;
   const std::vector<VariableName> & _exclude;
 };

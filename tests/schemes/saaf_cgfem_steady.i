@@ -27,13 +27,10 @@
 
 [AuxKernels]
   [Flux_Moment]
-    type = NeutronFluxMoment
+    type = ParticleFluxMoment
     variable = flux_moment_1_0_0
     group_flux_ordinates = 'angular_flux_1_1 angular_flux_1_2'
-    n_l = 2
-    n_c = 1
-    major_axis = x
-    dimensionality = 1D_cartesian
+    aq = AQ
     degree = 0
     order = 0
   []
@@ -41,33 +38,27 @@
 
 [Kernels]
   [Streaming_Right]
-    type = ADSAAFStreaming
+    type = SAAFStreaming
     variable = angular_flux_1_1
-    n_l = 2
-    n_c = 1
-    major_axis = x
-    dimensionality = 1D_cartesian
+    aq = AQ
     ordinate_index = 0
     group_index = 0
   []
   [Streaming_Left]
-    type = ADSAAFStreaming
+    type = SAAFStreaming
     variable = angular_flux_1_2
-    n_l = 2
-    n_c = 1
-    major_axis = x
-    dimensionality = 1D_cartesian
+    aq = AQ
     ordinate_index = 1
     group_index = 0
   []
 
   [Removal_Right]
-    type = ADSNRemoval
+    type = SNRemoval
     variable = angular_flux_1_1
     group_index = 0
   []
   [Removal_Left]
-    type = ADSNRemoval
+    type = SNRemoval
     variable = angular_flux_1_2
     group_index = 0
   []
@@ -75,49 +66,41 @@
 
 [DiracKernels]
   [Source_Right]
-    type = SAAFIsoPointSource
+    type = SAAFPointSource
     variable = angular_flux_1_1
-    n_l = 2
-    n_c = 1
-    major_axis = x
-    dimensionality = 1D_cartesian
+    aq = AQ
+    num_groups = 1
     ordinate_index = 0
     group_index = 0
-    intensities = '1000.0'
-    points = '5.0 0.0 0.0'
+    group_source = '1000.0'
+    point = '5.0 0.0 0.0'
+    source_anisotropy = 0
   []
   [Source_Left]
-    type = SAAFIsoPointSource
+    type = SAAFPointSource
     variable = angular_flux_1_2
-    n_l = 2
-    n_c = 1
-    major_axis = x
-    dimensionality = 1D_cartesian
+    aq = AQ
+    num_groups = 1
     ordinate_index = 1
     group_index = 0
-    intensities = '1000.0'
-    points = '5.0 0.0 0.0'
+    group_source = '1000.0'
+    point = '5.0 0.0 0.0'
+    source_anisotropy = 0
   []
 []
 
 [BCs]
   [Right_BC]
-    type = ADSNVacuumBC
+    type = SNVacuumBC
     variable = angular_flux_1_1
-    n_l = 2
-    n_c = 1
-    major_axis = x
-    dimensionality = 1D_cartesian
+    aq = AQ
     ordinate_index = 0
     boundary = 'left right'
   []
   [Left_BC]
-    type = ADSNVacuumBC
+    type = SNVacuumBC
     variable = angular_flux_1_2
-    n_l = 2
-    n_c = 1
-    major_axis = x
-    dimensionality = 1D_cartesian
+    aq = AQ
     ordinate_index = 1
     boundary = 'left right'
   []
@@ -132,8 +115,23 @@
   []
 []
 
+[UserObjects]
+  [AQ]
+    type = AQProvider
+    dimensionality = 1D_cartesian
+    aq_type = gauss_chebyshev
+    n_l = 2
+    n_c = 1
+    major_axis = x
+  []
+[]
+
 [Problem]
   type = FEProblem
+[]
+
+[Outputs]
+  exodus = true
 []
 
 [Executioner]
@@ -141,8 +139,4 @@
   solve_type = PJFNK
   petsc_options_iname = '-pc_type -pc_hypre_type'
   petsc_options_value = 'hypre boomeramg'
-[]
-
-[Outputs]
-  exodus = true
 []

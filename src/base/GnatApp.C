@@ -31,17 +31,20 @@ associateSyntaxInner(Syntax & syntax, ActionFactory & /*action_factory*/)
   syntax.registerActionSyntax("AddTransportMaterialAction", "TransportMaterials/*");
   syntax.registerActionSyntax("TransportAction", "TransportSystems/*");
 
-  // Mass transport syntax.
-  syntax.registerActionSyntax("SetupNuclideSystemAction", "NuclideSystem");
-  syntax.registerActionSyntax("NuclideSystemAction", "NuclideSystem");
+  // Depletion library.
+  syntax.registerActionSyntax("DepletionLibraryAction", "DepletionLibrary");
 
-  syntax.registerActionSyntax("AddIsotopeBCAction", "NuclideSystem/AddNuclideBCs/*");
+  // Mobile depletion syntax.
+  syntax.registerActionSyntax("MobileDepletionSystemAction", "MobileDepletionSystem");
+
+  syntax.registerActionSyntax("AddIsotopeBCAction", "MobileDepletionSystem/AddNuclideBCs/*");
+  syntax.registerActionSyntax("AddFVNuclideBCAction", "MobileDepletionSystem/AddFVNuclideBCs/*");
 }
 
 void
 GnatApp::registerAll(Factory & f, ActionFactory & af, Syntax & syntax)
 {
-  ModulesApp::registerAll(f, af, syntax);
+  ModulesApp::registerAllObjects<GnatApp>(f, af, syntax);
   Registry::registerObjectsTo(f, {"GnatApp"});
   Registry::registerActionsTo(af, {"GnatApp"});
 

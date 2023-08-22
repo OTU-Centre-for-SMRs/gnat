@@ -1,0 +1,5 @@
+openmc
+total: box_total.csv
+absorption: box_absorption.csv
+scatter: box_scatter.csv
+inverse-velocity: box_inverse-velocity.csv

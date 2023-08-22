@@ -7,20 +7,24 @@
 
 registerMooseObject("GnatApp", FileNeutronicsMaterial);
 
+// #define DEBUG_CROSS_SECTIONS
+
 InputParameters
 FileNeutronicsMaterial::validParams()
 {
   auto params = EmptyNeutronicsMaterial::validParams();
   params.addClassDescription(
       "Provides the neutron group velocity ($v_{g}$), "
-      "neutron group absorption cross-section "
-      "($\\Sigma_{a,g}$), and the scattering cross-"
+      "neutron group total cross-section "
+      "($\\Sigma_{t,g}$), and the scattering cross-"
       "section moments "
       "($\\Sigma_{s, g', g, l}$) for "
       "transport problems. The material properties "
       "are imported from files provided by the user. The user many also provide volumetric neutron "
       "source moments through the input parameter system.");
-  params.addRequiredParam<std::string>("file_name", "The file to extract cross-sections from.");
+  params.addRequiredParam<std::string>("file_name",
+                                       "The file to extract cross-sections from. The path of the "
+                                       "file should be relative to the input deck (.i) file.");
   params.addRequiredParam<std::string>("source_material_id",
                                        "The material ID used by the cross-section source to "
                                        "identify cross-sections for different geometric regions. "
@@ -51,7 +55,9 @@ FileNeutronicsMaterial::FileNeutronicsMaterial(const InputParameters & parameter
     _max_source_moments(0u),
     _has_volumetric_source(false),
     _xs_source(getParam<MooseEnum>("cross_section_source").getEnum<CrossSectionSource>()),
-    _file_name(getParam<std::string>("file_name")),
+    _file_name((std::filesystem::path(_app.getInputFileName()).parent_path() /
+                std::filesystem::path(getParam<std::string>("file_name")))
+                   .string()),
     _source_material_id(getParam<std::string>("source_material_id"))
 {
   // Open the descriptor file to figure out where the cross-sections are stored and what the files
@@ -84,11 +90,24 @@ FileNeutronicsMaterial::FileNeutronicsMaterial(const InputParameters & parameter
                       line.substr(pos + std::string("InvVelocity: ").size()));
         continue;
       }
+      pos = line.find("inverse-velocity: ");
+      if (pos != std::string::npos)
+      {
+        parseProperty(PropertyType::InvVelocity,
+                      line.substr(pos + std::string("inverse-velocity: ").size()));
+        continue;
+      }
 
       pos = line.find("SigmaR: ");
       if (pos != std::string::npos)
       {
         parseProperty(PropertyType::SigmaR, line.substr(pos + std::string("SigmaR: ").size()));
+        continue;
+      }
+      pos = line.find("total: ");
+      if (pos != std::string::npos)
+      {
+        parseProperty(PropertyType::SigmaR, line.substr(pos + std::string("total: ").size()));
         continue;
       }
 
@@ -98,19 +117,48 @@ FileNeutronicsMaterial::FileNeutronicsMaterial(const InputParameters & parameter
         parseProperty(PropertyType::SigmaA, line.substr(pos + std::string("SigmaA: ").size()));
         continue;
       }
+      pos = line.find("absorption: ");
+      if (pos != std::string::npos)
+      {
+        parseProperty(PropertyType::SigmaA, line.substr(pos + std::string("absorption: ").size()));
+        continue;
+      }
 
+      /*
       pos = line.find("SigmaS: ");
       if (pos != std::string::npos)
       {
         parseProperty(PropertyType::SigmaS, line.substr(pos + std::string("SigmaS: ").size()));
         continue;
       }
+      */
 
       pos = line.find("SigmaSMatrix: ");
       if (pos != std::string::npos)
       {
         parseProperty(PropertyType::SigmaSMatrix,
                       line.substr(pos + std::string("SigmaSMatrix: ").size()));
+        continue;
+      }
+      pos = line.find("scatter: ");
+      if (pos != std::string::npos)
+      {
+        parseProperty(PropertyType::SigmaSMatrix,
+                      line.substr(pos + std::string("scatter: ").size()));
+        continue;
+      }
+
+      pos = line.find("NuSigmaF: ");
+      if (pos != std::string::npos)
+      {
+        parseProperty(PropertyType::NuSigmaF, line.substr(pos + std::string("NuSigmaF: ").size()));
+        continue;
+      }
+
+      pos = line.find("ChiF: ");
+      if (pos != std::string::npos)
+      {
+        parseProperty(PropertyType::ChiF, line.substr(pos + std::string("ChiF: ").size()));
         continue;
       }
     }
@@ -121,8 +169,19 @@ FileNeutronicsMaterial::FileNeutronicsMaterial(const InputParameters & parameter
     mooseError("Failed to open file " + _file_name + " to read material properties.");
 
   // Resize the properties and initialize with 0.0.
+  _inv_v_g.resize(_num_groups, 0.0);
   _sigma_t_g.resize(_num_groups, 0.0);
+  _sigma_a_g.resize(_num_groups, 0.0);
+  //_sigma_s_g.resize(_num_groups, 0.0);
+  _sigma_s_g_matrix.resize(_num_groups, 0.0);
+  _sigma_s_g_g.resize(_num_groups, 0.0);
   _sigma_s_g_prime_g_l.resize(_num_groups * _num_groups * (_anisotropy + 1u), 0.0);
+
+  if (_has_fission)
+  {
+    _nu_sigma_f_g.resize(_num_groups, 0.0);
+    _chi_f_g.resize(_num_groups, 0.0);
+  }
 
   // Convert per-nuclide cross-sections to bulk material cross-sections.
   bool first_inv_v = true;
@@ -147,22 +206,58 @@ FileNeutronicsMaterial::FileNeutronicsMaterial(const InputParameters & parameter
       first_inv_v = false;
     }
 
-    // SigmaR.
+    // SigmaT.
     {
       if (data._sigma_t_g.size() < _num_groups)
       {
-        mooseError("Number of group-wise removal cross-sections is smaller then the number of "
+        mooseError("Number of group-wise total cross-sections is smaller then the number of "
                    "groups declared in the simulation properties.");
       }
       else if (data._sigma_t_g.size() > _num_groups)
         mooseWarning(
-            "Number of group-wise removal cross-sections is greater then then number of groups "
-            "declared in the simulation properties. The number of group-wise removal "
+            "Number of group-wise total cross-sections is greater then then number of groups "
+            "declared in the simulation properties. The number of group-wise total "
             "cross-sections will be truncated.");
 
       for (unsigned int i = 0u; i < _sigma_t_g.size(); ++i)
         _sigma_t_g[i] += data._sigma_t_g[i];
     }
+
+    // SigmaA.
+    {
+      if (data._sigma_a_g.size() < _num_groups)
+      {
+        mooseError("Number of group-wise absorption cross-sections is smaller then the number of "
+                   "groups declared in the simulation properties.");
+      }
+      else if (data._sigma_a_g.size() > _num_groups)
+        mooseWarning(
+            "Number of group-wise absorption cross-sections is greater then then number of groups "
+            "declared in the simulation properties. The number of group-wise absorption "
+            "cross-sections will be truncated.");
+
+      for (unsigned int i = 0u; i < _sigma_a_g.size(); ++i)
+        _sigma_a_g[i] += data._sigma_a_g[i];
+    }
+
+    // SigmaS.
+    /*
+    {
+      if (data._sigma_s_g.size() < _num_groups)
+      {
+        mooseError("Number of group-wise scattering cross-sections is smaller then the number of "
+                   "groups declared in the simulation properties.");
+      }
+      else if (data._sigma_s_g.size() > _num_groups)
+        mooseWarning(
+            "Number of group-wise scattering cross-sections is greater then then number of groups "
+            "declared in the simulation properties. The number of group-wise scattering "
+            "cross-sections will be truncated.");
+
+      for (unsigned int i = 0u; i < _sigma_s_g.size(); ++i)
+        _sigma_s_g[i] += data._sigma_s_g[i];
+    }
+    */
 
     // SigmaSMatrix.
     {
@@ -177,6 +272,38 @@ FileNeutronicsMaterial::FileNeutronicsMaterial(const InputParameters & parameter
 
       for (unsigned int i = 0u; i < _sigma_s_g_prime_g_l.size(); ++i)
         _sigma_s_g_prime_g_l[i] += data._sigma_s_g_prime_g_l[i];
+    }
+
+    if (_has_fission)
+    {
+      // NuSigmaF.
+      if (data._nu_sigma_f_g.size() < _num_groups)
+      {
+        mooseError("Number of group-wise production cross-sections is smaller then the number of "
+                   "groups declared in the simulation properties.");
+      }
+      else if (data._nu_sigma_f_g.size() > _num_groups)
+        mooseWarning(
+            "Number of group-wise production cross-sections is greater then then number of groups "
+            "declared in the simulation properties. The number of group-wise production "
+            "cross-sections will be truncated.");
+
+      for (unsigned int i = 0u; i < _nu_sigma_f_g.size(); ++i)
+        _nu_sigma_f_g[i] += data._nu_sigma_f_g[i];
+
+      // ChiF.
+      if (data._chi_f_g.size() < _num_groups)
+      {
+        mooseError("Number of group-wise fission spectra is smaller then the number of "
+                   "groups declared in the simulation properties.");
+      }
+      else if (data._chi_f_g.size() > _num_groups)
+        mooseWarning("Number of group-wise fission spectra is greater then then number of groups "
+                     "declared in the simulation properties. The number of group-wise fission "
+                     "spectra will be truncated.");
+
+      for (unsigned int i = 0u; i < _chi_f_g.size(); ++i)
+        _chi_f_g[i] += data._chi_f_g[i];
     }
   }
 
@@ -219,27 +346,27 @@ FileNeutronicsMaterial::FileNeutronicsMaterial(const InputParameters & parameter
   }
 
   // Required for neutron diffusion coefficients and removal cross-sections.
-
   // Compute the out-scattering cross-section. This is the sum of the 0'th
   // moments of the scattering cross-sections from the current group into all
   // other groups (excluding the current group).
-  _sigma_s_g.resize(_num_groups, 0.0);
-  _sigma_s_g_g.resize(_num_groups, 0.0);
   for (unsigned int g = 0u; g < _num_groups; ++g)
   {
-    for (unsigned int g_prime = 0u; g_prime < _num_groups; ++g_prime)
-      _sigma_s_g[g] += _sigma_s_g_prime_g_l[g_prime * _num_groups * _anisotropy + g * _anisotropy];
+    _sigma_s_g_g[g] =
+        _sigma_s_g_prime_g_l[g * _num_groups * (_anisotropy + 1u) + g * (_anisotropy + 1u)];
 
-    _sigma_s_g_g[g] = _sigma_s_g_prime_g_l[g * _num_groups * _anisotropy + g * _anisotropy];
+    for (unsigned int g_prime = 0u; g_prime < _num_groups; ++g_prime)
+      _sigma_s_g_matrix[g] +=
+          _sigma_s_g_prime_g_l[g * _num_groups * (_anisotropy + 1u) + g_prime * (_anisotropy + 1u)];
   }
 
   // Recompute the neutron diffusion coefficients to account for scattering (transport
   // approximation).
   // Sum the first order Legendre out-scattering cross-sections for all groups.
-  if (_diffusion_g.size() == 0u)
+  if (_diffusion_g.size() == 0u && _is_diffusion)
   {
     std::vector<Real> _sigma_s_g_prime_g_1;
     _sigma_s_g_prime_g_1.resize(_num_groups, 0.0);
+    /*
     if (_anisotropy > 0u)
     {
       for (unsigned int g = 0u; g < _num_groups; ++g)
@@ -251,6 +378,7 @@ FileNeutronicsMaterial::FileNeutronicsMaterial(const InputParameters & parameter
         }
       }
     }
+    */
 
     _diffusion_g.resize(_num_groups, 0.0);
     bool warning = false;
@@ -270,6 +398,29 @@ FileNeutronicsMaterial::FileNeutronicsMaterial(const InputParameters & parameter
           "provided cross-section(s). Using a diffusion coefficient of 1 / "
           "10.0 * libMesh::TOLERANCE for those values.");
   }
+
+#ifdef DEBUG_CROSS_SECTIONS
+  // Output material properties for verification.
+  for (unsigned int g = 0u; g < _num_groups; ++g)
+  {
+    _console << COLOR_GREEN << "Group " << g << " cross-sections for " << _name << ":\n"
+             << COLOR_DEFAULT;
+    _console << "_sigma_t_g              = " << _sigma_t_g[g] << "\n";
+    _console << "_sigma_a_g              = " << _sigma_a_g[g] << "\n";
+    _console << "_sigma_s_g              = " << _sigma_s_g[g] << "\n";
+    _console << "_sigma_s_g + _sigma_a_g = " << _sigma_s_g[g] + _sigma_a_g[g] << "\n";
+    _console << "_sigma_s_g_g            = " << _sigma_s_g_g[g] << "\n";
+    _console << "IsConservative:           " << std::boolalpha
+             << ((_sigma_s_g[g] + _sigma_a_g[g]) <= _sigma_t_g[g]);
+
+    if (_has_fission)
+    {
+      _console << "\n_nu_sigma_f_g       = " << _nu_sigma_f_g[g] << "\n";
+      _console << "_chi_f_g              = " << _chi_f_g[g];
+    }
+    _console << std::endl;
+  }
+#endif
 }
 
 void
@@ -314,6 +465,12 @@ FileNeutronicsMaterial::parseGnatProperty(const PropertyType & type,
     case PropertyType::SigmaSMatrix:
       break;
 
+    case PropertyType::NuSigmaF:
+      break;
+
+    case PropertyType::ChiF:
+      break;
+
     default:
       break;
   }
@@ -334,6 +491,7 @@ FileNeutronicsMaterial::parseOpenMCProperty(const PropertyType & type,
     // Loop over the cell ids to find ones that match the provided id in the material.
     int min_row = -1;
     int max_row = -1;
+    if (reader.has("cell"))
     {
       auto & cell_ids = reader.getColumn("cell");
       // Start by finding the minimum row.
@@ -363,17 +521,53 @@ FileNeutronicsMaterial::parseOpenMCProperty(const PropertyType & type,
       if (min_row != -1 && max_row == -1)
         max_row = static_cast<int>(cell_ids.size() - 1u);
     }
+    else if (reader.has("material"))
+    {
+      auto & material_ids = reader.getColumn("material");
+      // Start by finding the minimum row.
+      for (unsigned int row = 0u; row < material_ids.size(); ++row)
+      {
+        if (material_ids[row] == _source_material_id)
+        {
+          min_row = static_cast<int>(row);
+          break;
+        }
+      }
 
-    // Loop over the data to determine the number of isotopes.
+      if (min_row == -1)
+        mooseError("OpenMC material with label " + _source_material_id + " does not exist in " +
+                   property_file);
+
+      // Next find the maximum row (taking advantage of how OpenMC groups materials together).
+      for (unsigned int row = static_cast<unsigned int>(min_row) + 1; row < material_ids.size();
+           ++row)
+      {
+        if (material_ids[row - 1u] == _source_material_id &&
+            material_ids[row] != _source_material_id)
+        {
+          max_row = static_cast<int>(row - 1u);
+          break;
+        }
+      }
+
+      if (min_row != -1 && max_row == -1)
+        max_row = static_cast<int>(material_ids.size() - 1u);
+    }
+
+    // Loop over the data to determine the number of isotopes. Only need to do this if there are
+    // multiple nuclides.
     int num_groups = -1;
     unsigned int num_isotopes = 0;
+    if (reader.has("nuclide"))
     {
       std::string first_nuclide = reader.getEntry("nuclide", static_cast<unsigned int>(min_row));
       for (unsigned int row = static_cast<unsigned int>(min_row);
            row <= static_cast<unsigned int>(max_row);
            ++row)
       {
-        num_groups = std::max(num_groups, std::stoi(reader.getEntry("group in", row)));
+        num_groups = type == PropertyType::ChiF
+                         ? std::max(num_groups, std::stoi(reader.getEntry("group out", row)))
+                         : std::max(num_groups, std::stoi(reader.getEntry("group in", row)));
 
         if (first_nuclide == reader.getEntry("nuclide", row) &&
             row != static_cast<unsigned int>(min_row) && first_nuclide != "")
@@ -383,6 +577,8 @@ FileNeutronicsMaterial::parseOpenMCProperty(const PropertyType & type,
         }
       }
     }
+    else
+      mooseError("No nuclides detected in cross-section file " + property_file + ".");
 
     // Loop over the data and add nuclides to the unordered map of data.
     {
@@ -460,6 +656,26 @@ FileNeutronicsMaterial::parseOpenMCProperty(const PropertyType & type,
         _max_moments = (_anisotropy + 1u) * _num_groups * _num_groups;
         break;
 
+      case PropertyType::NuSigmaF:
+        for (unsigned int row = static_cast<unsigned int>(min_row);
+             row <= static_cast<unsigned int>(max_row);
+             ++row)
+        {
+          _material_properties[reader.getEntry("nuclide", row)]._nu_sigma_f_g.emplace_back(
+              std::stod(values[row]));
+        }
+        break;
+
+      case PropertyType::ChiF:
+        for (unsigned int row = static_cast<unsigned int>(min_row);
+             row <= static_cast<unsigned int>(max_row);
+             ++row)
+        {
+          _material_properties[reader.getEntry("nuclide", row)]._chi_f_g.emplace_back(
+              std::stod(values[row]));
+        }
+        break;
+
       default:
         break;
     }
@@ -473,19 +689,50 @@ FileNeutronicsMaterial::computeQpProperties()
 {
   EmptyNeutronicsMaterial::computeQpProperties();
 
-  _mat_inv_v_g[_qp].resize(_num_groups, 0.0);
-  _mat_sigma_t_g[_qp].resize(_num_groups, 0.0);
-  _mat_sigma_r_g[_qp].resize(_num_groups, 0.0);
-  _mat_diffusion_g[_qp].resize(_num_groups, 0.0);
-  for (unsigned int i = 0; i < _num_groups; ++i)
+  // SAAF tau.
+  if (_is_saaf)
   {
-    _mat_inv_v_g[_qp][i] = _inv_v_g[i];
+    (*_mat_saaf_tau)[_qp].resize(_num_groups, 0.0);
+
+    auto h = _current_elem->hmin();
+    for (unsigned int g = 0; g < _num_groups; ++g)
+    {
+      if (_sigma_t_g[g] * _saaf_c * h >= _saaf_eta)
+        (*_mat_saaf_tau)[_qp][g] = 1.0 / (_sigma_t_g[g] * _saaf_c);
+      else
+        (*_mat_saaf_tau)[_qp][g] = h / _saaf_eta;
+    }
+  }
+
+  _mat_sigma_t_g[_qp].resize(_num_groups, 0.0);
+  for (unsigned int i = 0; i < _num_groups; ++i)
     _mat_sigma_t_g[_qp][i] = _sigma_t_g[i];
-    // Have to sum the absorption and out-scattering cross-section to form the
-    // total cross-section. This sums all g -> g_prime scattering cross-sections and then subtracts
-    // the g -> g cross-section.
-    _mat_sigma_r_g[_qp][i] = _sigma_t_g[i] - _sigma_s_g_g[i];
-    _mat_diffusion_g[_qp][i] = _diffusion_g[i];
+
+  if (_is_diffusion)
+  {
+    (*_mat_sigma_r_g)[_qp].resize(_num_groups, 0.0);
+    (*_mat_diffusion_g)[_qp].resize(_num_groups, 0.0);
+    for (unsigned int i = 0; i < _num_groups; ++i)
+    {
+      // Have to sum the absorption and out-scattering cross-section to form the
+      // total cross-section. This sums all g -> g_prime scattering cross-sections and then
+      // subtracts the g -> g cross-section.
+      (*_mat_sigma_r_g)[_qp][i] = (_sigma_t_g[i] - _sigma_s_g_g[i]);
+      (*_mat_diffusion_g)[_qp][i] = _diffusion_g[i];
+    }
+  }
+
+  // Particle speeds.
+  _mat_inv_v_g[_qp].resize(_num_groups, 0.0);
+  if (_particle == Particletype::Neutron)
+  {
+    for (unsigned int i = 0; i < _num_groups; ++i)
+      _mat_inv_v_g[_qp][i] = _inv_v_g[i];
+  }
+  if (_particle == Particletype::GammaPhoton)
+  {
+    for (unsigned int i = 0; i < _num_groups; ++i)
+      _mat_inv_v_g[_qp][i] = _inv_c_cm;
   }
 
   // Scattering moments and anisotropy.
@@ -501,5 +748,17 @@ FileNeutronicsMaterial::computeQpProperties()
     _mat_source_moments[_qp].resize(_max_source_moments, 0.0);
     for (unsigned int i = 0u; i < _max_source_moments; ++i)
       _mat_source_moments[_qp][i] = _source_moments[i];
+  }
+
+  // Fission production cross-sections and spectra.
+  if (_has_fission)
+  {
+    (*_mat_nu_sigma_f_g)[_qp].resize(_num_groups, 0.0);
+    (*_mat_chi_f_g)[_qp].resize(_num_groups, 0.0);
+    for (unsigned int g = 0u; g < _num_groups; ++g)
+    {
+      (*_mat_nu_sigma_f_g)[_qp][g] = _nu_sigma_f_g[g];
+      (*_mat_chi_f_g)[_qp][g] = _chi_f_g[g];
+    }
   }
 }
