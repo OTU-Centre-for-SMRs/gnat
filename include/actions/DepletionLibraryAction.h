@@ -64,7 +64,7 @@ protected:
   // Cross-section information.
   enum class XSUnits
   {
-    InvCm = 0u,
+    InvCm2 = 0u,
     Barns = 1u
   } _xs_units;
   enum class EnergyUnits

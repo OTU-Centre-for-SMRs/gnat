@@ -62,14 +62,6 @@ enum class PropertyType
   ChiF = 6u
 }; // enum class PropertyType
 
-// An enum to make the parsing code for cross-section files cleaner.
-enum class CrossSectionSource
-{
-  Detect = 0u,
-  Gnat = 1u,
-  OpenMC = 2u
-}; // enum class CrossSectionSource
-
 // An enum to indicate if cross-sections are macroscopic or microscopic.
 enum class CrossSectionType
 {

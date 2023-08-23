@@ -2,8 +2,7 @@
 
 #include <fstream>
 #include <filesystem>
-
-#include "SimpleCSVReader.h"
+#include "pugixml.h"
 
 registerMooseObject("GnatApp", FileNeutronicsMaterial);
 
@@ -27,9 +26,7 @@ FileNeutronicsMaterial::validParams()
                                        "file should be relative to the input deck (.i) file.");
   params.addRequiredParam<std::string>("source_material_id",
                                        "The material ID used by the cross-section source to "
-                                       "identify cross-sections for different geometric regions. "
-                                       "This parameter will be cast to a different type depending "
-                                       "on the cross-section source.");
+                                       "identify cross-sections for different geometric regions.");
   params.addParam<MooseEnum>("cross_section_source",
                              MooseEnum("detect gnat openmc", "detect"),
                              "The source which generated the cross-sections. Used for "
@@ -54,258 +51,17 @@ FileNeutronicsMaterial::FileNeutronicsMaterial(const InputParameters & parameter
     _source_anisotropy(getParam<unsigned int>("source_anisotropy")),
     _max_source_moments(0u),
     _has_volumetric_source(false),
-    _xs_source(getParam<MooseEnum>("cross_section_source").getEnum<CrossSectionSource>()),
     _file_name((std::filesystem::path(_app.getInputFileName()).parent_path() /
                 std::filesystem::path(getParam<std::string>("file_name")))
                    .string()),
     _source_material_id(getParam<std::string>("source_material_id"))
 {
-  // Open the descriptor file to figure out where the cross-sections are stored and what the files
-  // are named.
-  std::ifstream descriptor_file(_file_name);
-  std::string line;
-  if (descriptor_file.is_open())
-  {
-    std::getline(descriptor_file, line);
-    if (_xs_source == CrossSectionSource::Detect)
-    {
-      // First line should always be the cross-section source. Use that to determine the
-      // properties.
-      if (line == "openmc")
-        _xs_source = CrossSectionSource::OpenMC;
-      else if (line == "gnat")
-        _xs_source = CrossSectionSource::Gnat;
-      else
-        mooseError("Unknown cross-section source.");
-    }
-
-    // Read each line. Assume that anything after the keyword is the relative path of the
-    // specific cross-section file to the descriptor file.
-    while (std::getline(descriptor_file, line))
-    {
-      auto pos = line.find("InvVelocity: ");
-      if (pos != std::string::npos)
-      {
-        parseProperty(PropertyType::InvVelocity,
-                      line.substr(pos + std::string("InvVelocity: ").size()));
-        continue;
-      }
-      pos = line.find("inverse-velocity: ");
-      if (pos != std::string::npos)
-      {
-        parseProperty(PropertyType::InvVelocity,
-                      line.substr(pos + std::string("inverse-velocity: ").size()));
-        continue;
-      }
-
-      pos = line.find("SigmaR: ");
-      if (pos != std::string::npos)
-      {
-        parseProperty(PropertyType::SigmaR, line.substr(pos + std::string("SigmaR: ").size()));
-        continue;
-      }
-      pos = line.find("total: ");
-      if (pos != std::string::npos)
-      {
-        parseProperty(PropertyType::SigmaR, line.substr(pos + std::string("total: ").size()));
-        continue;
-      }
-
-      pos = line.find("SigmaA: ");
-      if (pos != std::string::npos)
-      {
-        parseProperty(PropertyType::SigmaA, line.substr(pos + std::string("SigmaA: ").size()));
-        continue;
-      }
-      pos = line.find("absorption: ");
-      if (pos != std::string::npos)
-      {
-        parseProperty(PropertyType::SigmaA, line.substr(pos + std::string("absorption: ").size()));
-        continue;
-      }
-
-      /*
-      pos = line.find("SigmaS: ");
-      if (pos != std::string::npos)
-      {
-        parseProperty(PropertyType::SigmaS, line.substr(pos + std::string("SigmaS: ").size()));
-        continue;
-      }
-      */
-
-      pos = line.find("SigmaSMatrix: ");
-      if (pos != std::string::npos)
-      {
-        parseProperty(PropertyType::SigmaSMatrix,
-                      line.substr(pos + std::string("SigmaSMatrix: ").size()));
-        continue;
-      }
-      pos = line.find("scatter: ");
-      if (pos != std::string::npos)
-      {
-        parseProperty(PropertyType::SigmaSMatrix,
-                      line.substr(pos + std::string("scatter: ").size()));
-        continue;
-      }
-
-      pos = line.find("NuSigmaF: ");
-      if (pos != std::string::npos)
-      {
-        parseProperty(PropertyType::NuSigmaF, line.substr(pos + std::string("NuSigmaF: ").size()));
-        continue;
-      }
-
-      pos = line.find("ChiF: ");
-      if (pos != std::string::npos)
-      {
-        parseProperty(PropertyType::ChiF, line.substr(pos + std::string("ChiF: ").size()));
-        continue;
-      }
-    }
-
-    descriptor_file.close();
-  }
-  else
-    mooseError("Failed to open file " + _file_name + " to read material properties.");
+  // Parse the cross-section XML file.
+  parseXMLMacroXS();
 
   // Resize the properties and initialize with 0.0.
-  _inv_v_g.resize(_num_groups, 0.0);
-  _sigma_t_g.resize(_num_groups, 0.0);
-  _sigma_a_g.resize(_num_groups, 0.0);
-  //_sigma_s_g.resize(_num_groups, 0.0);
   _sigma_s_g_matrix.resize(_num_groups, 0.0);
   _sigma_s_g_g.resize(_num_groups, 0.0);
-  _sigma_s_g_prime_g_l.resize(_num_groups * _num_groups * (_anisotropy + 1u), 0.0);
-
-  if (_has_fission)
-  {
-    _nu_sigma_f_g.resize(_num_groups, 0.0);
-    _chi_f_g.resize(_num_groups, 0.0);
-  }
-
-  // Convert per-nuclide cross-sections to bulk material cross-sections.
-  bool first_inv_v = true;
-  for (auto & [nuclide, data] : _material_properties)
-  {
-    // InvVelocity is the exception, not the rule. Properties are identical for each isotope.
-    if (first_inv_v)
-    {
-      if (data._inv_v_g.size() < _num_groups)
-      {
-        mooseError("Number of group-wise velocities is smaller then the number of groups declared "
-                   "in the simulation properties.");
-      }
-      else if (data._inv_v_g.size() > _num_groups)
-        mooseWarning(
-            "Number of group-wise velocities is greater then then number of groups declared in the "
-            "simulation properties. The number of group-wise velocities will be truncated.");
-
-      for (auto & velocity : data._inv_v_g)
-        _inv_v_g.emplace_back(velocity);
-
-      first_inv_v = false;
-    }
-
-    // SigmaT.
-    {
-      if (data._sigma_t_g.size() < _num_groups)
-      {
-        mooseError("Number of group-wise total cross-sections is smaller then the number of "
-                   "groups declared in the simulation properties.");
-      }
-      else if (data._sigma_t_g.size() > _num_groups)
-        mooseWarning(
-            "Number of group-wise total cross-sections is greater then then number of groups "
-            "declared in the simulation properties. The number of group-wise total "
-            "cross-sections will be truncated.");
-
-      for (unsigned int i = 0u; i < _sigma_t_g.size(); ++i)
-        _sigma_t_g[i] += data._sigma_t_g[i];
-    }
-
-    // SigmaA.
-    {
-      if (data._sigma_a_g.size() < _num_groups)
-      {
-        mooseError("Number of group-wise absorption cross-sections is smaller then the number of "
-                   "groups declared in the simulation properties.");
-      }
-      else if (data._sigma_a_g.size() > _num_groups)
-        mooseWarning(
-            "Number of group-wise absorption cross-sections is greater then then number of groups "
-            "declared in the simulation properties. The number of group-wise absorption "
-            "cross-sections will be truncated.");
-
-      for (unsigned int i = 0u; i < _sigma_a_g.size(); ++i)
-        _sigma_a_g[i] += data._sigma_a_g[i];
-    }
-
-    // SigmaS.
-    /*
-    {
-      if (data._sigma_s_g.size() < _num_groups)
-      {
-        mooseError("Number of group-wise scattering cross-sections is smaller then the number of "
-                   "groups declared in the simulation properties.");
-      }
-      else if (data._sigma_s_g.size() > _num_groups)
-        mooseWarning(
-            "Number of group-wise scattering cross-sections is greater then then number of groups "
-            "declared in the simulation properties. The number of group-wise scattering "
-            "cross-sections will be truncated.");
-
-      for (unsigned int i = 0u; i < _sigma_s_g.size(); ++i)
-        _sigma_s_g[i] += data._sigma_s_g[i];
-    }
-    */
-
-    // SigmaSMatrix.
-    {
-      if (data._sigma_s_g_prime_g_l.size() < _max_moments)
-      {
-        mooseError("Number of scattering matrix components is smaller then the number allowed by "
-                   "the used simulation properties.");
-      }
-      else if (data._sigma_s_g_prime_g_l.size() > _max_moments)
-        mooseWarning("Number of scattering matrix components is greater then the number required "
-                     "for the simulation. The matrix may be out of order.");
-
-      for (unsigned int i = 0u; i < _sigma_s_g_prime_g_l.size(); ++i)
-        _sigma_s_g_prime_g_l[i] += data._sigma_s_g_prime_g_l[i];
-    }
-
-    if (_has_fission)
-    {
-      // NuSigmaF.
-      if (data._nu_sigma_f_g.size() < _num_groups)
-      {
-        mooseError("Number of group-wise production cross-sections is smaller then the number of "
-                   "groups declared in the simulation properties.");
-      }
-      else if (data._nu_sigma_f_g.size() > _num_groups)
-        mooseWarning(
-            "Number of group-wise production cross-sections is greater then then number of groups "
-            "declared in the simulation properties. The number of group-wise production "
-            "cross-sections will be truncated.");
-
-      for (unsigned int i = 0u; i < _nu_sigma_f_g.size(); ++i)
-        _nu_sigma_f_g[i] += data._nu_sigma_f_g[i];
-
-      // ChiF.
-      if (data._chi_f_g.size() < _num_groups)
-      {
-        mooseError("Number of group-wise fission spectra is smaller then the number of "
-                   "groups declared in the simulation properties.");
-      }
-      else if (data._chi_f_g.size() > _num_groups)
-        mooseWarning("Number of group-wise fission spectra is greater then then number of groups "
-                     "declared in the simulation properties. The number of group-wise fission "
-                     "spectra will be truncated.");
-
-      for (unsigned int i = 0u; i < _chi_f_g.size(); ++i)
-        _chi_f_g[i] += data._chi_f_g[i];
-    }
-  }
 
   _has_volumetric_source = _source_moments.size() > 0u;
   if (_has_volumetric_source)
@@ -366,19 +122,6 @@ FileNeutronicsMaterial::FileNeutronicsMaterial(const InputParameters & parameter
   {
     std::vector<Real> _sigma_s_g_prime_g_1;
     _sigma_s_g_prime_g_1.resize(_num_groups, 0.0);
-    /*
-    if (_anisotropy > 0u)
-    {
-      for (unsigned int g = 0u; g < _num_groups; ++g)
-      {
-        for (unsigned int g_prime = 0u; g_prime < _num_groups; ++g_prime)
-        {
-          _sigma_s_g[g] +=
-              _sigma_s_g_prime_g_l[g_prime * _num_groups * _anisotropy + g * _anisotropy + 1u];
-        }
-      }
-    }
-    */
 
     _diffusion_g.resize(_num_groups, 0.0);
     bool warning = false;
@@ -424,264 +167,90 @@ FileNeutronicsMaterial::FileNeutronicsMaterial(const InputParameters & parameter
 }
 
 void
-FileNeutronicsMaterial::parseProperty(const PropertyType & type, const std::string & property_file)
+FileNeutronicsMaterial::parseToVector(const std::string & string_rep, std::vector<Real> & real_rep)
 {
-  switch (_xs_source)
+  auto current_delim_pos = string_rep.find(" ");
+  std::size_t offset = 0u;
+  auto previous_delim_pos = 0u;
+  while (current_delim_pos != std::string::npos)
   {
-    case CrossSectionSource::Gnat:
-      parseGnatProperty(type, property_file);
-      break;
-
-    case CrossSectionSource::OpenMC:
-      parseOpenMCProperty(type, property_file);
-      break;
-
-    default:
-      break;
+    real_rep.emplace_back(std::stod(string_rep.substr(
+        previous_delim_pos + offset, current_delim_pos - (previous_delim_pos + offset))));
+    previous_delim_pos = current_delim_pos;
+    current_delim_pos = string_rep.find(" ", current_delim_pos + 1);
+    offset = 1u;
   }
+  real_rep.emplace_back(std::stod(string_rep.substr(previous_delim_pos)));
 }
 
 void
-FileNeutronicsMaterial::parseGnatProperty(const PropertyType & type,
-                                          const std::string & property_file)
+FileNeutronicsMaterial::parseXMLMacroXS()
 {
-  mooseError("Parsing of cross-sections generated by Gnat is currently not supported. " +
-             property_file);
+  pugi::xml_document doc;
+  if (!doc.load_file(_file_name.c_str()))
+    mooseError("Failed to load the following microscopic cross-section file: " + _file_name);
 
-  switch (type)
-  {
-    case PropertyType::InvVelocity:
-      break;
+  auto all_materials = doc.child("macroscopic_cross_sections");
 
-    case PropertyType::SigmaR:
-      break;
-
-    case PropertyType::SigmaA:
-      break;
-
-    case PropertyType::SigmaS:
-      break;
-
-    case PropertyType::SigmaSMatrix:
-      break;
-
-    case PropertyType::NuSigmaF:
-      break;
-
-    case PropertyType::ChiF:
-      break;
-
-    default:
-      break;
-  }
-}
-
-void
-FileNeutronicsMaterial::parseOpenMCProperty(const PropertyType & type,
-                                            const std::string & property_file)
-{
-  // Compute the actual path of the property file.
-  auto dir = std::filesystem::path(_file_name).parent_path();
-  dir /= std::filesystem::path(property_file);
-
-  // Parse!
-  SimpleCSVReader reader(dir.string());
-  if (reader.read())
-  {
-    // Loop over the cell ids to find ones that match the provided id in the material.
-    int min_row = -1;
-    int max_row = -1;
-    if (reader.has("cell"))
-    {
-      auto & cell_ids = reader.getColumn("cell");
-      // Start by finding the minimum row.
-      for (unsigned int row = 0u; row < cell_ids.size(); ++row)
-      {
-        if (cell_ids[row] == _source_material_id)
-        {
-          min_row = static_cast<int>(row);
-          break;
-        }
-      }
-
-      if (min_row == -1)
-        mooseError("OpenMC cell with label " + _source_material_id + " does not exist in " +
-                   property_file);
-
-      // Next find the maximum row (taking advantage of how OpenMC groups cells together).
-      for (unsigned int row = static_cast<unsigned int>(min_row) + 1; row < cell_ids.size(); ++row)
-      {
-        if (cell_ids[row - 1u] == _source_material_id && cell_ids[row] != _source_material_id)
-        {
-          max_row = static_cast<int>(row - 1u);
-          break;
-        }
-      }
-
-      if (min_row != -1 && max_row == -1)
-        max_row = static_cast<int>(cell_ids.size() - 1u);
-    }
-    else if (reader.has("material"))
-    {
-      auto & material_ids = reader.getColumn("material");
-      // Start by finding the minimum row.
-      for (unsigned int row = 0u; row < material_ids.size(); ++row)
-      {
-        if (material_ids[row] == _source_material_id)
-        {
-          min_row = static_cast<int>(row);
-          break;
-        }
-      }
-
-      if (min_row == -1)
-        mooseError("OpenMC material with label " + _source_material_id + " does not exist in " +
-                   property_file);
-
-      // Next find the maximum row (taking advantage of how OpenMC groups materials together).
-      for (unsigned int row = static_cast<unsigned int>(min_row) + 1; row < material_ids.size();
-           ++row)
-      {
-        if (material_ids[row - 1u] == _source_material_id &&
-            material_ids[row] != _source_material_id)
-        {
-          max_row = static_cast<int>(row - 1u);
-          break;
-        }
-      }
-
-      if (min_row != -1 && max_row == -1)
-        max_row = static_cast<int>(material_ids.size() - 1u);
-    }
-
-    // Loop over the data to determine the number of isotopes. Only need to do this if there are
-    // multiple nuclides.
-    int num_groups = -1;
-    unsigned int num_isotopes = 0;
-    if (reader.has("nuclide"))
-    {
-      std::string first_nuclide = reader.getEntry("nuclide", static_cast<unsigned int>(min_row));
-      for (unsigned int row = static_cast<unsigned int>(min_row);
-           row <= static_cast<unsigned int>(max_row);
-           ++row)
-      {
-        num_groups = type == PropertyType::ChiF
-                         ? std::max(num_groups, std::stoi(reader.getEntry("group out", row)))
-                         : std::max(num_groups, std::stoi(reader.getEntry("group in", row)));
-
-        if (first_nuclide == reader.getEntry("nuclide", row) &&
-            row != static_cast<unsigned int>(min_row) && first_nuclide != "")
-        {
-          num_isotopes = row - static_cast<unsigned int>(min_row);
-          first_nuclide = "";
-        }
-      }
-    }
-    else
-      mooseError("No nuclides detected in cross-section file " + property_file + ".");
-
-    // Loop over the data and add nuclides to the unordered map of data.
-    {
-      auto & nuclides = reader.getColumn("nuclide");
-      for (unsigned int row = static_cast<unsigned int>(min_row);
-           row < static_cast<unsigned int>(min_row) + num_isotopes;
-           ++row)
-        _material_properties.try_emplace(nuclides[row]);
-    }
-
-    // Loop over all of the rows of data and parse accordingly.
-    // OpenMC orders energy groups from the largest to smallest. As an example: group 1 would be
-    // fast, group 2 would be thermal.
-    // The case switch-case works with the different nuclear properties.
-    auto & values = reader.getColumn("mean");
-    bool has_moments = reader.has("legendre");
-    switch (type)
-    {
-      case PropertyType::InvVelocity:
-        for (unsigned int row = static_cast<unsigned int>(min_row);
-             row <= static_cast<unsigned int>(max_row);
-             ++row)
-        {
-          _material_properties[reader.getEntry("nuclide", row)]._inv_v_g.emplace_back(
-              std::stod(values[row]));
-        }
-        break;
-
-      case PropertyType::SigmaR:
-        for (unsigned int row = static_cast<unsigned int>(min_row);
-             row <= static_cast<unsigned int>(max_row);
-             ++row)
-        {
-          _material_properties[reader.getEntry("nuclide", row)]._sigma_t_g.emplace_back(
-              std::stod(values[row]));
-        }
-        break;
-
-      case PropertyType::SigmaA:
-        for (unsigned int row = static_cast<unsigned int>(min_row);
-             row <= static_cast<unsigned int>(max_row);
-             ++row)
-        {
-          _material_properties[reader.getEntry("nuclide", row)]._sigma_a_g.emplace_back(
-              std::stod(values[row]));
-        }
-        break;
-
-      case PropertyType::SigmaS:
-        for (unsigned int row = static_cast<unsigned int>(min_row);
-             row <= static_cast<unsigned int>(max_row);
-             ++row)
-        {
-          _material_properties[reader.getEntry("nuclide", row)]._sigma_s_g.emplace_back(
-              std::stod(values[row]));
-        }
-        break;
-
-      case PropertyType::SigmaSMatrix:
-        // Parse the material properties and detect the maximum anisotropy.
-        for (unsigned int row = static_cast<unsigned int>(min_row);
-             row <= static_cast<unsigned int>(max_row);
-             ++row)
-        {
-          _material_properties[reader.getEntry("nuclide", row)]._sigma_s_g_prime_g_l.emplace_back(
-              std::stod(values[row]));
-
-          if (has_moments)
-          {
-            _anisotropy = std::max(
-                _anisotropy,
-                static_cast<unsigned int>(std::stoi(reader.getEntry("legendre", row).substr(1u))));
-          }
-        }
-        _max_moments = (_anisotropy + 1u) * _num_groups * _num_groups;
-        break;
-
-      case PropertyType::NuSigmaF:
-        for (unsigned int row = static_cast<unsigned int>(min_row);
-             row <= static_cast<unsigned int>(max_row);
-             ++row)
-        {
-          _material_properties[reader.getEntry("nuclide", row)]._nu_sigma_f_g.emplace_back(
-              std::stod(values[row]));
-        }
-        break;
-
-      case PropertyType::ChiF:
-        for (unsigned int row = static_cast<unsigned int>(min_row);
-             row <= static_cast<unsigned int>(max_row);
-             ++row)
-        {
-          _material_properties[reader.getEntry("nuclide", row)]._chi_f_g.emplace_back(
-              std::stod(values[row]));
-        }
-        break;
-
-      default:
-        break;
-    }
-  }
+  // Parse the energy units.
+  if (std::string(all_materials.attribute("energy_units").as_string()) == "eV")
+    _energy_units = EnergyUnits::eV;
+  else if (std::string(all_materials.attribute("energy_units").as_string()) == "keV")
+    _energy_units = EnergyUnits::keV;
+  else if (std::string(all_materials.attribute("energy_units").as_string()) == "MeV")
+    _energy_units = EnergyUnits::MeV;
   else
-    mooseError("Failed to open cross-section file: " + dir.string());
+    _console << COLOR_YELLOW << "Unsupported units of energy: "
+             << all_materials.attribute("energy_units").as_string() << ". Defauling to eV.\n"
+             << COLOR_DEFAULT;
+
+  // Parse the cross-section units. cm^{-1} is currently the only supported unit.
+  if (std::string(all_materials.attribute("xs_units").as_string()) == "cm^-1")
+    _xs_units = XSUnits::InvCm;
+  else
+    _console << COLOR_YELLOW << "Cross-section units cannot be detected. Defauling to cm^-1.\n"
+             << COLOR_DEFAULT;
+
+  // Parse the number of groups and group boundaries.
+  unsigned int num_groups_in_file = all_materials.attribute("num_groups").as_uint(0u);
+  if (num_groups_in_file != _num_groups)
+    mooseError("The number of groups provided (" + Moose::stringify(num_groups_in_file) +
+               ") is not consistent with the number of groups in the simulation (" +
+               Moose::stringify(_num_groups) + ").");
+  parseToVector(std::string(all_materials.attribute("group_bounds").as_string()), _group_bounds);
+
+  // Attempt to find the material by ID the user provided in the input syntax.
+  for (auto & material_node : all_materials)
+  {
+    // We have a match.
+    if (std::string(material_node.attribute("id").as_string()) == _source_material_id &&
+        std::string(material_node.name()) == "domain")
+    {
+      _anisotropy = material_node.attribute("num_legendre").as_uint(0u);
+      _max_moments = _num_groups * _num_groups * (_anisotropy + 1u);
+
+      for (auto & xs_node : material_node)
+      {
+        if (std::string(xs_node.attribute("type").as_string()) == "total")
+          parseToVector(std::string(xs_node.attribute("mgxs").as_string()), _sigma_t_g);
+
+        if (std::string(xs_node.attribute("type").as_string()) == "absorption")
+          parseToVector(std::string(xs_node.attribute("mgxs").as_string()), _sigma_a_g);
+
+        if (std::string(xs_node.attribute("type").as_string()) == "scatter")
+          parseToVector(std::string(xs_node.attribute("mgxs").as_string()), _sigma_s_g_prime_g_l);
+
+        if (std::string(xs_node.attribute("type").as_string()) == "inverse-velocity")
+          parseToVector(std::string(xs_node.attribute("mgxs").as_string()), _inv_v_g);
+      }
+
+      // Can stop searching after all cross-section data is parsed.
+      return;
+    }
+  }
+
+  mooseError("Failed to find a material with the ID " + _source_material_id +
+             " in the provided cross-section file.");
 }
 
 void

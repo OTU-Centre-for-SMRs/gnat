@@ -368,7 +368,7 @@ DepletionLibraryAction::loadOpenMCMicoXSXML()
   if (std::string(chain.attribute("xs_units").as_string()) == "barns")
     _xs_units = XSUnits::Barns;
   else if (std::string(chain.attribute("xs_units").as_string()) == "cm^-1")
-    _xs_units = XSUnits::InvCm;
+    _xs_units = XSUnits::InvCm2;
   else
     _console << COLOR_YELLOW << "Cross-section units cannot be detected. Defauling to barns.\n"
              << COLOR_DEFAULT;

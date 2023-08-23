@@ -12,29 +12,30 @@ public:
 
 protected:
   virtual void computeQpProperties() override;
-  void parseProperty(const PropertyType & type, const std::string & property_file);
-  void parseGnatProperty(const PropertyType & type, const std::string & property_file);
-  void parseOpenMCProperty(const PropertyType & type, const std::string & property_file);
 
-  // Nuclear properties for individual isotopes.
-  struct NuclideProperties
+  // A helper function to turn a string vector of cross-sections deliminated with a ' ' into a
+  // vector of numerics.
+  static void parseToVector(const std::string & string_rep, std::vector<Real> & real_rep);
+  void parseXMLMacroXS();
+
+  // Cross-section information.
+  enum class XSUnits
   {
-    std::vector<Real> _inv_v_g;
-    std::vector<Real> _sigma_t_g;
-    std::vector<Real> _sigma_a_g;
-    std::vector<Real> _sigma_s_g;
-    std::vector<Real> _sigma_s_g_prime_g_l;
-    std::vector<Real> _nu_sigma_f_g;
-    std::vector<Real> _chi_f_g;
-  };
-  std::unordered_map<std::string, NuclideProperties> _material_properties;
+    InvCm = 0u
+  } _xs_units;
+  enum class EnergyUnits
+  {
+    eV = 0u,
+    keV = 1u,
+    MeV = 2u
+  } _energy_units;
+  std::vector<Real> _group_bounds;
 
   // The sum of all isotopic material properties are the actual properties provided to the transport
   // solver.
   std::vector<Real> _inv_v_g;
   std::vector<Real> _sigma_t_g;
   std::vector<Real> _sigma_a_g;
-  // std::vector<Real> _sigma_s_g;
   std::vector<Real> _sigma_s_g_matrix;
   std::vector<Real> _sigma_s_g_g;
   std::vector<Real> _diffusion_g;
@@ -74,7 +75,6 @@ protected:
   unsigned int _max_source_moments;
   bool _has_volumetric_source;
 
-  CrossSectionSource _xs_source;
   const std::string _file_name;
   const std::string & _source_material_id;
 }; // class FileNeutronicsMaterial
