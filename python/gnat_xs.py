@@ -37,6 +37,59 @@ def apply_tallies(tallies, xs_list):
 
   return tallies
 
+def process_all_macro_xs_results_xml(state_point, domain_list, file_name, directory):
+  for xs_list in domain_list:
+    for xs in xs_list:
+      xs.load_from_statepoint(state_point)
+
+  root_elem = ET.Element('macroscopic_cross_sections')
+  root_elem.attrib['generator'] = 'openmc'
+  root_elem.attrib['num_groups'] = str(xs_list[0].energy_groups.group_edges.size - 1)
+  root_elem.attrib['group_bounds'] = ''
+  for bounds in reversed(xs_list[0].energy_groups.group_edges):
+    root_elem.attrib['group_bounds'] += str(bounds) + ' '
+  root_elem.attrib['group_bounds'] = root_elem.attrib['group_bounds'].rstrip(root_elem.attrib['group_bounds'][-1])
+  root_elem.attrib['energy_units'] = 'eV'
+  root_elem.attrib['xs_units'] = 'cm^-1'
+
+  for xs_list in domain_list:
+    material_element = ET.Element('domain')
+    material_element.attrib['type'] = str(xs_list[0].domain_type)
+    material_element.attrib['name'] = str(xs_list[0].domain.name)
+    material_element.attrib['id'] = str(xs_list[0].domain.id)
+
+    for xs in xs_list:
+      reaction = xs.rxn_type
+
+      reaction_element = ET.Element('reaction')
+      reaction_element.attrib['type'] = str(reaction)
+
+      xs_data = xs.get_xs(subdomains = 'all', nuclides= 'sum', xs_type='macro', order_groups = 'increasing', value = 'mean', squeeze = True)
+
+      if reaction == 'scatter':
+        material_element.attrib['num_legendre'] = str(xs.legendre_order)
+        reaction_element.attrib['mgxs'] = ''
+        for incoming_group in xs_data:
+          for outgoing_group in incoming_group:
+            for legendre_moment in outgoing_group:
+              reaction_element.attrib['mgxs'] += str(legendre_moment) + ' '
+        reaction_element.attrib['mgxs'] = reaction_element.attrib['mgxs'].rstrip(reaction_element.attrib['mgxs'][-1])
+      else:
+        reaction_element.attrib['mgxs'] = ''
+        for xs in xs_data:
+          reaction_element.attrib['mgxs'] += str(xs) + ' '
+        reaction_element.attrib['mgxs'] = reaction_element.attrib['mgxs'].rstrip(reaction_element.attrib['mgxs'][-1])
+
+      material_element.append(reaction_element)
+
+    root_elem.append(material_element)
+
+  if not os.path.exists(os.path.join('./', directory)):
+    os.makedirs(os.path.join('./', directory))
+
+  tree = ET.ElementTree(root_elem)
+  tree.write(directory + '/' + file_name + '.xml', encoding='utf-8', pretty_print=True)
+
 def process_depletion_results(state_point, depletion_list, file_name, directory):
   for dep in depletion_list:
     dep.load_from_statepoint(state_point)
@@ -78,23 +131,10 @@ def process_depletion_results(state_point, depletion_list, file_name, directory)
     nuclide_element.attrib['reactions'] = str(num_xs)
     root_elem.append(nuclide_element)
 
-    if not os.path.exists(os.path.join('./', directory)):
-      os.mkdir(os.path.join('./', directory))
+  if not os.path.exists(os.path.join('./', directory)):
+    os.makedirs(os.path.join('./', directory))
 
-    tree = ET.ElementTree(root_elem)
-    tree.write(directory + '/' + file_name + '.xml', encoding='utf-8', pretty_print=True)
+  tree = ET.ElementTree(root_elem)
+  tree.write(directory + '/' + file_name + '.xml', encoding='utf-8', pretty_print=True)
 
   return depletion_list
-
-def process_xs_results(state_point, xs_list, file_name, directory, format='csv', groups='all'):
-  for xs in xs_list:
-    xs.load_from_statepoint(state_point)
-    xs.export_xs_data(file_name + "_" + xs.rxn_type, directory, format, groups, 'macro')
-
-  with open(directory + "/" + file_name + '_cross_sections.txt', 'w') as f:
-    f.write('openmc\n')
-    for xs in xs_list:
-      f.write(xs.rxn_type + ": " + file_name + "_" + xs.rxn_type + "." + format)
-      f.write("\n")
-
-  return xs_list
