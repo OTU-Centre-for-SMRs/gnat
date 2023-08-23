@@ -40,8 +40,8 @@
   [Domain]
     type = FileNeutronicsMaterial
     transport_system = Neutron
-    file_name = 'cross_sections/cross_sections.txt'
-    source_material_id = '1'
+    file_name = 'macro_xs.xml'
+    source_material_id = '5'
   []
 []
 

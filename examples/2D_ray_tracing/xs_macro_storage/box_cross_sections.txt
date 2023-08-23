@@ -1,6 +1,0 @@
-openmc
-InvVelocity: box_inv_velocity.csv
-SigmaR: box_total.csv
-SigmaA: box_absorption.csv
-SigmaS: box_scattering.csv
-SigmaSMatrix: box_scattering_matrix.csv

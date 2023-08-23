@@ -1,5 +1,0 @@
-openmc
-total: rpv_total.csv
-absorption: rpv_absorption.csv
-scatter: rpv_scatter.csv
-inverse-velocity: rpv_inverse-velocity.csv

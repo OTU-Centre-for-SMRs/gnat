@@ -30,7 +30,6 @@
     point_source_locations = '5.0 5.0 0.0'
     point_source_moments = '1e3 0.0'
     point_source_anisotropies = '0'
-    scale_sources = true
   []
 []
 
@@ -38,25 +37,15 @@
   [Water]
     type = FileNeutronicsMaterial
     transport_system = Neutron
-    file_name = 'cross_sections/cross_sections.txt'
+    file_name = 'macro_xs.xml'
     source_material_id = '1'
-    block = '1'
-  []
-
-  [Shield]
-    type = AbsorbingNeutronicsMaterial
-    transport_system = Neutron
-    group_absorption = '1.0 3.0'
-    group_speeds = '10000000000.0 2200000.0'
-    block = '2'
+    block = '1 2'
   []
 []
 
 [Executioner]
   type = Steady
   solve_type = PJFNK
-  petsc_options_iname = '-pc_type -pc_hypre_type -ksp_gmres_restart'
-  petsc_options_value = 'hypre boomeramg 10'
 
   l_max_its = 50
   nl_rel_tol = 1e-12

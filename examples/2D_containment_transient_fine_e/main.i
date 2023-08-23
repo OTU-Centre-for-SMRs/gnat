@@ -1,6 +1,6 @@
 [DepletionLibrary]
-  depletion_file = 'chain_endfb71_pwr_air.xml'
-  cross_section_file = 'xs_micro/air.xml'
+  depletion_file = 'data/chain_endfb71_pwr_air.xml'
+  cross_section_file = 'data/air_xs_micro.xml'
   depletion_file_source = openmc
   show_warnings = false
 []

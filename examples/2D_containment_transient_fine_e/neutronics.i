@@ -36,21 +36,21 @@
   [RPV]
     type = FileNeutronicsMaterial
     transport_system = Neutron
-    file_name = 'xs_macro/rpv_cross_sections.txt'
+    file_name = 'data/xs_macro.xml'
     source_material_id = '6'
     block = rpv
   []
   [Air]
     type = FileNeutronicsMaterial
     transport_system = Neutron
-    file_name = 'xs_macro/air_cross_sections.txt'
+    file_name = 'data/xs_macro.xml'
     source_material_id = '5'
     block = air
   []
   [Walls]
     type = FileNeutronicsMaterial
     transport_system = Neutron
-    file_name = 'xs_macro/walls_cross_sections.txt'
+    file_name = 'data/xs_macro.xml'
     source_material_id = '7'
     block = walls
   []

@@ -60,6 +60,7 @@ FileNeutronicsMaterial::FileNeutronicsMaterial(const InputParameters & parameter
   parseXMLMacroXS();
 
   // Validate the resulting cross-sections.
+  // TODO: validate Chi and NuSigmaF.
   if (_inv_v_g.size() != _num_groups)
     mooseError("The inverse velocity data failed to parse properly.");
   if (_sigma_t_g.size() != _num_groups)
@@ -193,6 +194,7 @@ FileNeutronicsMaterial::parseToVector(const std::string & string_rep, std::vecto
   real_rep.emplace_back(std::stod(string_rep.substr(previous_delim_pos)));
 }
 
+// TODO: parse Chi and NuSigmaF.
 void
 FileNeutronicsMaterial::parseXMLMacroXS()
 {

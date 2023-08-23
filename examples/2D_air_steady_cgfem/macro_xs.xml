@@ -1,0 +1,8 @@
+<macroscopic_cross_sections generator="openmc" num_groups="2" group_bounds="20000000.0 0.625 0.0" energy_units="eV" xs_units="cm^-1">
+  <domain type="material" name="air" id="5" num_legendre="1">
+    <reaction type="total" mgxs="0.00010649527399094707 0.0"/>
+    <reaction type="absorption" mgxs="5.146171510459463e-06 0.0"/>
+    <reaction type="scatter" mgxs="0.00010134910248048762 1.1941848247442596e-05 0.0 0.0 0.0 0.0 0.0 0.0"/>
+    <reaction type="inverse-velocity" mgxs="6.892265530567443e-10 0.0"/>
+  </domain>
+</macroscopic_cross_sections>

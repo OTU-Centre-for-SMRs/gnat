@@ -1,5 +1,0 @@
-openmc
-total: walls_total.csv
-absorption: walls_absorption.csv
-scatter: walls_scatter.csv
-inverse-velocity: walls_inverse-velocity.csv

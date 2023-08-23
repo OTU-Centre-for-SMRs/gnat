@@ -42,7 +42,7 @@
   [Water]
     type = FileNeutronicsMaterial
     transport_system = Neutron
-    file_name = 'cross_sections/cross_sections.txt'
+    file_name = 'macro_xs.xml'
     source_material_id = '1'
     block = '1 2'
   []

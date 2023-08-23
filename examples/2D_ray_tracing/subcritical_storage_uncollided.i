@@ -41,7 +41,7 @@
   [Air]
     type = FileNeutronicsMaterial
     transport_system = ''
-    file_name = 'xs_macro_storage/air_cross_sections.txt'
+    file_name = 'macro_xs.xml'
     source_material_id = '5'
     block = air
     num_groups = 1
@@ -49,7 +49,7 @@
   [Cladding]
     type = FileNeutronicsMaterial
     transport_system = ''
-    file_name = 'xs_macro_storage/clad_cross_sections.txt'
+    file_name = 'macro_xs.xml'
     source_material_id = '6'
     block = cladding
     num_groups = 1
@@ -57,7 +57,7 @@
   [Fuel]
     type = FileNeutronicsMaterial
     transport_system = ''
-    file_name = 'xs_macro_storage/fuel_cross_sections.txt'
+    file_name = 'macro_xs.xml'
     source_material_id = '7'
     block = fuel
     num_groups = 1
@@ -65,7 +65,7 @@
   [Wood]
     type = FileNeutronicsMaterial
     transport_system = ''
-    file_name = 'xs_macro_storage/box_cross_sections.txt'
+    file_name = 'macro_xs.xml'
     source_material_id = '8'
     block = wood
     num_groups = 1

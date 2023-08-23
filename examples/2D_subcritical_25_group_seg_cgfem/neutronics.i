@@ -23,7 +23,12 @@
     vacuum_boundaries = 'vacuum'
 
     volumetric_source_blocks = fuel
-    volumetric_source_moments = '40.5717'
+    volumetric_source_moments = '
+    40.5717 0.0 0.0 0.0 0.0
+    0.0     0.0 0.0 0.0 0.0
+    0.0     0.0 0.0 0.0 0.0
+    0.0     0.0 0.0 0.0 0.0
+    0.0     0.0 0.0 0.0 0.0'
     volumetric_source_anisotropies = '0'
   []
 []
