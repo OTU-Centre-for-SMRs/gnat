@@ -8,7 +8,7 @@
 [TransportSystems]
   [Neutron]
     num_groups = 1
-    max_anisotropy = 0
+    max_anisotropy = 1
     scheme = saaf_cfem
     particle_type = neutron
 
@@ -35,28 +35,28 @@
   [Air]
     type = FileNeutronicsMaterial
     transport_system = Neutron
-    file_name = 'xs_macro/air_cross_sections.txt'
+    file_name = 'data/macro_xs.xml'
     source_material_id = '5'
     block = air
   []
   [Cladding]
     type = FileNeutronicsMaterial
     transport_system = Neutron
-    file_name = 'xs_macro/clad_cross_sections.txt'
+    file_name = 'data/macro_xs.xml'
     source_material_id = '6'
     block = cladding
   []
   [Fuel]
     type = FileNeutronicsMaterial
     transport_system = Neutron
-    file_name = 'xs_macro/fuel_cross_sections.txt'
+    file_name = 'data/macro_xs.xml'
     source_material_id = '7'
     block = fuel
   []
   [Wood]
     type = FileNeutronicsMaterial
     transport_system = Neutron
-    file_name = 'xs_macro/box_cross_sections.txt'
+    file_name = 'data/macro_xs.xml'
     source_material_id = '8'
     block = wood
   []

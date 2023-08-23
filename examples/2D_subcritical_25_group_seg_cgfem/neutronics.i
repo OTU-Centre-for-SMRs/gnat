@@ -2,8 +2,6 @@
   [NeutronicsDomain]
     type = FileMeshGenerator
     file = Radiation_Mesh.e
-    #file = main_out_Neutronics0_t_out.e
-    #use_for_exodus_restart = true
   []
 []
 
@@ -34,28 +32,28 @@
   [Air]
     type = FileNeutronicsMaterial
     transport_system = Neutron
-    file_name = 'xs_macro/air_cross_sections.txt'
+    file_name = 'data/macro_xs.xml'
     source_material_id = '5'
     block = air
   []
   [Cladding]
     type = FileNeutronicsMaterial
     transport_system = Neutron
-    file_name = 'xs_macro/clad_cross_sections.txt'
+    file_name = 'data/macro_xs.xml'
     source_material_id = '6'
     block = cladding
   []
   [Fuel]
     type = FileNeutronicsMaterial
     transport_system = Neutron
-    file_name = 'xs_macro/fuel_cross_sections.txt'
+    file_name = 'data/macro_xs.xml'
     source_material_id = '7'
     block = fuel
   []
   [Wood]
     type = FileNeutronicsMaterial
     transport_system = Neutron
-    file_name = 'xs_macro/box_cross_sections.txt'
+    file_name = 'data/macro_xs.xml'
     source_material_id = '8'
     block = wood
   []
@@ -71,4 +69,8 @@
   automatic_scaling = true
   off_diagonals_in_auto_scaling = true
   compute_scaling_once = false
+[]
+
+[Outputs]
+  exodus = true
 []

@@ -1,5 +1,0 @@
-openmc
-total: clad_total.csv
-absorption: clad_absorption.csv
-scatter: clad_scatter.csv
-inverse-velocity: clad_inverse-velocity.csv

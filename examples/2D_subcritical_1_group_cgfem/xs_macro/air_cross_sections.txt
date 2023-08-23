@@ -1,6 +1,0 @@
-openmc
-InvVelocity: air_inv_velocity.csv
-SigmaR: air_total.csv
-SigmaA: air_absorption.csv
-SigmaS: air_scattering.csv
-SigmaSMatrix: air_scattering_matrix.csv

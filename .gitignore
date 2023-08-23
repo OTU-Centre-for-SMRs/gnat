@@ -255,4 +255,5 @@ modules/reactor/test/tests/meshgenerators/patterned_hex_mesh_generator/positions
 
 # Gnat Examples
 !**/examples/**/*.csv
+!**/examples/**/*.xml
 !**/examples/**/*.txt

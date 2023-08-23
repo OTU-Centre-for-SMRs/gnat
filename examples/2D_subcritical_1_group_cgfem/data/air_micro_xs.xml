@@ -1,0 +1,165 @@
+<depletion_chain generator="openmc" num_groups="1" group_bounds="20000000.0 0.0" energy_units="eV" xs_units="barns">
+  <nuclide name="Ar36" reactions="4">
+    <reaction type="(n,2n)" mgxs="9.442466294195067e-09"/>
+    <reaction type="(n,gamma)" mgxs="0.15635971631067652"/>
+    <reaction type="(n,p)" mgxs="0.071061654640534"/>
+    <reaction type="(n,a)" mgxs="0.040678191256684586"/>
+  </nuclide>
+  <nuclide name="Ar37" reactions="4">
+    <reaction type="(n,2n)" mgxs="9.005620656973246e-05"/>
+    <reaction type="(n,gamma)" mgxs="0.2667153101612119"/>
+    <reaction type="(n,p)" mgxs="2.3028318136919075"/>
+    <reaction type="(n,a)" mgxs="59.49042054769613"/>
+  </nuclide>
+  <nuclide name="Ar38" reactions="4">
+    <reaction type="(n,2n)" mgxs="1.964207544141301e-05"/>
+    <reaction type="(n,gamma)" mgxs="0.02525902427826307"/>
+    <reaction type="(n,p)" mgxs="0.0005839536891374876"/>
+    <reaction type="(n,a)" mgxs="0.002878349925291059"/>
+  </nuclide>
+  <nuclide name="Ar39" reactions="4">
+    <reaction type="(n,2n)" mgxs="0.0009659367690005738"/>
+    <reaction type="(n,gamma)" mgxs="0.008414400459442938"/>
+    <reaction type="(n,p)" mgxs="0.0001620592347751674"/>
+    <reaction type="(n,a)" mgxs="0.31299235078165366"/>
+  </nuclide>
+  <nuclide name="Ar40" reactions="5">
+    <reaction type="(n,2n)" mgxs="0.00010370294979653765"/>
+    <reaction type="(n,3n)" mgxs="2.6254206722831088e-09"/>
+    <reaction type="(n,gamma)" mgxs="0.020650698882816478"/>
+    <reaction type="(n,p)" mgxs="5.259288010918089e-06"/>
+    <reaction type="(n,a)" mgxs="5.065018969448312e-05"/>
+  </nuclide>
+  <nuclide name="Ar41" reactions="5">
+    <reaction type="(n,2n)" mgxs="0.002332041395800254"/>
+    <reaction type="(n,3n)" mgxs="1.63239640977193e-08"/>
+    <reaction type="(n,gamma)" mgxs="0.028154320595187483"/>
+    <reaction type="(n,p)" mgxs="1.0188367961658345e-05"/>
+    <reaction type="(n,a)" mgxs="3.118528611134064e-05"/>
+  </nuclide>
+  <nuclide name="B10" reactions="3">
+    <reaction type="(n,gamma)" mgxs="0.011993435845256603"/>
+    <reaction type="(n,p)" mgxs="0.0048737397689668244"/>
+    <reaction type="(n,a)" mgxs="116.25190639245292"/>
+  </nuclide>
+  <nuclide name="B11" reactions="4">
+    <reaction type="(n,2n)" mgxs="1.2131636593447783e-06"/>
+    <reaction type="(n,gamma)" mgxs="0.00017656213794913975"/>
+    <reaction type="(n,p)" mgxs="4.624005955804398e-07"/>
+    <reaction type="(n,a)" mgxs="2.499669032112356e-05"/>
+  </nuclide>
+  <nuclide name="C12" reactions="3">
+    <reaction type="(n,gamma)" mgxs="0.00014633870393715426"/>
+    <reaction type="(n,p)" mgxs="7.723025303655706e-08"/>
+    <reaction type="(n,a)" mgxs="0.000528120388378694"/>
+  </nuclide>
+  <nuclide name="C13" reactions="2">
+    <reaction type="(n,gamma)" mgxs="5.784800450462218e-05"/>
+    <reaction type="(n,a)" mgxs="0.00045851877128147634"/>
+  </nuclide>
+  <nuclide name="Cl35" reactions="4">
+    <reaction type="(n,2n)" mgxs="2.9152603817348944e-07"/>
+    <reaction type="(n,gamma)" mgxs="1.2938020301304685"/>
+    <reaction type="(n,p)" mgxs="0.0692080591983331"/>
+    <reaction type="(n,a)" mgxs="0.009335769708904708"/>
+  </nuclide>
+  <nuclide name="Cl36" reactions="4">
+    <reaction type="(n,2n)" mgxs="0.00016928012475424386"/>
+    <reaction type="(n,gamma)" mgxs="0.34813125972274317"/>
+    <reaction type="(n,p)" mgxs="6.415293557042688"/>
+    <reaction type="(n,a)" mgxs="0.21764404437763069"/>
+  </nuclide>
+  <nuclide name="Cl37" reactions="4">
+    <reaction type="(n,2n)" mgxs="5.8684375504863216e-05"/>
+    <reaction type="(n,gamma)" mgxs="0.013660818356046309"/>
+    <reaction type="(n,p)" mgxs="8.506943910984174e-05"/>
+    <reaction type="(n,a)" mgxs="0.00018463902829064614"/>
+  </nuclide>
+  <nuclide name="H1" reactions="1">
+    <reaction type="(n,gamma)" mgxs="0.010047184386862236"/>
+  </nuclide>
+  <nuclide name="H2" reactions="2">
+    <reaction type="(n,2n)" mgxs="0.0025329601648532824"/>
+    <reaction type="(n,gamma)" mgxs="1.9812163139001453e-05"/>
+  </nuclide>
+  <nuclide name="He4" reactions="0"/>
+  <nuclide name="K39" reactions="4">
+    <reaction type="(n,2n)" mgxs="2.3975186926884616e-07"/>
+    <reaction type="(n,gamma)" mgxs="0.06599230691008601"/>
+    <reaction type="(n,p)" mgxs="0.052940435486582435"/>
+    <reaction type="(n,a)" mgxs="0.019029518206107567"/>
+  </nuclide>
+  <nuclide name="K41" reactions="4">
+    <reaction type="(n,2n)" mgxs="6.317427442675809e-06"/>
+    <reaction type="(n,gamma)" mgxs="0.053299653813093"/>
+    <reaction type="(n,p)" mgxs="0.0009394568622188647"/>
+    <reaction type="(n,a)" mgxs="0.00043582414363881115"/>
+  </nuclide>
+  <nuclide name="N14" reactions="4">
+    <reaction type="(n,2n)" mgxs="5.596970089654508e-07"/>
+    <reaction type="(n,gamma)" mgxs="0.0022848105892706596"/>
+    <reaction type="(n,p)" mgxs="0.08038746480924155"/>
+    <reaction type="(n,a)" mgxs="0.041500502486228476"/>
+  </nuclide>
+  <nuclide name="N15" reactions="4">
+    <reaction type="(n,2n)" mgxs="9.185798196840878e-06"/>
+    <reaction type="(n,gamma)" mgxs="1.5133451554618169e-05"/>
+    <reaction type="(n,p)" mgxs="5.439485464123173e-06"/>
+    <reaction type="(n,a)" mgxs="2.9232262127736313e-05"/>
+  </nuclide>
+  <nuclide name="O16" reactions="4">
+    <reaction type="(n,2n)" mgxs="2.4927479797417087e-10"/>
+    <reaction type="(n,gamma)" mgxs="5.8522403540798765e-05"/>
+    <reaction type="(n,p)" mgxs="1.2613253422429493e-05"/>
+    <reaction type="(n,a)" mgxs="0.0054726001736358195"/>
+  </nuclide>
+  <nuclide name="O17" reactions="4">
+    <reaction type="(n,2n)" mgxs="1.9683187254184893e-05"/>
+    <reaction type="(n,gamma)" mgxs="0.00023509828345085463"/>
+    <reaction type="(n,p)" mgxs="6.356084243741864e-06"/>
+    <reaction type="(n,a)" mgxs="0.06713759078297721"/>
+  </nuclide>
+  <nuclide name="O18" reactions="5">
+    <reaction type="(n,2n)" mgxs="0.00022222031787100618"/>
+    <reaction type="(n,3n)" mgxs="8.339865983300832e-07"/>
+    <reaction type="(n,gamma)" mgxs="9.873905516908647e-05"/>
+    <reaction type="(n,p)" mgxs="8.379429989449284e-08"/>
+    <reaction type="(n,a)" mgxs="7.651359041980744e-05"/>
+  </nuclide>
+  <nuclide name="S32" reactions="4">
+    <reaction type="(n,2n)" mgxs="1.4276987302195266e-09"/>
+    <reaction type="(n,gamma)" mgxs="0.01700652232200311"/>
+    <reaction type="(n,p)" mgxs="0.031911507886915"/>
+    <reaction type="(n,a)" mgxs="0.040542053443159164"/>
+  </nuclide>
+  <nuclide name="S33" reactions="4">
+    <reaction type="(n,2n)" mgxs="0.00010033886803004286"/>
+    <reaction type="(n,gamma)" mgxs="0.010910385704315453"/>
+    <reaction type="(n,p)" mgxs="0.03033685348755987"/>
+    <reaction type="(n,a)" mgxs="0.1784627420777859"/>
+  </nuclide>
+  <nuclide name="S34" reactions="4">
+    <reaction type="(n,2n)" mgxs="2.2034777990035404e-05"/>
+    <reaction type="(n,gamma)" mgxs="0.0069681399774374425"/>
+    <reaction type="(n,p)" mgxs="0.0003822632870400717"/>
+    <reaction type="(n,a)" mgxs="0.001567371173968738"/>
+  </nuclide>
+  <nuclide name="S35" reactions="4">
+    <reaction type="(n,2n)" mgxs="0.0013536307073875689"/>
+    <reaction type="(n,gamma)" mgxs="0.011336371699944963"/>
+    <reaction type="(n,p)" mgxs="0.00010912327029607624"/>
+    <reaction type="(n,a)" mgxs="0.0033591613966039435"/>
+  </nuclide>
+  <nuclide name="S36" reactions="4">
+    <reaction type="(n,2n)" mgxs="0.00012456042367405812"/>
+    <reaction type="(n,gamma)" mgxs="0.005417656549825374"/>
+    <reaction type="(n,p)" mgxs="2.386309432601296e-07"/>
+    <reaction type="(n,a)" mgxs="2.6424030169366727e-05"/>
+  </nuclide>
+  <nuclide name="Si30" reactions="4">
+    <reaction type="(n,2n)" mgxs="4.625947758278761e-05"/>
+    <reaction type="(n,gamma)" mgxs="0.01395826601176409"/>
+    <reaction type="(n,p)" mgxs="1.1789966416334652e-05"/>
+    <reaction type="(n,a)" mgxs="6.0662849437539435e-05"/>
+  </nuclide>
+</depletion_chain>

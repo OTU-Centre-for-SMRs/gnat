@@ -1,5 +1,0 @@
-openmc
-total: fuel_total.csv
-absorption: fuel_absorption.csv
-scatter: fuel_scatter.csv
-inverse-velocity: fuel_inverse-velocity.csv

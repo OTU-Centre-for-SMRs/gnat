@@ -1,6 +1,0 @@
-openmc
-InvVelocity: fuel_inv_velocity.csv
-SigmaR: fuel_total.csv
-SigmaA: fuel_absorption.csv
-SigmaS: fuel_scattering.csv
-SigmaSMatrix: fuel_scattering_matrix.csv
