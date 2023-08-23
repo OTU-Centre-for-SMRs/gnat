@@ -36,9 +36,6 @@ associateSyntaxInner(Syntax & syntax, ActionFactory & /*action_factory*/)
 
   // Mobile depletion syntax.
   syntax.registerActionSyntax("MobileDepletionSystemAction", "MobileDepletionSystem");
-
-  syntax.registerActionSyntax("AddIsotopeBCAction", "MobileDepletionSystem/AddNuclideBCs/*");
-  syntax.registerActionSyntax("AddFVNuclideBCAction", "MobileDepletionSystem/AddFVNuclideBCs/*");
 }
 
 void

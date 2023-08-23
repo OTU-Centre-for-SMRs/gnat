@@ -1,5 +1,8 @@
 #include "AddTransportMaterialAction.h"
 
+#include "ActionWarehouse.h"
+#include "FEProblemBase.h"
+
 #include "TransportAction.h"
 
 registerMooseAction("GnatApp", AddTransportMaterialAction, "add_material");
