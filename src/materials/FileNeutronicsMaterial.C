@@ -59,6 +59,16 @@ FileNeutronicsMaterial::FileNeutronicsMaterial(const InputParameters & parameter
   // Parse the cross-section XML file.
   parseXMLMacroXS();
 
+  // Validate the resulting cross-sections.
+  if (_inv_v_g.size() != _num_groups)
+    mooseError("The inverse velocity data failed to parse properly.");
+  if (_sigma_t_g.size() != _num_groups)
+    mooseError("The total cross-section data failed to parse properly.");
+  if (_sigma_a_g.size() != _num_groups)
+    mooseError("The absorption cross-section data failed to parse properly.");
+  if (_sigma_s_g_prime_g_l.size() != _max_moments)
+    mooseError("The scattering matrix cross-section data failed to parse properly.");
+
   // Resize the properties and initialize with 0.0.
   _sigma_s_g_matrix.resize(_num_groups, 0.0);
   _sigma_s_g_g.resize(_num_groups, 0.0);

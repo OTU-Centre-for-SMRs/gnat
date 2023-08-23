@@ -76,11 +76,9 @@ SNSourceBC::SNSourceBC(const InputParameters & parameters)
 
   // Warn the user if more parameters have been provided than required.
   if (_source_moments.size() > _max_source_moments)
-  {
     mooseWarning("More source moments have been provided than possibly "
                  "supported with the given maximum source anisotropy and "
                  "number of groups. The vector will be truncated.");
-  }
 
   // Error if the user did not provide enough parameters.
   if (_source_moments.size() < _max_source_moments)

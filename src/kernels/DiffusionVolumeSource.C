@@ -37,11 +37,15 @@ DiffusionVolumeSource::DiffusionVolumeSource(const InputParameters & parameters)
 {
   if (_group_index >= _num_groups)
     mooseError("The group index exceeds the number of energy groups.");
+
+  if (_source_moments.size() / _num_groups < 1u)
+    mooseError("Not enough moments have been provided.");
 }
 
 Real
 DiffusionVolumeSource::computeQpResidual()
 {
-  const unsigned int num_group_moments = _source_moments.size() / _num_groups;
-  return -1.0 * _test[_i][_qp] * _source_moments[_group_index * num_group_moments];
+  const unsigned int moment_index = _group_index * _source_moments.size() / _num_groups;
+
+  return -1.0 * _test[_i][_qp] * _source_moments[moment_index];
 }

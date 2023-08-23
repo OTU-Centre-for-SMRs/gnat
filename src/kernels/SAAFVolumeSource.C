@@ -54,6 +54,14 @@ SAAFVolumeSource::SAAFVolumeSource(const InputParameters & parameters)
         _y_l_m.emplace_back(RealSphericalHarmonics::evaluate(
             l, 0, _aq.getPolarRoot(_ordinate_index), _aq.getAzimuthalAngularRoot(_ordinate_index)));
 
+      if (_source_moments.size() > (_anisotropy + 1u) * _num_groups)
+        mooseWarning("More source moments have been provided than possibly "
+                     "supported with the given maximum source anisotropy and "
+                     "number of groups. The vector will be truncated.");
+
+      if (_source_moments.size() < (_anisotropy + 1u) * _num_groups)
+        mooseError("Not enough source moments have been provided.");
+
       break;
 
     // Need moments with m >= 0 for 2D.
@@ -69,6 +77,14 @@ SAAFVolumeSource::SAAFVolumeSource(const InputParameters & parameters)
                                                _aq.getAzimuthalAngularRoot(_ordinate_index)));
       }
 
+      if (_source_moments.size() > ((_anisotropy + 1u) * (_anisotropy + 2u) / 2u) * _num_groups)
+        mooseWarning("More source moments have been provided than possibly "
+                     "supported with the given maximum source anisotropy and "
+                     "number of groups. The vector will be truncated.");
+
+      if (_source_moments.size() < ((_anisotropy + 1u) * (_anisotropy + 2u) / 2u) * _num_groups)
+        mooseError("Not enough source moments have been provided.");
+
       break;
 
     // Need all moments in 3D.
@@ -83,6 +99,14 @@ SAAFVolumeSource::SAAFVolumeSource(const InputParameters & parameters)
                                                _aq.getPolarRoot(_ordinate_index),
                                                _aq.getAzimuthalAngularRoot(_ordinate_index)));
       }
+
+      if (_source_moments.size() > ((_anisotropy + 1u) * (_anisotropy + 1u)) * _num_groups)
+        mooseWarning("More source moments have been provided than possibly "
+                     "supported with the given maximum source anisotropy and "
+                     "number of groups. The vector will be truncated.");
+
+      if (_source_moments.size() < ((_anisotropy + 1u) * (_anisotropy + 1u)) * _num_groups)
+        mooseError("Not enough source moments have been provided.");
 
       break;
 

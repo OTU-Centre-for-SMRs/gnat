@@ -42,6 +42,9 @@ DiffusionIsoPointSource::DiffusionIsoPointSource(const InputParameters & paramet
 {
   if (_group_index >= _num_groups)
     mooseError("The group index exceeds the number of energy groups.");
+
+  if (_source_moments.size() / _num_groups < 1u)
+    mooseError("Not enough moments have been provided.");
 }
 
 void
