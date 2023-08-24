@@ -7,9 +7,9 @@
 
 [TransportSystems]
   [Neutron]
-    num_groups = 4
-    max_anisotropy = 1
-    scheme = saaf_cfem
+    num_groups = 1
+    max_anisotropy = 0
+    scheme = diffusion_cfem
     particle_type = neutron
 
     flux_moment_names = 'Flux_Moment'
@@ -18,14 +18,11 @@
     order = FIRST
     family = LAGRANGE
 
-    n_azimuthal = 3
-    n_polar = 3
-
     vacuum_boundaries = 'vacuum'
 
     point_source_locations = '96.52 96.52 0.0'
-    point_source_moments = '1e7 0.0 0.0 0.0'
-    point_source_anisotropies = 0
+    point_source_moments = '1e7'
+    point_source_anisotropies = '0'
     scale_sources = true
   []
 []
@@ -35,8 +32,8 @@
     type = FileNeutronicsMaterial
     transport_system = Neutron
     file_name = 'macro_xs.xml'
-    source_material_id = '5' #
-    block = '2 7 8 9 '
+    source_material_id = '5'
+    block = '2 7 8 9 ' #
   []
 
   [Cladding]

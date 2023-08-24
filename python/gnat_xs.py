@@ -3,7 +3,6 @@ import os
 import numpy as np
 import lxml.etree as ET
 
-import openmc
 import openmc.mgxs as mgxs
 
 def get_depletion_mgxs_list(domain=None, domain_type=None, energy_groups=None, name='', num_polar=1, num_azimuthal=1):
@@ -13,23 +12,30 @@ def get_depletion_mgxs_list(domain=None, domain_type=None, energy_groups=None, n
 
   return depletion_list
 
-def get_mgxs_list(domain=None, domain_type=None, energy_groups=None, legendre_order=0, correction=None, name='', num_polar=1, num_azimuthal=1, nu=False):
-  depletion_list = []
+def get_mgxs_list(domain=None, domain_type=None, energy_groups=None, legendre_order=0, correction=None, name='', num_polar=1, num_azimuthal=1, nu=False, fission=False, diffusion=False):
+  xs_list = []
 
-  depletion_list.append(mgxs.TotalXS(domain, domain_type, energy_groups, False, name, num_polar, num_azimuthal))
+  xs_list.append(mgxs.TotalXS(domain, domain_type, energy_groups, False, name, num_polar, num_azimuthal))
 
-  depletion_list.append(mgxs.AbsorptionXS(domain, domain_type, energy_groups, False, name, num_polar, num_azimuthal))
+  xs_list.append(mgxs.AbsorptionXS(domain, domain_type, energy_groups, False, name, num_polar, num_azimuthal))
 
   scatter = mgxs.ScatterMatrixXS(domain, domain_type, energy_groups, False, name, num_polar, num_azimuthal, nu)
   scatter.formulation = 'consistent'
   scatter.scatter_format = 'legendre'
   scatter.correction = correction
   scatter.legendre_order = legendre_order
-  depletion_list.append(scatter)
+  xs_list.append(scatter)
 
-  depletion_list.append(mgxs.InverseVelocity(domain, domain_type, energy_groups, False, name, num_polar, num_azimuthal))
+  xs_list.append(mgxs.InverseVelocity(domain, domain_type, energy_groups, False, name, num_polar, num_azimuthal))
 
-  return depletion_list
+  if fission:
+    xs_list.append(mgxs.FissionXS(domain, domain_type, energy_groups, nu=True))
+    xs_list.append(mgxs.Chi(domain, domain_type, energy_groups))
+
+  if diffusion:
+    xs_list.append(mgxs.DiffusionCoefficient(domain, domain_type, energy_groups, nu, False, name, num_polar, num_azimuthal))
+
+  return xs_list
 
 def apply_tallies(tallies, xs_list):
   for xs in xs_list:

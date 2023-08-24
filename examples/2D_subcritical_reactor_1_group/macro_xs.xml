@@ -1,0 +1,47 @@
+<macroscopic_cross_sections generator="openmc" num_groups="1" group_bounds="20000000.0 0.0" energy_units="eV" xs_units="cm^-1">
+  <domain type="material" name="Fuel" id="6" num_legendre="1">
+    <reaction type="total" mgxs="0.54314406215434"/>
+    <reaction type="absorption" mgxs="0.07584196838249273"/>
+    <reaction type="scatter" mgxs="0.4673020937718467 0.0509013344604057"/>
+    <reaction type="inverse-velocity" mgxs="6.977154545645026e-07"/>
+    <reaction type="nu-fission" mgxs="0.08429882450752556"/>
+    <reaction type="chi" mgxs="1.0000000000000229"/>
+    <reaction type="diffusion-coefficient" mgxs="0.6771649590999095"/>
+  </domain>
+  <domain type="material" name="Cladding" id="7" num_legendre="1">
+    <reaction type="total" mgxs="0.1514118345195631"/>
+    <reaction type="absorption" mgxs="0.0030682172413545074"/>
+    <reaction type="scatter" mgxs="0.14834361727820822 0.017050423042807947"/>
+    <reaction type="inverse-velocity" mgxs="9.644264467022767e-07"/>
+    <reaction type="nu-fission" mgxs="0.0"/>
+    <reaction type="chi" mgxs="0.0"/>
+    <reaction type="diffusion-coefficient" mgxs="2.480676343304371"/>
+  </domain>
+  <domain type="material" name="Graphite" id="8" num_legendre="1">
+    <reaction type="total" mgxs="0.4504009847912211"/>
+    <reaction type="absorption" mgxs="0.00019094268851094866"/>
+    <reaction type="scatter" mgxs="0.4502100421027107 0.02603599068214436"/>
+    <reaction type="inverse-velocity" mgxs="2.3320176946169173e-06"/>
+    <reaction type="nu-fission" mgxs="0.0"/>
+    <reaction type="chi" mgxs="0.0"/>
+    <reaction type="diffusion-coefficient" mgxs="0.7854881358931386"/>
+  </domain>
+  <domain type="material" name="Control" id="9" num_legendre="1">
+    <reaction type="total" mgxs="0.8522923388395506"/>
+    <reaction type="absorption" mgxs="0.062217305757559724"/>
+    <reaction type="scatter" mgxs="0.7900750330819909 0.016017621701239586"/>
+    <reaction type="inverse-velocity" mgxs="1.0544211152578903e-06"/>
+    <reaction type="nu-fission" mgxs="0.0"/>
+    <reaction type="chi" mgxs="0.0"/>
+    <reaction type="diffusion-coefficient" mgxs="0.3985988768734783"/>
+  </domain>
+  <domain type="material" name="Air" id="5" num_legendre="1">
+    <reaction type="total" mgxs="0.0004203331928524405"/>
+    <reaction type="absorption" mgxs="3.492628100134532e-05"/>
+    <reaction type="scatter" mgxs="0.0003854069118510942 1.7881486982384746e-05"/>
+    <reaction type="inverse-velocity" mgxs="2.0540362100588578e-06"/>
+    <reaction type="nu-fission" mgxs="0.0"/>
+    <reaction type="chi" mgxs="0.0"/>
+    <reaction type="diffusion-coefficient" mgxs="828.4387878765009"/>
+  </domain>
+</macroscopic_cross_sections>

@@ -1,8 +1,0 @@
-openmc
-InvVelocity: steel_inv_velocity.csv
-SigmaR: steel_total.csv
-SigmaA: steel_absorption.csv
-SigmaS: steel_scattering.csv
-SigmaSMatrix: steel_scattering_matrix.csv
-NuSigmaF: steel_fission.csv
-ChiF: steel_chi.csv

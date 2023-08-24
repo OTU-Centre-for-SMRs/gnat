@@ -60,7 +60,6 @@ FileNeutronicsMaterial::FileNeutronicsMaterial(const InputParameters & parameter
   parseXMLMacroXS();
 
   // Validate the resulting cross-sections.
-  // TODO: validate Chi and NuSigmaF.
   if (_inv_v_g.size() != _num_groups)
     mooseError("The inverse velocity data failed to parse properly.");
   if (_sigma_t_g.size() != _num_groups)
@@ -69,6 +68,25 @@ FileNeutronicsMaterial::FileNeutronicsMaterial(const InputParameters & parameter
     mooseError("The absorption cross-section data failed to parse properly.");
   if (_sigma_s_g_prime_g_l.size() != _max_moments)
     mooseError("The scattering matrix cross-section data failed to parse properly.");
+
+  if (_nu_sigma_f_g.size() != _num_groups && _has_fission)
+  {
+    mooseWarning("Could not parse neutron production cross-section data. Assuming the neutron "
+                 "production cross-sections for this material are 0.");
+    _nu_sigma_f_g.clear();
+    _nu_sigma_f_g.resize(_num_groups, 0.0);
+  }
+  if (_chi_f_g.size() != _num_groups && _has_fission)
+  {
+    mooseWarning("Could not parse the fission neutron spectra. Assuming the fission "
+                 "neutron spectra for this material is 0.");
+    _chi_f_g.clear();
+    _chi_f_g.resize(_num_groups, 0.0);
+  }
+
+  if (_diffusion_g.size() != _num_groups && _is_diffusion)
+    mooseWarning("Could not parse the radiation diffusion coefficients. This will be computed "
+                 "using my GNAT using local material properties instead.");
 
   // Resize the properties and initialize with 0.0.
   _sigma_s_g_matrix.resize(_num_groups, 0.0);
@@ -129,7 +147,7 @@ FileNeutronicsMaterial::FileNeutronicsMaterial(const InputParameters & parameter
   // Recompute the neutron diffusion coefficients to account for scattering (transport
   // approximation).
   // Sum the first order Legendre out-scattering cross-sections for all groups.
-  if (_diffusion_g.size() == 0u && _is_diffusion)
+  if (_diffusion_g.size() != _num_groups && _is_diffusion)
   {
     std::vector<Real> _sigma_s_g_prime_g_1;
     _sigma_s_g_prime_g_1.resize(_num_groups, 0.0);
@@ -194,7 +212,6 @@ FileNeutronicsMaterial::parseToVector(const std::string & string_rep, std::vecto
   real_rep.emplace_back(std::stod(string_rep.substr(previous_delim_pos)));
 }
 
-// TODO: parse Chi and NuSigmaF.
 void
 FileNeutronicsMaterial::parseXMLMacroXS()
 {
@@ -254,6 +271,16 @@ FileNeutronicsMaterial::parseXMLMacroXS()
 
         if (std::string(xs_node.attribute("type").as_string()) == "inverse-velocity")
           parseToVector(std::string(xs_node.attribute("mgxs").as_string()), _inv_v_g);
+
+        if (std::string(xs_node.attribute("type").as_string()) == "nu-fission" && _has_fission)
+          parseToVector(std::string(xs_node.attribute("mgxs").as_string()), _nu_sigma_f_g);
+
+        if (std::string(xs_node.attribute("type").as_string()) == "chi" && _has_fission)
+          parseToVector(std::string(xs_node.attribute("mgxs").as_string()), _chi_f_g);
+
+        if (std::string(xs_node.attribute("type").as_string()) == "diffusion-coefficient" &&
+            _is_diffusion)
+          parseToVector(std::string(xs_node.attribute("mgxs").as_string()), _diffusion_g);
       }
 
       // Can stop searching after all cross-section data is parsed.
