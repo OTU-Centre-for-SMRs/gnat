@@ -15,7 +15,8 @@ class AuxiliarySystem;
  * This should really be an auxkernel, but MOOSE currently doesn't support higher order and
  * non-nodal ray auxkernels.
  */
-class UncollidedFluxRayKernel : public IntegralRayKernelBase, public MooseVariableInterface<Real>
+class UncollidedFluxRayKernel : public IntegralRayKernelBase,
+                                public MooseVariableInterface<RealEigenVector>
 {
 public:
   static InputParameters validParams();
@@ -30,16 +31,13 @@ public:
   /**
    * Gets the variable this kernel operates on.
    */
-  MooseVariableFE<Real> & variable() { return _var; }
+  MooseVariableFE<RealEigenVector> & variable() { return _var; }
 
-  void addValue(const Real value);
+  void addValue(const RealEigenVector & value);
 
   void onSegment() override final;
 
 protected:
-  // Compute the uncollided flux at the destination element.
-  Real computeValue();
-
   // Function to compute the segment contribution to the optical depth.
   void computeSegmentOpticalDepth();
 
@@ -54,20 +52,19 @@ protected:
   AuxiliarySystem & _aux;
 
   // The AuxVariable this AuxRayKernel contributes to
-  MooseVariableFE<Real> & _var;
+  MooseVariableFE<RealEigenVector> & _var;
 
   // The index into the data on the ray that this integral accumulates into.
-  const RayDataIndex _integral_data_index;
+  std::vector<RayDataIndex> _integral_data_indices;
   // The index into the data on the ray which contains the source intensity and spatial quadratures,
   // pre-multiplied.
-  const RayDataIndex _source_spatial_weights;
+  std::vector<RayDataIndex> _source_spatial_weights;
   // The index into the ray which contains a sign to indicate if the target point and source point
   // are in the same element.
   const RayDataIndex _target_in_element;
 
   // Data required for the optical depth.
-  // g
-  const unsigned int _group_index;
+  const unsigned int _num_groups;
   // The total cross-section.
   const ADMaterialProperty<std::vector<Real>> & _sigma_t_g;
 

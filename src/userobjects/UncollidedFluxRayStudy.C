@@ -19,9 +19,6 @@ UncollidedFluxRayStudy::validParams()
   params.addRequiredParam<unsigned int>(
       "num_groups",
       "The number of spectral energy groups that this study is computing the uncollided flux for.");
-  params.addRequiredParam<unsigned int>(
-      "group_index",
-      "The current spectral energy group that this study is computing the uncollided flux for.");
 
   // Point sources.
   params.addParam<std::vector<Point>>("point_source_locations",
@@ -116,11 +113,9 @@ UncollidedFluxRayStudy::validParams()
 
 UncollidedFluxRayStudy::UncollidedFluxRayStudy(const InputParameters & parameters)
   : RayTracingStudy(parameters),
-    _source_spatial_weights(registerRayData(getParam<std::string>("source_and_weights_name"))),
     _target_in_element(registerRayData("target_source_same_element")),
     _dim(_mesh.dimension()),
     _num_groups(getParam<unsigned int>("num_groups")),
-    _group_index(getParam<unsigned int>("group_index")),
     _symmetry_factor(_dim == 2u ? 2.0 : 1.0),
     _volume_fe(FEBase::build(_dim, FEType(CONSTANT, MONOMIAL))),
     _q_volume(QBase::build(Moose::stringToEnum<QuadratureType>(getParam<MooseEnum>("volume_type")),
@@ -157,8 +152,14 @@ UncollidedFluxRayStudy::UncollidedFluxRayStudy(const InputParameters & parameter
   _volume_fe->get_xyz();
   _face_fe->get_xyz();
 
+  _source_spatial_weights.reserve(_num_groups);
+  for (unsigned int g = 0u; g < _num_groups; ++g)
+    _source_spatial_weights.emplace_back(registerRayData(
+        getParam<std::string>("source_and_weights_name") + "_" + Moose::stringify(g)));
+
   if (_dim <= 1u)
-    mooseError("Ray tracing for the uncollided flux is not supported on 1D meshes.");
+    mooseError("Ray tracing for the uncollided flux is not supported on 1D meshes as ray effects "
+               "don't exist in 1D.");
 
   // Handle possible errors for point sources.
   if (_point_source_locations.size() > 0u)
@@ -264,9 +265,13 @@ Real
 UncollidedFluxRayStudy::computeSHSource(unsigned int source,
                                         const std::vector<std::vector<Real>> & moments,
                                         const std::vector<unsigned int> & anisotropy,
-                                        const RealVectorValue & direction)
+                                        const RealVectorValue & direction,
+                                        unsigned int group_index)
 {
-  unsigned int moment_index = _group_index * moments.size() / _num_groups;
+  const auto num_moments = _dim == 3u ? (anisotropy[source] + 1u) * (anisotropy[source] + 1u)
+                                      : (anisotropy[source] + 1u) * (anisotropy[source] + 2u) / 2u;
+
+  unsigned int moment_index = group_index * num_moments;
 
   Real mu = 0.0;
   Real omega = 0.0;
@@ -380,9 +385,12 @@ UncollidedFluxRayStudy::generateRays()
 
         const auto dir = (global_spatial_q_points[i] - _point_source_locations[src_index]).unit();
 
-        ray->data(_source_spatial_weights) =
-            global_spatial_q_weights[i] *
-            computeSHSource(src_index, _point_source_moments, _point_source_anisotropy, dir);
+        for (unsigned int g = 0u; g < _num_groups; ++g)
+        {
+          ray->data(_source_spatial_weights[g]) =
+              global_spatial_q_weights[i] *
+              computeSHSource(src_index, _point_source_moments, _point_source_anisotropy, dir, g);
+        }
 
         ray->data(_target_in_element) = -1.0;
 
@@ -443,10 +451,13 @@ UncollidedFluxRayStudy::generateRays()
 
             const auto dir = (global_spatial_q_points[i] - surface_q_points[j]).unit();
 
-            ray->data(_source_spatial_weights) =
-                global_spatial_q_weights[i] * surface_q_weights[j] *
-                computeSHSource(
-                    src_index, _boundary_source_moments, _boundary_source_anisotropy, dir);
+            for (unsigned int g = 0u; g < _num_groups; ++g)
+            {
+              ray->data(_source_spatial_weights[g]) =
+                  global_spatial_q_weights[i] * surface_q_weights[j] *
+                  computeSHSource(
+                      src_index, _boundary_source_moments, _boundary_source_anisotropy, dir, g);
+            }
 
             ray->data(_target_in_element) = -1.0;
 
@@ -516,9 +527,13 @@ UncollidedFluxRayStudy::generateRays()
 
             const auto dir = (global_spatial_q_points[i] - source_q_points[j]).unit();
 
-            ray->data(_source_spatial_weights) =
-                global_spatial_q_weights[i] * source_q_weights[j] *
-                computeSHSource(src_index, _volume_source_moments, _volume_source_anisotropy, dir);
+            for (unsigned int g = 0u; g < _num_groups; ++g)
+            {
+              ray->data(_source_spatial_weights[g]) =
+                  global_spatial_q_weights[i] * source_q_weights[j] *
+                  computeSHSource(
+                      src_index, _volume_source_moments, _volume_source_anisotropy, dir, g);
+            }
 
             ray->data(_target_in_element) = -1.0;
 
@@ -561,9 +576,13 @@ UncollidedFluxRayStudy::generateRays()
             ray->setStart(source_q_points[i], elem);
             ray->setStartingDirection(dir);
 
-            ray->data(_source_spatial_weights) =
-                angular_weight * source_q_weights[i] *
-                computeSHSource(src_index, _volume_source_moments, _volume_source_anisotropy, dir);
+            for (unsigned int g = 0u; g < _num_groups; ++g)
+            {
+              ray->data(_source_spatial_weights[g]) =
+                  angular_weight * source_q_weights[i] *
+                  computeSHSource(
+                      src_index, _volume_source_moments, _volume_source_anisotropy, dir, g);
+            }
 
             ray->data(_target_in_element) = 1.0;
 

@@ -24,11 +24,12 @@ protected:
   Real computeSHSource(unsigned int source,
                        const std::vector<std::vector<Real>> & moments,
                        const std::vector<unsigned int> & anisotropy,
-                       const RealVectorValue & direction);
+                       const RealVectorValue & direction,
+                       unsigned int group_index);
 
-  // The index into the data on the ray which contains the source intensity and spatial
-  // quadratures, pre-multiplied.
-  const RayDataIndex _source_spatial_weights;
+  // The index into the data on the ray which contains the source intensity and spatial quadratures,
+  // pre-multiplied.
+  std::vector<RayDataIndex> _source_spatial_weights;
   // The index into the ray which contains a sign to indicate if the target point and source point
   // are in the same element.
   const RayDataIndex _target_in_element;
@@ -37,7 +38,6 @@ protected:
 
   // Radiation transport parameters.
   const unsigned int _num_groups;
-  const unsigned int _group_index;
   const Real _symmetry_factor;
 
   // Spatial quadrature rules.

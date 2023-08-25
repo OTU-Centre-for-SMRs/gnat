@@ -19,13 +19,12 @@ UncollidedFluxRayKernel::validParams()
                              "a point source using ray tracing.");
 
   params.addRequiredParam<AuxVariableName>(
-      "variable", "The name of the auxvariable that this RayKernel operates on");
+      "variable",
+      "The name of the array auxvariable that this RayKernel operates on. Each component will be a "
+      "group-wise scalar flux.");
 
-  params.addRequiredRangeCheckedParam<unsigned int>("group_index",
-                                                    "group_index >= 0",
-                                                    "The energy group index "
-                                                    "of the current angular "
-                                                    "flux.");
+  params.addRequiredRangeCheckedParam<unsigned int>(
+      "num_groups", "num_groups > 0", "The number of spectral energy groups.");
   params.addParam<std::string>("source_and_weights_name",
                                "source_and_weights",
                                "The name of the ray data which houses the source intensity "
@@ -41,20 +40,18 @@ UncollidedFluxRayKernel::validParams()
 
 UncollidedFluxRayKernel::UncollidedFluxRayKernel(const InputParameters & parameters)
   : IntegralRayKernelBase(parameters),
-    MooseVariableInterface<Real>(this,
-                                 _fe_problem.getAuxiliarySystem()
-                                     .getVariable(_tid, parameters.get<AuxVariableName>("variable"))
-                                     .isNodal(),
-                                 "variable",
-                                 Moose::VarKindType::VAR_AUXILIARY,
-                                 Moose::VarFieldType::VAR_FIELD_STANDARD),
+    MooseVariableInterface<RealEigenVector>(
+        this,
+        _fe_problem.getAuxiliarySystem()
+            .getVariable(_tid, parameters.get<AuxVariableName>("variable"))
+            .isNodal(),
+        "variable",
+        Moose::VarKindType::VAR_AUXILIARY,
+        Moose::VarFieldType::VAR_FIELD_ARRAY),
     _aux(_fe_problem.getAuxiliarySystem()),
     _var(*this->mooseVariable()),
-    _integral_data_index(_study.registerRayData(integralRayDataName())),
-    _source_spatial_weights(
-        _study.getRayDataIndex(getParam<std::string>("source_and_weights_name"))),
     _target_in_element(_study.getRayDataIndex("target_source_same_element")),
-    _group_index(getParam<unsigned int>("group_index")),
+    _num_groups(getParam<unsigned int>("num_groups")),
     _sigma_t_g(getADMaterialProperty<std::vector<Real>>(getParam<std::string>("transport_system") +
                                                         "total_xs_g"))
 {
@@ -71,14 +68,25 @@ UncollidedFluxRayKernel::UncollidedFluxRayKernel(const InputParameters & paramet
     paramError("variable", "Only CONSTANT MONOMIAL variables are supported");
 
   addMooseVariableDependency(&variable());
+
+  // Fetch and register data indices required for group-wise calculation of the scalar flux using
+  // ray-tracing. These are the group-wise source and optical depth.
+  _integral_data_indices.reserve(_num_groups);
+  _source_spatial_weights.reserve(_num_groups);
+  for (unsigned int g = 0u; g < _num_groups; ++g)
+  {
+    _integral_data_indices.emplace_back(
+        _study.registerRayData(integralRayDataName() + "_" + Moose::stringify(g)));
+    _source_spatial_weights.emplace_back(_study.getRayDataIndex(
+        getParam<std::string>("source_and_weights_name") + "_" + Moose::stringify(g), true));
+  }
 }
 
 void
-UncollidedFluxRayKernel::addValue(const Real value)
+UncollidedFluxRayKernel::addValue(const RealEigenVector & value)
 {
-  // TODO: this is horribly inefficient. Consider caching and adding later
   Threads::spin_mutex::scoped_lock lock(_add_value_mutex);
-  _var.setNodalValue(value);
+  _var.setNodalValue(value, 0u);
   _var.add(_aux.solution());
 }
 
@@ -104,30 +112,49 @@ void
 UncollidedFluxRayKernel::computeSegmentOpticalDepth()
 {
   Real integral = 0;
-  for (_qp = 0; _qp < _q_point.size(); ++_qp)
-    integral += _JxW[_qp] * MetaPhysicL::raw_value(_sigma_t_g[_qp][_group_index]);
+  for (unsigned int g = 0u; g < _num_groups; ++g)
+  {
+    for (_qp = 0; _qp < _q_point.size(); ++_qp)
+      integral += _JxW[_qp] * MetaPhysicL::raw_value(_sigma_t_g[_qp][g]);
 
-  // Accumulate the optical depth into the ray.
-  currentRay()->data(_integral_data_index) += integral;
+    // Accumulate the optical depth into the ray.
+    currentRay()->data(_integral_data_indices[g]) += integral;
+    integral = 0.0;
+  }
 }
 
+// There is UB in this function even with addValue(val) commented out.
+// - Has to do with using threads while using processors.
+// - Using threading results in occasional non-deterministic segmentation faults.
+// - Incorrect results even when threading is disabled, though the results are deterministic.
+// - Using quadrature point zero when accessing cross-section data seems to fix the issue.
+// TODO: Figure out why threaded material property access at _qp != 0 causes segmentation faults.
+// Current solution where the 0th quadrature point is used works and results in the correct answer
+// for target == source cells, though it is rather hacky. This might be a deeper issue than just
+// this function.
 void
 UncollidedFluxRayKernel::computeUncollidedFluxSourceIsTarget()
 {
   const auto & ray = currentRay();
 
-  Real val = 0.0;
-  if (MetaPhysicL::raw_value(_sigma_t_g[_qp][_group_index]) < libMesh::TOLERANCE)
-    val += ray->data(_source_spatial_weights) * ray->distance();
-  else
-  {
-    val += 1.0 / MetaPhysicL::raw_value(_sigma_t_g[_qp][_group_index]);
-    val *= (1.0 - std::exp(-1.0 * MetaPhysicL::raw_value(_sigma_t_g[_qp][_group_index]) *
-                           ray->distance()));
-  }
+  RealEigenVector val(_num_groups);
+  val.setZero();
 
-  // w_{n} * w_{q} * S(r_{q'}, \hat{\Omega}_{n})
-  val *= ray->data(_source_spatial_weights);
+  for (unsigned int g = 0u; g < _num_groups; ++g)
+  {
+    if (MetaPhysicL::raw_value(_sigma_t_g[0u][g]) < libMesh::TOLERANCE)
+      val[g] = ray->distance();
+    else
+    {
+      // (1 - e^{-\Sigma_{t} * ||r_{q+} - r_{q}||}) / \Sigma_{t}
+      val[g] = 1.0 / MetaPhysicL::raw_value(_sigma_t_g[0u][g]);
+      val[g] *=
+          (1.0 - std::exp(-1.0 * MetaPhysicL::raw_value(_sigma_t_g[0u][g]) * ray->distance()));
+    }
+
+    // w_{n} * w_{q} * S(r_{q'}, \hat{\Omega}_{n})
+    val[g] *= ray->data(_source_spatial_weights[g]);
+  }
 
   // Average flux.
   val /= _current_elem->volume();
@@ -141,14 +168,20 @@ UncollidedFluxRayKernel::computeUncollidedFluxSourceNotTarget()
 {
   const auto & ray = currentRay();
 
-  // 1 / ||r_{q'} - r_{q}||^2.
-  Real val = 1.0 / std::max(ray->distance() * ray->distance(), libMesh::TOLERANCE);
+  RealEigenVector val(_num_groups);
+  val.setZero();
 
-  // w_{q'} * w_{q} * S(r_{q'}, r_{q'} - r_{q} / ||r_{q'} - r_{q}||)
-  val *= ray->data(_source_spatial_weights);
+  for (unsigned int g = 0u; g < _num_groups; ++g)
+  {
+    // 1 / ||r_{q'} - r_{q}||^2.
+    val[g] = 1.0 / std::max(ray->distance() * ray->distance(), libMesh::TOLERANCE);
 
-  // e^{-\tau(r_{q'}, r_{q})}
-  val *= std::exp(-1.0 * ray->data(_integral_data_index));
+    // e^{-\tau(r_{q'}, r_{q})}
+    val[g] *= std::exp(-1.0 * ray->data(_integral_data_indices[g]));
+
+    // w_{q'} * w_{q} * S(r_{q'}, r_{q'} - r_{q} / ||r_{q'} - r_{q}||)
+    val[g] *= ray->data(_source_spatial_weights[g]);
+  }
 
   // Average flux.
   val /= _current_elem->volume();

@@ -18,24 +18,23 @@
 [UserObjects]
   [UncollidedStudy]
     type = UncollidedFluxRayStudy
-    num_groups = 1
-    group_index = 0
+    num_groups = 2
 
     point_source_locations = '
     14.0  0.0 0.0
     14.0 36.0 0.0'
     point_source_moments = '
-    1.0;
-    1.0'
+    1.0 0.0;
+    1.0 0.0'
     point_source_anisotropies = '0 0'
 
     source_boundaries = '1 3'
     boundary_source_anisotropy = '0 0'
-    boundary_source_moments = '1.0; 1.0'
+    boundary_source_moments = '0.5 0.1; 0.1 0.5'
 
     volumetric_source_blocks = '2'
     volumetric_source_anisotropies = '0'
-    volumetric_source_moments = '1.0'
+    volumetric_source_moments = '1.0 0.5'
 
     n_polar = 30
   []
@@ -45,16 +44,18 @@
   [UncollidedFluxKernel]
     type = UncollidedFluxRayKernel
     variable = UncollidedFlux
-    group_index = 0
+    num_groups = 2
     transport_system = ''
   []
 []
 
 [AuxVariables]
   [UncollidedFlux]
-    type = MooseVariable
+    type = ArrayMooseVariable
     order = CONSTANT
     family = MONOMIAL
+    components = 2
+    initial_condition = '0.0 0.0'
   []
 []
 
@@ -62,17 +63,17 @@
   [Shield]
     type = AbsorbingNeutronicsMaterial
     transport_system = ''
-    num_groups = 1
-    group_absorption = '0.5'
-    group_speeds = '220000'
+    num_groups = 2
+    group_absorption = '0.5 1.0'
+    group_speeds = '220000 220000'
     block = '1 2'
   []
   [Duct]
     type = AbsorbingNeutronicsMaterial
     transport_system = ''
-    num_groups = 1
-    group_absorption = '0.0'
-    group_speeds = '220000'
+    num_groups = 2
+    group_absorption = '0.0 0.0'
+    group_speeds = '220000 220000'
     block = '0'
   []
 []

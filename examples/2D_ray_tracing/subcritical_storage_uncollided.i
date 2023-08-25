@@ -3,20 +3,16 @@
     type = FileMeshGenerator
     file = Storage_Radiation_Mesh_Tris.e
   []
-  uniform_refine = 0
 []
 
 [UserObjects]
   [UncollidedStudy]
     type = UncollidedFluxRayStudy
     num_groups = 1
-    group_index = 0
 
     volumetric_source_blocks = fuel
     volumetric_source_moments = '40.5717'
     volumetric_source_anisotropies = '0'
-
-    n_polar = 5
   []
 []
 
@@ -24,16 +20,17 @@
   [UncollidedFluxKernel]
     type = UncollidedFluxRayKernel
     variable = UncollidedFlux
-    group_index = 0
+    num_groups = 1
     transport_system = ''
   []
 []
 
 [AuxVariables]
   [UncollidedFlux]
-    type = MooseVariable
+    type = ArrayMooseVariable
     order = CONSTANT
     family = MONOMIAL
+    components = 1
   []
 []
 
