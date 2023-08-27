@@ -22,4 +22,8 @@ protected:
   const int _order;
 
   const Real _scale_factor;
+
+  const ArrayVariableValue * _uncollided_scalar_flux;
+  const unsigned int _group_index;
+  const unsigned int _num_groups;
 }; // class ParticleFluxMoment

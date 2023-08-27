@@ -18,6 +18,8 @@
 #include "libmesh/string_to_enum.h"
 #include "libmesh/fe_type.h"
 
+#include "RayKernelBase.h"
+
 // All schemes.
 registerMooseAction("GnatApp", TransportAction, "add_variable");
 registerMooseAction("GnatApp", TransportAction, "add_kernel");
@@ -223,7 +225,7 @@ TransportAction::validParams()
       "'point_source_locations'");
   params.addParamNamesToGroup("point_source_locations point_source_moments "
                               "point_source_anisotropies",
-                              "Isotropic Point Source");
+                              "Point Source");
 
   //----------------------------------------------------------------------------
   // Initial conditions.
@@ -238,7 +240,6 @@ TransportAction::validParams()
                                      "angular fluxes.");
   params.addParamNamesToGroup("ic_type constant_ic", "Initial Condition");
   // TODO: Init from function.
-  // TODO: Init from file.
 
   //----------------------------------------------------------------------------
   // Parameters for multi-app (Picard) coupling.
@@ -1295,6 +1296,8 @@ TransportAction::addAuxKernels(const std::string & var_name, unsigned int g, uns
     // Flux moment degree and order.
     params.set<unsigned int>("degree") = l;
     params.set<int>("order") = m;
+    params.set<unsigned int>("group_index") = g;
+    params.set<unsigned int>("num_groups") = _num_groups;
 
     params.set<ExecFlagEnum>("execute_on") = {EXEC_INITIAL, EXEC_TIMESTEP_BEGIN, EXEC_LINEAR};
 
@@ -1322,6 +1325,8 @@ TransportAction::addAuxKernels(const std::string & var_name, unsigned int g, uns
     // Flux moment degree and order.
     params.set<unsigned int>("degree") = l;
     params.set<int>("order") = m;
+    params.set<unsigned int>("group_index") = g;
+    params.set<unsigned int>("num_groups") = _num_groups;
 
     params.set<Real>("scale_factor") = _source_scale_factor;
 

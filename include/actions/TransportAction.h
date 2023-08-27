@@ -6,9 +6,7 @@
 #include <vector>
 
 // TODO:
-// - Finish function and file initial conditions.
-// - Fix negative fluxes in the SAAF implementation.
-//   - Tempoary fix through maxing the angular flux while computing flux moments.
+// - Finish function initial conditions.
 class TransportAction : public GnatBaseAction
 {
 public:

@@ -15,9 +15,9 @@
   uniform_refine = 1
 []
 
-[UserObjects]
-  [UncollidedStudy]
-    type = UncollidedFluxRayStudy
+[UncollidedFlux]
+  [Neutron]
+    uncollided_flux_treatment = ray-tracing
     num_groups = 2
 
     point_source_locations = '
@@ -36,42 +36,21 @@
     volumetric_source_anisotropies = '0'
     volumetric_source_moments = '1.0 0.5'
 
-    n_polar = 30
+    rt_n_polar = 30
   []
 []
 
-[RayKernels]
-  [UncollidedFluxKernel]
-    type = UncollidedFluxRayKernel
-    variable = UncollidedFlux
-    num_groups = 2
-    transport_system = ''
-  []
-[]
-
-[AuxVariables]
-  [UncollidedFlux]
-    type = ArrayMooseVariable
-    order = CONSTANT
-    family = MONOMIAL
-    components = 2
-    initial_condition = '0.0 0.0'
-  []
-[]
-
-[Materials]
+[TransportMaterials]
   [Shield]
     type = AbsorbingNeutronicsMaterial
-    transport_system = ''
-    num_groups = 2
+    transport_system = 'Neutron'
     group_absorption = '0.5 1.0'
     group_speeds = '220000 220000'
     block = '1 2'
   []
   [Duct]
     type = AbsorbingNeutronicsMaterial
-    transport_system = ''
-    num_groups = 2
+    transport_system = 'Neutron'
     group_absorption = '0.0 0.0'
     group_speeds = '220000 220000'
     block = '0'
@@ -82,7 +61,6 @@
   type = FEProblem
   solve = false
   kernel_coverage_check = false
-  material_coverage_check = false
 []
 
 [Executioner]

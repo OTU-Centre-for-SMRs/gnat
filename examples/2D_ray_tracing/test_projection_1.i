@@ -1,12 +1,28 @@
 [Mesh]
-  [NeutronicsDomain]
-    type = FileMeshGenerator
-    file = Storage_Radiation_Mesh_Tris.e
+  [domain]
+    type = CartesianMeshGenerator
+    dim = 2
+    dx = '11 3 3 11'
+    dy = '15 3 3 15'
+    ix = '11 3 3 11'
+    iy = '15 3 3 15'
+    subdomain_id = '
+    1 0 0 1
+    1 2 2 1
+    1 2 2 1
+    1 0 0 1'
   []
+  uniform_refine = 1
 []
 
 [AuxVariables]
-  [UncollidedFlux]
+  [UncollidedFlux_1]
+    type = MooseVariable
+    order = FIRST
+    family = L2_LAGRANGE
+  []
+
+  [UncollidedFlux_2]
     type = MooseVariable
     order = FIRST
     family = L2_LAGRANGE
@@ -14,11 +30,18 @@
 []
 
 [Transfers]
-  [UncollidedFluxTransfer]
+  [UncollidedFluxTransfer_1]
     type = MultiAppShapeEvaluationTransfer
     from_multi_app = Neutronics
-    variable = UncollidedFlux
-    source_variable = UncollidedFlux
+    variable = UncollidedFlux_1
+    source_variable = uncollided_flux_moment_1_0_0
+  []
+
+  [UncollidedFluxTransfer_2]
+    type = MultiAppShapeEvaluationTransfer
+    from_multi_app = Neutronics
+    variable = UncollidedFlux_2
+    source_variable = uncollided_flux_moment_2_0_0
   []
 []
 

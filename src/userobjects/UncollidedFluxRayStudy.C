@@ -14,7 +14,7 @@ UncollidedFluxRayStudy::validParams()
   auto params = RayTracingStudy::validParams();
   params.addClassDescription(
       "A ray tracing study which generates rays from point, surface, and volume sources for "
-      "computing the uncollided component of the angular flux.");
+      "computing the uncollided flux moments of the angular flux.");
 
   params.addRequiredParam<unsigned int>(
       "num_groups",
@@ -93,14 +93,14 @@ UncollidedFluxRayStudy::validParams()
                                             "Number of Legendre polar "
                                             "quadrature points in a single "
                                             "octant of the unit sphere. "
-                                            "Defaults to 3.");
+                                            "Defaults to 30.");
   params.addRangeCheckedParam<unsigned int>("n_azimuthal",
                                             30,
                                             "n_azimuthal > 0",
                                             "Number of Chebyshev azimuthal "
                                             "quadrature points in a single "
                                             "octant of the unit sphere. "
-                                            "Defaults to 3.");
+                                            "Defaults to 30.");
 
   // It's impractical to register rays due to the sheer number of them.
   params.set<bool>("_use_ray_registration") = false;

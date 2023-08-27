@@ -26,6 +26,12 @@ ParticleFluxMoment::validParams()
 
   params.addParam<Real>("scale_factor", 1.0, "A scaling factor to apply to the flux moments.");
 
+  params.addRequiredParam<unsigned int>("group_index", "The current spectral energy group.");
+  params.addRequiredParam<unsigned int>("num_groups", "The number of spectral energy groups.");
+  params.addCoupledVar("uncollided_flux_moments",
+                       "The uncollided flux moments. Currently only supports uncollided scalar "
+                       "fluxes.");
+
   return params;
 }
 
@@ -34,7 +40,10 @@ ParticleFluxMoment::ParticleFluxMoment(const InputParameters & parameters)
     _aq(getUserObject<AQProvider>("aq")),
     _degree(getParam<unsigned int>("degree")),
     _order(getParam<int>("order")),
-    _scale_factor(getParam<Real>("scale_factor"))
+    _scale_factor(getParam<Real>("scale_factor")),
+    _uncollided_scalar_flux(nullptr),
+    _group_index(getParam<unsigned int>("group_index")),
+    _num_groups(getParam<unsigned int>("num_groups"))
 {
   const unsigned int num_coupled = coupledComponents("group_flux_ordinates");
 
@@ -44,18 +53,27 @@ ParticleFluxMoment::ParticleFluxMoment(const InputParameters & parameters)
   _flux_ordinates.reserve(num_coupled);
   for (unsigned int i = 0; i < num_coupled; ++i)
     _flux_ordinates.emplace_back(&adCoupledValue("group_flux_ordinates", i));
+
+  if (isCoupled("uncollided_flux_moments"))
+    _uncollided_scalar_flux = &coupledArrayValue("uncollided_flux_moments");
 }
 
 Real
 ParticleFluxMoment::computeValue()
 {
   Real moment = 0.0;
+
+  // The collided component.
   for (unsigned int i = 0; i < _aq.totalOrder(); ++i)
   {
     moment += RealSphericalHarmonics::evaluate(
                   _degree, _order, _aq.getPolarRoot(i), _aq.getAzimuthalAngularRoot(i)) *
               MetaPhysicL::raw_value((*_flux_ordinates[i])[_qp]) * _aq.weight(i);
   }
+
+  // The uncollided component.
+  if (_uncollided_scalar_flux && _degree == 0u && _order == 0)
+    moment += (*_uncollided_scalar_flux)[_qp](_group_index);
 
   return moment * _scale_factor;
 }

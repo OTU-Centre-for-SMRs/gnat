@@ -30,6 +30,7 @@ associateSyntaxInner(Syntax & syntax, ActionFactory & /*action_factory*/)
   // TransportSystem syntax.
   syntax.registerActionSyntax("AddTransportMaterialAction", "TransportMaterials/*");
   syntax.registerActionSyntax("TransportAction", "TransportSystems/*");
+  syntax.registerActionSyntax("UncollidedFluxAction", "UncollidedFlux/*");
 
   // Depletion library.
   syntax.registerActionSyntax("DepletionLibraryAction", "DepletionLibrary");

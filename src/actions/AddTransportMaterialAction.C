@@ -4,6 +4,7 @@
 #include "FEProblemBase.h"
 
 #include "TransportAction.h"
+#include "UncollidedFluxAction.h"
 
 registerMooseAction("GnatApp", AddTransportMaterialAction, "add_material");
 
@@ -39,12 +40,14 @@ AddTransportMaterialAction::act()
   if (!_is_init)
   {
     // Get the associated transport action.
+    auto transport_actions = _awh.getActions<TransportAction>();
+    auto uncollided_flux_actions = _awh.getActions<UncollidedFluxAction>();
+    bool can_setup = true;
     if (_parent_transport_system == "")
     {
       // A transport system was not provided. Fetch the first transport system from the action
-      // warehouse.
-      auto transport_actions = _awh.getActions<TransportAction>();
-      if (transport_actions.size() > 0u)
+      // warehouse. Prioritizing transport systems first.
+      if (transport_actions.size() == 1u)
       {
         _num_groups = transport_actions[0u]->getParam<unsigned int>("num_groups");
         _particle = transport_actions[0u]->getParam<MooseEnum>("particle_type");
@@ -52,20 +55,58 @@ AddTransportMaterialAction::act()
         _disable_fission = transport_actions[0u]->getParam<bool>("debug_disable_fission");
 
         _parent_transport_system = transport_actions[0u]->name();
+
+        can_setup = false;
       }
-      else if (transport_actions.size() == 0u)
-        mooseError("No transport systems have been declared in the input deck.");
-      else
+
+      if (can_setup && uncollided_flux_actions.size() == 1u)
+      {
+        _num_groups = uncollided_flux_actions[0u]->getParam<unsigned int>("num_groups");
+        _particle = MooseEnum("neutron photon", "photon");
+        _scheme =
+            MooseEnum("saaf_cfem diffusion_cfem flux_moment_transfer", "flux_moment_transfer");
+        _disable_fission = true;
+
+        _parent_transport_system = uncollided_flux_actions[0u]->name();
+
+        can_setup = false;
+      }
+
+      if (transport_actions.size() == 0u && uncollided_flux_actions.size() == 0u)
         mooseError(
-            "Multiple transport systems have been declared. Please select one in the input deck.");
+            "No transport systems / uncollided flux systems have been declared in the input deck.");
+
+      if (transport_actions.size() > 1u || uncollided_flux_actions.size() > 1u)
+        mooseError("Multiple transport systems / uncollided flux systems have been declared. "
+                   "Please select one in the input deck.");
     }
     else
     {
-      const auto & transport_action = _awh.getAction<TransportAction>(_parent_transport_system);
-      _num_groups = transport_action.getParam<unsigned int>("num_groups");
-      _particle = transport_action.getParam<MooseEnum>("particle_type");
-      _scheme = transport_action.getParam<MooseEnum>("scheme");
-      _disable_fission = transport_action.getParam<bool>("debug_disable_fission");
+      if (transport_actions.size() >= 1u)
+      {
+        const auto & transport_action = _awh.getAction<TransportAction>(_parent_transport_system);
+        _num_groups = transport_action.getParam<unsigned int>("num_groups");
+        _particle = transport_action.getParam<MooseEnum>("particle_type");
+        _scheme = transport_action.getParam<MooseEnum>("scheme");
+        _disable_fission = transport_action.getParam<bool>("debug_disable_fission");
+
+        can_setup = false;
+      }
+
+      if (can_setup && uncollided_flux_actions.size() >= 1u)
+      {
+        const auto & uncollided_flux_action =
+            _awh.getAction<UncollidedFluxAction>(_parent_transport_system);
+        _num_groups = uncollided_flux_action.getParam<unsigned int>("num_groups");
+        _particle = MooseEnum("neutron photon", "photon");
+        _scheme =
+            MooseEnum("saaf_cfem diffusion_cfem flux_moment_transfer", "flux_moment_transfer");
+        _disable_fission = true;
+
+        _parent_transport_system = uncollided_flux_action.name();
+
+        can_setup = false;
+      }
     }
 
     _moose_object_pars.set<unsigned int>("num_groups") = _num_groups;
