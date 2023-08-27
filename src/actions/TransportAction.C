@@ -273,6 +273,18 @@ TransportAction::validParams()
       "MultiApp");
 
   //----------------------------------------------------------------------------
+  // Parameters for a multi-app provided uncollided flux treatment.
+  params.addParam<MultiAppName>("uncollided_from_multi_app",
+                                "",
+                                "The name of the multi-app to pull the uncollided flux moments.");
+  params.addParam<std::string>("from_uncollided_flux_moment_names",
+                               "uncollided_flux_moment",
+                               "The names of the source flux moments.");
+  params.addParam<std::vector<SubdomainName>>("uncollided_from_blocks",
+                                              "The list of blocks (ids or "
+                                              "names) that we are pulling from.");
+
+  //----------------------------------------------------------------------------
   // Parameters for debugging.
   params.addParam<MooseEnum>("debug_verbosity",
                              MooseEnum("level0 level1", "level1"),
@@ -327,6 +339,11 @@ TransportAction::TransportAction(const InputParameters & params)
     _from_multi_app_name(getParam<MultiAppName>("from_multi_app")),
     _from_subdomain_ids(getParam<std::vector<SubdomainName>>("from_blocks")),
     _source_flux_moment_names(getParam<std::string>("from_flux_moment_names")),
+    _uncollided_from_multi_app_name(getParam<MultiAppName>("uncollided_from_multi_app")),
+    _uncollided_from_subdomain_ids(getParam<std::vector<SubdomainName>>("uncollided_from_blocks")),
+    _uncollided_source_flux_moment_names(
+        getParam<std::string>("from_uncollided_flux_moment_names")),
+    _using_uncollided(_uncollided_from_multi_app_name != ""),
     _source_scale_factor(0.0),
     _var_init(false)
 {
@@ -367,6 +384,14 @@ TransportAction::TransportAction(const InputParameters & params)
       for (auto & volume_moment : volume_moments)
         volume_moment /= _source_scale_factor;
   }
+
+  if (_using_uncollided && _transport_scheme != TransportScheme::SAAFCFEM)
+    mooseWarning("Uncollided flux corrections only work for discrete ordinates transport schemes. "
+                 "The uncollided flux moments will not be used.");
+
+  if (_using_uncollided && _max_eval_anisotropy > 0u)
+    mooseWarning("Currently uncollided flux treatments only support scalar flux moments. Higher "
+                 "order / degree momement support is planned in the future.");
 }
 
 void
@@ -380,6 +405,9 @@ TransportAction::act()
   {
     case TransportScheme::SAAFCFEM:
       actSAAFCFEM();
+
+      if (_using_uncollided && _var_init)
+        actUncollided();
       break;
     case TransportScheme::DiffusionApprox:
       actDiffusion();
@@ -940,6 +968,78 @@ TransportAction::actTransfer()
 }
 //------------------------------------------------------------------------------
 
+void
+TransportAction::actUncollided()
+{
+  std::string unc_source_var_name = "";
+  std::string unc_var_name = "";
+  // Loop over all groups.
+  for (unsigned int g = 0; g < _num_groups; ++g)
+  {
+    unc_var_name = _flux_moment_name + "_" + Moose::stringify(g + 1u) + "_0_0_uncollided";
+    unc_source_var_name =
+        _uncollided_source_flux_moment_names + "_" + Moose::stringify(g + 1u) + "_0_0";
+
+    // Add the resulting transferred variable.
+    if (_current_task == "add_aux_variable")
+    {
+      if (g == 0u)
+        debugOutput("    - Adding auxvariables...");
+
+      addAuxVariables(unc_var_name);
+    }
+
+    // Add a transfer.
+    if (_current_task == "add_transfer" && !getParam<bool>("init_from_file"))
+    {
+      if (g == 0u)
+        debugOutput("    - Adding transfers...");
+
+      addUncTransfers(unc_var_name, unc_source_var_name);
+    }
+  }
+}
+
+//------------------------------------------------------------------------------
+// Functions to add transfers for decoupled uncollided flux calculations.
+//------------------------------------------------------------------------------
+void
+TransportAction::addUncTransfers(const std::string & to_var_name,
+                                 const std::string & source_var_name)
+{
+  auto params = _factory.getValidParams("MultiAppGeneralFieldShapeEvaluationTransfer");
+  params.set<std::vector<VariableName>>("source_variable").emplace_back(source_var_name);
+  params.set<std::vector<AuxVariableName>>("variable").emplace_back(to_var_name);
+
+  params.set<MultiAppName>("from_multi_app") = _uncollided_from_multi_app_name;
+
+  auto & from_blocks = params.set<std::vector<SubdomainName>>("from_blocks");
+  for (const auto & block : _uncollided_from_subdomain_ids)
+    from_blocks.emplace_back(block);
+
+  auto & to_block = params.set<std::vector<SubdomainName>>("to_blocks");
+  for (const auto & block : getParam<std::vector<SubdomainName>>("block"))
+    to_block.emplace_back(block);
+
+  /*
+  if (getParam<bool>("use_conservative_transfers"))
+  {
+    params.set<std::vector<PostprocessorName>>("from_postprocessors_to_be_preserved")
+        .emplace_back("ElementIntegralVariablePostprocessor_" + source_var_name + "_src");
+    params.set<std::vector<PostprocessorName>>("to_postprocessors_to_be_preserved")
+        .emplace_back("ElementIntegralVariablePostprocessor_" + to_var_name + "_dst");
+  }
+  */
+
+  _problem->addTransfer("MultiAppGeneralFieldShapeEvaluationTransfer",
+                        "MultiAppGeneralFieldShapeEvaluationTransfer_" + to_var_name + "_from_" +
+                            source_var_name,
+                        params);
+  debugOutput(
+      "      - Adding Transfer MultiAppGeneralFieldShapeEvaluationTransfer for the variable " +
+      to_var_name + " from " + source_var_name + ".");
+}
+
 //------------------------------------------------------------------------------
 // Functions to add transfers for decoupled multi-app calculations.
 //------------------------------------------------------------------------------
@@ -1105,7 +1205,7 @@ TransportAction::addSNBCs(const std::string & var_name, unsigned int g, unsigned
   } // SNVacuumBC
 
   // Add SNSourceBC.
-  if (_source_side_sets.size() > 0u)
+  if (_source_side_sets.size() > 0u && !_using_uncollided)
   {
     if (_source_side_sets.size() != _boundary_source_moments.size() &&
         _source_side_sets.size() != _boundary_source_anisotropy.size())
@@ -1142,7 +1242,7 @@ TransportAction::addSNBCs(const std::string & var_name, unsigned int g, unsigned
   } // SNSourceBC
 
   // Add SNNormalCurrentBC.
-  if (_current_side_sets.size() > 0u)
+  if (_current_side_sets.size() > 0u && !_using_uncollided)
   {
     if (_current_side_sets.size() != _boundary_currents.size() &&
         _current_side_sets.size() != _boundary_current_anisotropy.size())
@@ -1307,6 +1407,10 @@ TransportAction::addAuxKernels(const std::string & var_name, unsigned int g, uns
     // The flux ordinates for this group.
     params.set<std::vector<VariableName>>("group_flux_ordinates") = _group_angular_fluxes[g];
 
+    if (_using_uncollided && l == 0u && m == 0)
+      params.set<std::vector<VariableName>>("uncollided_flux_moment")
+          .emplace_back(_flux_moment_name + "_" + Moose::stringify(g + 1u) + "_0_0_uncollided");
+
     if (isParamValid("block"))
     {
       params.set<std::vector<SubdomainName>>("block") =
@@ -1328,7 +1432,8 @@ TransportAction::addAuxKernels(const std::string & var_name, unsigned int g, uns
     params.set<unsigned int>("group_index") = g;
     params.set<unsigned int>("num_groups") = _num_groups;
 
-    params.set<Real>("scale_factor") = _source_scale_factor;
+    if (!_using_uncollided)
+      params.set<Real>("scale_factor") = _source_scale_factor;
 
     params.set<ExecFlagEnum>("execute_on") = {EXEC_TIMESTEP_END};
 
@@ -1337,6 +1442,10 @@ TransportAction::addAuxKernels(const std::string & var_name, unsigned int g, uns
 
     // The flux ordinates for this group.
     params.set<std::vector<VariableName>>("group_flux_ordinates") = _group_angular_fluxes[g];
+
+    if (_using_uncollided && l == 0u && m == 0)
+      params.set<std::vector<VariableName>>("uncollided_flux_moment")
+          .emplace_back(_flux_moment_name + "_" + Moose::stringify(g + 1u) + "_0_0_uncollided");
 
     if (isParamValid("block"))
     {
@@ -1429,7 +1538,7 @@ TransportAction::addSAAFKernels(const std::string & var_name, unsigned int g, un
   } // SNRemoval
 
   // Add SAAFVolumeSource
-  if (_volumetric_source_blocks.size() > 0u && !_is_eigen)
+  if (_volumetric_source_blocks.size() > 0u && !_is_eigen && !_using_uncollided)
   {
     for (unsigned int i = 0u; i < _volumetric_source_blocks.size(); ++i)
     {
@@ -1461,7 +1570,7 @@ TransportAction::addSAAFKernels(const std::string & var_name, unsigned int g, un
   } // SAAFVolumeSource
 
   // Add SAAFMaterialSource.
-  if (!_is_eigen)
+  if (!_is_eigen && !_using_uncollided)
   {
     auto params = _factory.getValidParams("SAAFMaterialSource");
     params.set<NonlinearVariableName>("variable") = var_name;
@@ -1633,7 +1742,7 @@ void
 TransportAction::addSAAFDiracKernels(const std::string & var_name, unsigned int g, unsigned int n)
 {
   // Add SAAFPointSource.
-  if (!_is_eigen)
+  if (!_is_eigen && !_using_uncollided)
   {
     for (unsigned int i = 0u; i < _point_source_moments.size(); ++i)
     {

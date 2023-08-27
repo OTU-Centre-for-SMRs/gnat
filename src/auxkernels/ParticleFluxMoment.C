@@ -28,7 +28,7 @@ ParticleFluxMoment::validParams()
 
   params.addRequiredParam<unsigned int>("group_index", "The current spectral energy group.");
   params.addRequiredParam<unsigned int>("num_groups", "The number of spectral energy groups.");
-  params.addCoupledVar("uncollided_flux_moments",
+  params.addCoupledVar("uncollided_flux_moment",
                        "The uncollided flux moments. Currently only supports uncollided scalar "
                        "fluxes.");
 
@@ -41,9 +41,7 @@ ParticleFluxMoment::ParticleFluxMoment(const InputParameters & parameters)
     _degree(getParam<unsigned int>("degree")),
     _order(getParam<int>("order")),
     _scale_factor(getParam<Real>("scale_factor")),
-    _uncollided_scalar_flux(nullptr),
-    _group_index(getParam<unsigned int>("group_index")),
-    _num_groups(getParam<unsigned int>("num_groups"))
+    _uncollided_flux_moment(nullptr)
 {
   const unsigned int num_coupled = coupledComponents("group_flux_ordinates");
 
@@ -54,8 +52,8 @@ ParticleFluxMoment::ParticleFluxMoment(const InputParameters & parameters)
   for (unsigned int i = 0; i < num_coupled; ++i)
     _flux_ordinates.emplace_back(&adCoupledValue("group_flux_ordinates", i));
 
-  if (isCoupled("uncollided_flux_moments"))
-    _uncollided_scalar_flux = &coupledArrayValue("uncollided_flux_moments");
+  if (isCoupled("uncollided_flux_moment"))
+    _uncollided_flux_moment = &coupledValue("uncollided_flux_moment");
 }
 
 Real
@@ -72,8 +70,8 @@ ParticleFluxMoment::computeValue()
   }
 
   // The uncollided component.
-  if (_uncollided_scalar_flux && _degree == 0u && _order == 0)
-    moment += (*_uncollided_scalar_flux)[_qp](_group_index);
+  if (_uncollided_flux_moment)
+    moment += (*_uncollided_flux_moment)[_qp];
 
   return moment * _scale_factor;
 }

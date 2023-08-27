@@ -28,6 +28,9 @@ protected:
   void actDiffusion();
   void actTransfer();
 
+  // Act function for setting up the multi-app provided uncollided flux treatment.
+  void actUncollided();
+
   // Member functions to initialize the MOOSE objects required for all schemes.
   void modifyOutputs();
   void addSNUserObjects();
@@ -52,6 +55,7 @@ protected:
 
   // Member functions to add transfers.
   void addTransfers(const std::string & to_var_name, const std::string & source_var_name);
+  void addUncTransfers(const std::string & to_var_name, const std::string & source_var_name);
 
   // Member function to add conservative transfer post-processors.
   void addDestinationConservativePP(const std::string & to_var_name);
@@ -112,6 +116,12 @@ protected:
   const MultiAppName & _from_multi_app_name;
   const std::vector<SubdomainName> & _from_subdomain_ids;
   const std::string & _source_flux_moment_names;
+
+  // Uncollided flux multi-app properties.
+  const MultiAppName & _uncollided_from_multi_app_name;
+  const std::vector<SubdomainName> & _uncollided_from_subdomain_ids;
+  const std::string & _uncollided_source_flux_moment_names;
+  const bool _using_uncollided;
 
   // List of the names for all angular flux variables and flux moments.
   std::unordered_map<unsigned int, std::vector<VariableName>> _group_angular_fluxes;
