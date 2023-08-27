@@ -33,6 +33,8 @@
     aq = AQ
     degree = 0
     order = 0
+    group_index = 0
+    num_groups = 1
   []
 []
 
