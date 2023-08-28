@@ -6,6 +6,7 @@
 #include <vector>
 
 // TODO:
+// - This action + syntax is in desperate need of a refactor.
 // - Finish function initial conditions.
 class TransportAction : public GnatBaseAction
 {

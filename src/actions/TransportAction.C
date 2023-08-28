@@ -258,7 +258,7 @@ TransportAction::validParams()
                         "Useful for coupling to finite volume fields.");
   params.addParam<bool>(
       "use_conservative_transfers",
-      false,
+      true,
       "Whether this transport action should pull flux moments using conservative transfers.");
   params.addParam<bool>("is_conservative_transfer_src",
                         false,
@@ -281,6 +281,13 @@ TransportAction::validParams()
   params.addParam<std::vector<SubdomainName>>("uncollided_from_blocks",
                                               "The list of blocks (ids or "
                                               "names) that we are pulling from.");
+  params.addParam<bool>("use_conservative_uncollided_transfers",
+                        true,
+                        "Whether the uncollided flux moments should be conserved when transferred "
+                        "to the new shape functions.");
+  params.addParamNamesToGroup("uncollided_from_multi_app from_uncollided_flux_moment_names "
+                              "uncollided_from_blocks use_conservative_uncollided_transfers",
+                              "Uncollided MultiApp");
 
   //----------------------------------------------------------------------------
   // Parameters for debugging.
@@ -1049,6 +1056,48 @@ TransportAction::actUncollided()
         }
       }
     }
+
+    if (_current_task == "add_postprocessor")
+    {
+      if (_p_type == ProblemType::Cartesian2D)
+      {
+        for (unsigned int l = 0u; l <= _max_eval_anisotropy; ++l)
+        {
+          for (int m = 0; m <= static_cast<int>(l); ++m)
+          {
+            unc_var_name = _flux_moment_name + "_" + Moose::stringify(g + 1u) + "_" +
+                           Moose::stringify(l) + "_" + Moose::stringify(m) + "_uncollided";
+            unc_source_var_name = _uncollided_source_flux_moment_names + "_" +
+                                  Moose::stringify(g + 1u) + "_" + Moose::stringify(l) + "_" +
+                                  Moose::stringify(m);
+
+            if (g == 0u && l == 0u && m == 0u)
+              debugOutput("    - Adding post-processors...");
+
+            addDestinationConservativePP(unc_var_name);
+          }
+        }
+      }
+      else
+      {
+        for (unsigned int l = 0; l <= _max_eval_anisotropy; ++l)
+        {
+          for (int m = -1 * static_cast<int>(l); m <= static_cast<int>(l); ++m)
+          {
+            unc_var_name = _flux_moment_name + "_" + Moose::stringify(g + 1u) + "_" +
+                           Moose::stringify(l) + "_" + Moose::stringify(m) + "_uncollided";
+            unc_source_var_name = _uncollided_source_flux_moment_names + "_" +
+                                  Moose::stringify(g + 1u) + "_" + Moose::stringify(l) + "_" +
+                                  Moose::stringify(m);
+
+            if (g == 0u && l == 0u && m == 0u)
+              debugOutput("    - Adding post-processors...");
+
+            addDestinationConservativePP(unc_var_name);
+          }
+        }
+      }
+    }
   }
 }
 
@@ -1073,15 +1122,13 @@ TransportAction::addUncTransfers(const std::string & to_var_name,
   for (const auto & block : getParam<std::vector<SubdomainName>>("block"))
     to_block.emplace_back(block);
 
-  /*
-  if (getParam<bool>("use_conservative_transfers"))
+  if (getParam<bool>("use_conservative_uncollided_transfers"))
   {
     params.set<std::vector<PostprocessorName>>("from_postprocessors_to_be_preserved")
         .emplace_back("ElementIntegralVariablePostprocessor_" + source_var_name + "_src");
     params.set<std::vector<PostprocessorName>>("to_postprocessors_to_be_preserved")
         .emplace_back("ElementIntegralVariablePostprocessor_" + to_var_name + "_dst");
   }
-  */
 
   _problem->addTransfer("MultiAppGeneralFieldShapeEvaluationTransfer",
                         "MultiAppGeneralFieldShapeEvaluationTransfer_" + to_var_name + "_from_" +
