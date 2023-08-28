@@ -18,8 +18,6 @@
 #include "libmesh/string_to_enum.h"
 #include "libmesh/fe_type.h"
 
-#include "RayKernelBase.h"
-
 // All schemes.
 registerMooseAction("GnatApp", TransportAction, "add_variable");
 registerMooseAction("GnatApp", TransportAction, "add_kernel");
@@ -388,10 +386,6 @@ TransportAction::TransportAction(const InputParameters & params)
   if (_using_uncollided && _transport_scheme != TransportScheme::SAAFCFEM)
     mooseWarning("Uncollided flux corrections only work for discrete ordinates transport schemes. "
                  "The uncollided flux moments will not be used.");
-
-  if (_using_uncollided && _max_eval_anisotropy > 0u)
-    mooseWarning("Currently uncollided flux treatments only support scalar flux moments. Higher "
-                 "order / degree momement support is planned in the future.");
 }
 
 void
@@ -976,26 +970,84 @@ TransportAction::actUncollided()
   // Loop over all groups.
   for (unsigned int g = 0; g < _num_groups; ++g)
   {
-    unc_var_name = _flux_moment_name + "_" + Moose::stringify(g + 1u) + "_0_0_uncollided";
-    unc_source_var_name =
-        _uncollided_source_flux_moment_names + "_" + Moose::stringify(g + 1u) + "_0_0";
-
     // Add the resulting transferred variable.
     if (_current_task == "add_aux_variable")
     {
-      if (g == 0u)
-        debugOutput("    - Adding auxvariables...");
+      if (_p_type == ProblemType::Cartesian2D)
+      {
+        for (unsigned int l = 0u; l <= _max_eval_anisotropy; ++l)
+        {
+          for (int m = 0; m <= static_cast<int>(l); ++m)
+          {
+            unc_var_name = _flux_moment_name + "_" + Moose::stringify(g + 1u) + "_" +
+                           Moose::stringify(l) + "_" + Moose::stringify(m) + "_uncollided";
 
-      addAuxVariables(unc_var_name);
+            if (g == 0u && l == 0u && m == 0u)
+              debugOutput("    - Adding auxvariables...");
+
+            addAuxVariables(unc_var_name);
+          }
+        }
+      }
+      else
+      {
+        for (unsigned int l = 0; l <= _max_eval_anisotropy; ++l)
+        {
+          for (int m = -1 * static_cast<int>(l); m <= static_cast<int>(l); ++m)
+          {
+            unc_var_name = _flux_moment_name + "_" + Moose::stringify(g + 1u) + "_" +
+                           Moose::stringify(l) + "_" + Moose::stringify(m) + "_uncollided";
+
+            if (g == 0u && l == 0u && m == 0u)
+              debugOutput("    - Adding auxvariables...");
+
+            addAuxVariables(unc_var_name);
+          }
+        }
+      }
     }
 
     // Add a transfer.
     if (_current_task == "add_transfer" && !getParam<bool>("init_from_file"))
     {
-      if (g == 0u)
-        debugOutput("    - Adding transfers...");
+      if (_p_type == ProblemType::Cartesian2D)
+      {
+        for (unsigned int l = 0u; l <= _max_eval_anisotropy; ++l)
+        {
+          for (int m = 0; m <= static_cast<int>(l); ++m)
+          {
+            unc_var_name = _flux_moment_name + "_" + Moose::stringify(g + 1u) + "_" +
+                           Moose::stringify(l) + "_" + Moose::stringify(m) + "_uncollided";
+            unc_source_var_name = _uncollided_source_flux_moment_names + "_" +
+                                  Moose::stringify(g + 1u) + "_" + Moose::stringify(l) + "_" +
+                                  Moose::stringify(m);
 
-      addUncTransfers(unc_var_name, unc_source_var_name);
+            if (g == 0u && l == 0u && m == 0u)
+              debugOutput("    - Adding transfers...");
+
+            addUncTransfers(unc_var_name, unc_source_var_name);
+          }
+        }
+      }
+      else
+      {
+        for (unsigned int l = 0; l <= _max_eval_anisotropy; ++l)
+        {
+          for (int m = -1 * static_cast<int>(l); m <= static_cast<int>(l); ++m)
+          {
+            unc_var_name = _flux_moment_name + "_" + Moose::stringify(g + 1u) + "_" +
+                           Moose::stringify(l) + "_" + Moose::stringify(m) + "_uncollided";
+            unc_source_var_name = _uncollided_source_flux_moment_names + "_" +
+                                  Moose::stringify(g + 1u) + "_" + Moose::stringify(l) + "_" +
+                                  Moose::stringify(m);
+
+            if (g == 0u && l == 0u && m == 0u)
+              debugOutput("    - Adding transfers...");
+
+            addUncTransfers(unc_var_name, unc_source_var_name);
+          }
+        }
+      }
     }
   }
 }
@@ -1407,9 +1459,10 @@ TransportAction::addAuxKernels(const std::string & var_name, unsigned int g, uns
     // The flux ordinates for this group.
     params.set<std::vector<VariableName>>("group_flux_ordinates") = _group_angular_fluxes[g];
 
-    if (_using_uncollided && l == 0u && m == 0)
+    if (_using_uncollided)
       params.set<std::vector<VariableName>>("uncollided_flux_moment")
-          .emplace_back(_flux_moment_name + "_" + Moose::stringify(g + 1u) + "_0_0_uncollided");
+          .emplace_back(_flux_moment_name + "_" + Moose::stringify(g + 1u) + "_" +
+                        Moose::stringify(l) + "_" + Moose::stringify(m) + "_uncollided");
 
     if (isParamValid("block"))
     {
@@ -1443,9 +1496,10 @@ TransportAction::addAuxKernels(const std::string & var_name, unsigned int g, uns
     // The flux ordinates for this group.
     params.set<std::vector<VariableName>>("group_flux_ordinates") = _group_angular_fluxes[g];
 
-    if (_using_uncollided && l == 0u && m == 0)
+    if (_using_uncollided)
       params.set<std::vector<VariableName>>("uncollided_flux_moment")
-          .emplace_back(_flux_moment_name + "_" + Moose::stringify(g + 1u) + "_0_0_uncollided");
+          .emplace_back(_flux_moment_name + "_" + Moose::stringify(g + 1u) + "_" +
+                        Moose::stringify(l) + "_" + Moose::stringify(m) + "_uncollided");
 
     if (isParamValid("block"))
     {

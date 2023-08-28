@@ -20,6 +20,7 @@ protected:
   void addUncollidedRayStudies();
   void addUncollidedRayAuxVars();
   void addUncollidedRayAuxKernels();
+  void addUncollidedRayPostProcessors();
 
   void modifyRTOutputs();
 
@@ -27,9 +28,10 @@ protected:
   const unsigned int _num_groups;
   // Maximum degree of the flux moments requested.
   const unsigned int _max_eval_anisotropy;
+  // The number of flux moments per energy group.
+  unsigned int _num_group_moments;
 
   const std::string & _uncollided_var_base_name;
-  std::unordered_map<unsigned int, std::vector<VariableName>> _group_flux_moments;
 
   // Uncollided flux treatment.
   enum class UncollidedTreatment
@@ -37,6 +39,8 @@ protected:
     RT = 0u,
     SASF = 1u
   } _uncollided_treatment;
+
+  const bool _conservative_src;
 
   // Point source moments.
   const std::vector<Point> & _point_source_locations;

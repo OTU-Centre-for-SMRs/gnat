@@ -19,7 +19,7 @@
 [TransportSystems]
   [Neutron]
     num_groups = 2
-    max_anisotropy = 0
+    max_anisotropy = 1
     scheme = saaf_cfem
     particle_type = neutron
 
@@ -73,7 +73,7 @@
   [Uncollided_Neutronics]
     type = FullSolveMultiApp
     app_type = GnatApp
-    input_files = 'point_water_unc.i'
+    input_files = 'water_air_unc.i'
     execute_on = INITIAL
   []
 []

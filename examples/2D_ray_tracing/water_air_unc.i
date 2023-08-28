@@ -20,11 +20,13 @@
   [Neutron]
     uncollided_flux_treatment = ray-tracing
     num_groups = 2
-    max_anisotropy = 0
+    max_anisotropy = 1
 
     volumetric_source_blocks = '2'
     volumetric_source_moments = '1.0 0.5'
     volumetric_source_anisotropies = '0'
+
+    #rt_volume_order = SECOND
   []
 []
 

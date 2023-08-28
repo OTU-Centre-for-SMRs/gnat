@@ -38,6 +38,8 @@ public:
   void onSegment() override final;
 
 protected:
+  static void cartesianToSpherical(const RealVectorValue & direction, Real & mu, Real & omega);
+
   // Function to compute the segment contribution to the optical depth.
   void computeSegmentOpticalDepth();
 
@@ -65,6 +67,8 @@ protected:
 
   // Data required for the optical depth.
   const unsigned int _num_groups;
+  const unsigned int _max_eval_anisotropy;
+  const unsigned int _num_group_moments;
   // The total cross-section.
   const ADMaterialProperty<std::vector<Real>> & _sigma_t_g;
 

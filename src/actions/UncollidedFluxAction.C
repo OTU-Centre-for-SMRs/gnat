@@ -8,10 +8,14 @@
 // Required for all treatments.
 registerMooseAction("GnatApp", UncollidedFluxAction, "add_aux_variable");
 registerMooseAction("GnatApp", UncollidedFluxAction, "add_aux_kernel");
+registerMooseAction("GnatApp", UncollidedFluxAction, "add_postprocessor");
 
 // Raytracing uncollided flux treatment.
 registerMooseAction("GnatApp", UncollidedFluxAction, "add_user_object");
 registerMooseAction("GnatApp", UncollidedFluxAction, "add_ray_kernel");
+
+// For validating the problem.
+registerMooseAction("GnatApp", UncollidedFluxAction, "post_mesh_prepared");
 
 InputParameters
 UncollidedFluxAction::validParams()
@@ -41,6 +45,11 @@ UncollidedFluxAction::validParams()
                                "flux. The output format for the group flux "
                                "moments will be of the form "
                                "{uncollided_flux_moment_names}_g_l_m.");
+  params.addParam<bool>("is_conservative_transfer_src",
+                        true,
+                        "Whether this transport action is providing flux moments to a sub/parent "
+                        "app using conservative transfers. Setting this option to 'true' adds "
+                        "post-processors to ensure flux moments are conservative.");
   //----------------------------------------------------------------------------
   // Boundary sources.
   params.addParam<std::vector<BoundaryName>>("source_boundaries",
@@ -138,9 +147,11 @@ UncollidedFluxAction::UncollidedFluxAction(const InputParameters & parameters)
   : GnatBaseAction(parameters),
     _num_groups(getParam<unsigned int>("num_groups")),
     _max_eval_anisotropy(getParam<unsigned int>("max_anisotropy")),
+    _num_group_moments(0u),
     _uncollided_var_base_name(getParam<std::string>("uncollided_flux_moment_names")),
     _uncollided_treatment(
         getParam<MooseEnum>("uncollided_flux_treatment").getEnum<UncollidedTreatment>()),
+    _conservative_src(getParam<bool>("is_conservative_transfer_src")),
     _point_source_locations(getParam<std::vector<Point>>("point_source_locations")),
     _point_source_moments(getParam<std::vector<std::vector<Real>>>("point_source_moments")),
     _point_source_anisotropy(getParam<std::vector<unsigned int>>("point_source_anisotropies")),
@@ -153,18 +164,29 @@ UncollidedFluxAction::UncollidedFluxAction(const InputParameters & parameters)
     _volumetric_source_anisotropy(
         getParam<std::vector<unsigned int>>("volumetric_source_anisotropies"))
 {
-  for (unsigned int g = 0; g < _num_groups; ++g)
-  {
-    // Set up variable names for the group flux moments.
-    _group_flux_moments.emplace(g, std::vector<VariableName>());
-    _group_flux_moments[g].emplace_back(_uncollided_var_base_name + "_" + Moose::stringify(g + 1u) +
-                                        "_" + Moose::stringify(0u) + "_" + Moose::stringify(0u));
-  }
 }
 
 void
 UncollidedFluxAction::act()
 {
+  if (_current_task == "post_mesh_prepared")
+  {
+    switch (_mesh->dimension())
+    {
+      case 2u:
+        _num_group_moments = (_max_eval_anisotropy + 1u) * (_max_eval_anisotropy + 2u) / 2u;
+        break;
+
+      case 3u:
+        _num_group_moments = (_max_eval_anisotropy + 1u) * (_max_eval_anisotropy + 1u);
+        break;
+
+      default:
+        mooseError("Invalid mesh dimensionality (" + Moose::stringify(_mesh->dimension()) + ").");
+        break;
+    }
+  }
+
   switch (_uncollided_treatment)
   {
     case UncollidedTreatment::RT:
@@ -209,6 +231,12 @@ UncollidedFluxAction::actUncollidedFluxRT()
     debugOutput("    - Adding the uncollided flux auxkernels...");
     addUncollidedRayAuxKernels();
   }
+
+  if (_current_task == "add_postprocessor" && _conservative_src)
+  {
+    debugOutput("    - Adding the uncollided flux post-processors...");
+    addUncollidedRayPostProcessors();
+  }
 }
 
 void
@@ -219,6 +247,8 @@ UncollidedFluxAction::addUncollidedRayKernels()
     auto params = _factory.getValidParams("UncollidedFluxRayKernel");
     params.set<AuxVariableName>("variable") = "RTUncollidedStorage";
     params.set<unsigned int>("num_groups") = _num_groups;
+    params.set<unsigned int>("max_anisotropy") = _max_eval_anisotropy;
+    params.set<unsigned int>("num_group_moments") = _num_group_moments;
     // We pretend that the uncollided flux actions are transport systems. For all intensive
     // purposes, they are.
     params.set<std::string>("transport_system") = name();
@@ -242,6 +272,7 @@ UncollidedFluxAction::addUncollidedRayKernels()
         "      - Adding ray kernel UncollidedFluxRayKernel for the variable RTUncollidedStorage.");
   } // UncollidedFluxRayKernel
 }
+
 void
 UncollidedFluxAction::addUncollidedRayStudies()
 {
@@ -283,6 +314,7 @@ UncollidedFluxAction::addUncollidedRayStudies()
         "      - Adding ray study UncollidedFluxRayStudy for the variable RTUncollidedStorage.");
   } // UncollidedFluxRayStudy
 }
+
 void
 UncollidedFluxAction::addUncollidedRayAuxVars()
 {
@@ -291,7 +323,7 @@ UncollidedFluxAction::addUncollidedRayAuxVars()
     auto params = _factory.getValidParams("ArrayMooseVariable");
     params.set<MooseEnum>("order") = "CONSTANT";
     params.set<MooseEnum>("family") = "MONOMIAL";
-    params.set<unsigned int>("components") = _num_groups;
+    params.set<unsigned int>("components") = _num_groups * _num_group_moments;
 
     if (isParamValid("block"))
     {
@@ -315,9 +347,36 @@ UncollidedFluxAction::addUncollidedRayAuxVars()
 
     for (unsigned int g = 0; g < _num_groups; ++g)
     {
-      _problem->addAuxVariable("MooseVariableConstMonomial", _group_flux_moments[g][0u], params);
-      debugOutput("      - Adding auxvariable MooseVariableConstMonomial " +
-                  _group_flux_moments[g][0u] + ".");
+      if (_mesh->dimension() == 2u)
+      {
+        for (unsigned int l = 0; l <= _max_eval_anisotropy; ++l)
+        {
+          for (int m = 0; m <= static_cast<int>(l); ++m)
+          {
+            const std::string var_name = _uncollided_var_base_name + "_" +
+                                         Moose::stringify(g + 1u) + "_" + Moose::stringify(l) +
+                                         "_" + Moose::stringify(m);
+
+            _problem->addAuxVariable("MooseVariableConstMonomial", var_name, params);
+            debugOutput("      - Adding auxvariable MooseVariableConstMonomial " + var_name + ".");
+          }
+        }
+      }
+      else
+      {
+        for (unsigned int l = 0; l <= _max_eval_anisotropy; ++l)
+        {
+          for (int m = -1 * static_cast<int>(l); m <= static_cast<int>(l); ++m)
+          {
+            const std::string var_name = _uncollided_var_base_name + "_" +
+                                         Moose::stringify(g + 1u) + "_" + Moose::stringify(l) +
+                                         "_" + Moose::stringify(m);
+
+            _problem->addAuxVariable("MooseVariableConstMonomial", var_name, params);
+            debugOutput("      - Adding auxvariable MooseVariableConstMonomial " + var_name + ".");
+          }
+        }
+      }
     }
   } // MooseVariableConstMonomial
 }
@@ -326,26 +385,134 @@ void
 UncollidedFluxAction::addUncollidedRayAuxKernels()
 {
   // Add ArrayVariableComponent.
+  unsigned int index = 0u;
   for (unsigned int g = 0u; g < _num_groups; ++g)
   {
-    auto params = _factory.getValidParams("ArrayVariableComponent");
-    params.set<std::vector<VariableName>>("array_variable").emplace_back("RTUncollidedStorage");
-    params.set<AuxVariableName>("variable") = _group_flux_moments[g][0u];
-    params.set<unsigned int>("component") = g;
-
-    if (isParamValid("block"))
+    if (_mesh->dimension() == 2u)
     {
-      params.set<std::vector<SubdomainName>>("block") =
-          getParam<std::vector<SubdomainName>>("block");
+      for (unsigned int l = 0; l <= _max_eval_anisotropy; ++l)
+      {
+        for (int m = 0; m <= static_cast<int>(l); ++m)
+        {
+          const std::string var_name = _uncollided_var_base_name + "_" + Moose::stringify(g + 1u) +
+                                       "_" + Moose::stringify(l) + "_" + Moose::stringify(m);
+
+          auto params = _factory.getValidParams("ArrayVariableComponent");
+          params.set<std::vector<VariableName>>("array_variable")
+              .emplace_back("RTUncollidedStorage");
+          params.set<AuxVariableName>("variable") = var_name;
+          params.set<unsigned int>("component") = index;
+
+          if (isParamValid("block"))
+          {
+            params.set<std::vector<SubdomainName>>("block") =
+                getParam<std::vector<SubdomainName>>("block");
+          }
+
+          params.set<ExecFlagEnum>("execute_on") = EXEC_TIMESTEP_END;
+
+          _problem->addAuxKernel(
+              "ArrayVariableComponent", "ArrayVariableComponent_" + var_name, params);
+          debugOutput("      - Adding auxkernel ArrayVariableComponent for " + var_name + ".");
+
+          index++;
+        }
+      }
     }
+    else
+    {
+      for (unsigned int l = 0; l <= _max_eval_anisotropy; ++l)
+      {
+        for (int m = -1 * static_cast<int>(l); m <= static_cast<int>(l); ++m)
+        {
+          const std::string var_name = _uncollided_var_base_name + "_" + Moose::stringify(g + 1u) +
+                                       "_" + Moose::stringify(l) + "_" + Moose::stringify(m);
 
-    params.set<ExecFlagEnum>("execute_on") = EXEC_TIMESTEP_END;
+          auto params = _factory.getValidParams("ArrayVariableComponent");
+          params.set<std::vector<VariableName>>("array_variable")
+              .emplace_back("RTUncollidedStorage");
+          params.set<AuxVariableName>("variable") = var_name;
+          params.set<unsigned int>("component") = index;
 
-    _problem->addAuxKernel(
-        "ArrayVariableComponent", "ArrayVariableComponent_" + _group_flux_moments[g][0u], params);
-    debugOutput("      - Adding auxkernel ArrayVariableComponent for " +
-                _group_flux_moments[g][0u] + ".");
+          if (isParamValid("block"))
+          {
+            params.set<std::vector<SubdomainName>>("block") =
+                getParam<std::vector<SubdomainName>>("block");
+          }
+
+          params.set<ExecFlagEnum>("execute_on") = EXEC_TIMESTEP_END;
+
+          _problem->addAuxKernel(
+              "ArrayVariableComponent", "ArrayVariableComponent_" + var_name, params);
+          debugOutput("      - Adding auxkernel ArrayVariableComponent for " + var_name + ".");
+
+          index++;
+        }
+      }
+    }
   } // ArrayVariableComponent
+}
+
+void
+UncollidedFluxAction::addUncollidedRayPostProcessors()
+{
+  for (unsigned int g = 0u; g < _num_groups; ++g)
+  {
+    if (_mesh->dimension() == 2u)
+    {
+      for (unsigned int l = 0; l <= _max_eval_anisotropy; ++l)
+      {
+        for (int m = 0; m <= static_cast<int>(l); ++m)
+        {
+          const std::string var_name = _uncollided_var_base_name + "_" + Moose::stringify(g + 1u) +
+                                       "_" + Moose::stringify(l) + "_" + Moose::stringify(m);
+
+          auto params = _factory.getValidParams("ElementIntegralVariablePostprocessor");
+          params.set<std::vector<VariableName>>("variable").emplace_back(var_name);
+          params.set<ExecFlagEnum>("execute_on") = EXEC_TIMESTEP_END;
+          params.set<std::vector<OutputName>>("outputs").emplace_back("none");
+
+          if (isParamValid("block"))
+            params.set<std::vector<SubdomainName>>("block") =
+                getParam<std::vector<SubdomainName>>("block");
+
+          _problem->addPostprocessor("ElementIntegralVariablePostprocessor",
+                                     "ElementIntegralVariablePostprocessor_" + var_name + "_src",
+                                     params);
+          debugOutput(
+              "      - Adding Transfer ElementIntegralVariablePostprocessor for the variable " +
+              var_name + ".");
+        }
+      }
+    }
+    else
+    {
+      for (unsigned int l = 0; l <= _max_eval_anisotropy; ++l)
+      {
+        for (int m = -1 * static_cast<int>(l); m <= static_cast<int>(l); ++m)
+        {
+          const std::string var_name = _uncollided_var_base_name + "_" + Moose::stringify(g + 1u) +
+                                       "_" + Moose::stringify(l) + "_" + Moose::stringify(m);
+
+          auto params = _factory.getValidParams("ElementIntegralVariablePostprocessor");
+          params.set<std::vector<VariableName>>("variable").emplace_back(var_name);
+          params.set<ExecFlagEnum>("execute_on") = EXEC_TIMESTEP_END;
+          params.set<std::vector<OutputName>>("outputs").emplace_back("none");
+
+          if (isParamValid("block"))
+            params.set<std::vector<SubdomainName>>("block") =
+                getParam<std::vector<SubdomainName>>("block");
+
+          _problem->addPostprocessor("ElementIntegralVariablePostprocessor",
+                                     "ElementIntegralVariablePostprocessor_" + var_name + "_src",
+                                     params);
+          debugOutput(
+              "      - Adding Transfer ElementIntegralVariablePostprocessor for the variable " +
+              var_name + ".");
+        }
+      }
+    }
+  }
 }
 
 void

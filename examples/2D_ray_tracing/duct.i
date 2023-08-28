@@ -19,6 +19,7 @@
   [Neutron]
     uncollided_flux_treatment = ray-tracing
     num_groups = 2
+    max_anisotropy = 0
 
     point_source_locations = '
     14.0  0.0 0.0
@@ -36,7 +37,7 @@
     volumetric_source_anisotropies = '0'
     volumetric_source_moments = '1.0 0.5'
 
-    rt_n_polar = 30
+    rt_n_polar = 10
   []
 []
 
