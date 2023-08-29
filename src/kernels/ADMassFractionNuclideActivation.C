@@ -67,7 +67,11 @@ ADMassFractionNuclideActivation::ADMassFractionNuclideActivation(const InputPara
 ADReal
 ADMassFractionNuclideActivation::computeQpResidual()
 {
-  const auto qp_arg = std::make_tuple(_current_elem, _qp, _qrule);
+  auto qp_args = Moose::ElemQpArg();
+  qp_args.elem = _current_elem;
+  qp_args.qp = _qp;
+  qp_args.qrule = _qrule;
+  qp_args.point = _q_point[_qp];
 
   ADReal res = 0.0;
   ADReal iso_res = 0.0;
@@ -79,7 +83,7 @@ ADMassFractionNuclideActivation::computeQpResidual()
     for (unsigned int g = 0u; g < _num_groups; ++g)
       iso_res += ((*_group_scalar_fluxes[g])[_qp]) * _sigma_a_g[i * _num_groups + g];
 
-    res += iso_res * (*_isotope_fractions[i])[_qp] * _density(qp_arg, 0u);
+    res += iso_res * (*_isotope_fractions[i])[_qp] * _density(qp_args, 0u);
     iso_res = 0.0;
   }
 

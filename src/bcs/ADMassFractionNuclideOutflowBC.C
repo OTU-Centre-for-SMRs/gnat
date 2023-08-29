@@ -22,7 +22,12 @@ ADMassFractionNuclideOutflowBC::ADMassFractionNuclideOutflowBC(const InputParame
 ADReal
 ADMassFractionNuclideOutflowBC::computeQpResidual()
 {
-  const auto qp_arg = std::make_tuple(_current_elem, _qp, _qrule);
+  auto qp_arg = Moose::ElemSideQpArg();
+  qp_arg.elem = _current_elem;
+  qp_arg.side = _current_side;
+  qp_arg.qp = _qp;
+  qp_arg.point = _q_point[_qp];
+
   ADReal res = 0.0;
   ADRealVectorValue vel = getQpVelocity();
   ADReal n_dot_v = vel * _normals[_qp];

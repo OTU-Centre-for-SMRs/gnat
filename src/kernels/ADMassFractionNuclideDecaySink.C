@@ -22,6 +22,11 @@ ADMassFractionNuclideDecaySink::ADMassFractionNuclideDecaySink(const InputParame
 ADReal
 ADMassFractionNuclideDecaySink::computeQpResidual()
 {
-  return computeQpTests() * _decay_const * _u[_qp] *
-         _density(std::make_tuple(_current_elem, _qp, _qrule), 0u);
+  auto qp_args = Moose::ElemQpArg();
+  qp_args.elem = _current_elem;
+  qp_args.qp = _qp;
+  qp_args.qrule = _qrule;
+  qp_args.point = _q_point[_qp];
+
+  return computeQpTests() * _decay_const * _u[_qp] * _density(qp_args, 0u);
 }

@@ -29,18 +29,22 @@ ADMassFractionNuclideDiffusion::ADMassFractionNuclideDiffusion(const InputParame
 ADReal
 ADMassFractionNuclideDiffusion::computeQpResidual()
 {
-  const auto qp_arg = std::make_tuple(_current_elem, _qp, _qrule);
+  auto qp_args = Moose::ElemQpArg();
+  qp_args.elem = _current_elem;
+  qp_args.qp = _qp;
+  qp_args.qrule = _qrule;
+  qp_args.point = _q_point[_qp];
 
   // SUPG stabilizing test functions.
-  auto supg = _supg_tau(qp_arg, 0u) * getQpVelocity() * _grad_test[_i][_qp];
+  auto supg = _supg_tau(qp_args, 0u) * getQpVelocity() * _grad_test[_i][_qp];
 
   // Unstabilized contribution.
-  ADReal res = _grad_test[_i][_qp] * _mat_diff(qp_arg, 0u) *
-               (_density(qp_arg, 0u) * _grad_u[_qp] + _density.gradient(qp_arg, 0u) * _u[_qp]);
+  ADReal res = _grad_test[_i][_qp] * _mat_diff(qp_args, 0u) *
+               (_density(qp_args, 0u) * _grad_u[_qp] + _density.gradient(qp_args, 0u) * _u[_qp]);
 
   // Upwind contribution 1.
-  res -= supg * _grad_mat_diff(qp_arg, 0u) *
-         (_density.gradient(qp_arg, 0u) * _u[_qp] + _density(qp_arg, 0u) * _grad_u[_qp]);
+  res -= supg * _grad_mat_diff(qp_args, 0u) *
+         (_density.gradient(qp_args, 0u) * _u[_qp] + _density(qp_args, 0u) * _grad_u[_qp]);
 
   // Laplacian of the mass fraction.
   ADReal laplacian = _hessian_u[_qp](0u, 0u);
@@ -54,9 +58,9 @@ ADMassFractionNuclideDiffusion::computeQpResidual()
   ADReal density_laplacian = 0.0;
 
   // Upwind contribution 2. Currently makes the assumption that laplacian(density) = 0.
-  res -= supg * _mat_diff(qp_arg, 0u) *
-         (density_laplacian + 2.0 * _grad_u[_qp] * _density.gradient(qp_arg, 0u) +
-          _density(qp_arg, 0u) * laplacian);
+  res -= supg * _mat_diff(qp_args, 0u) *
+         (density_laplacian + 2.0 * _grad_u[_qp] * _density.gradient(qp_args, 0u) +
+          _density(qp_args, 0u) * laplacian);
 
   return res;
 }

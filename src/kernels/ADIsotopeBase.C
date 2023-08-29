@@ -42,15 +42,25 @@ ADIsotopeBase::ADIsotopeBase(const InputParameters & parameters)
 ADRealVectorValue
 ADIsotopeBase::getQpVelocity()
 {
-  const auto qp_arg = std::make_tuple(_current_elem, _qp, _qrule);
-  return ADRealVectorValue(_vel_u(qp_arg, 0u),
-                           _vel_v ? (*_vel_v)(qp_arg, 0u) : 0.0,
-                           _vel_w ? (*_vel_w)(qp_arg, 0u) : 0.0);
+  auto qp_args = Moose::ElemQpArg();
+  qp_args.elem = _current_elem;
+  qp_args.qp = _qp;
+  qp_args.qrule = _qrule;
+  qp_args.point = _q_point[_qp];
+
+  return ADRealVectorValue(_vel_u(qp_args, 0u),
+                           _vel_v ? (*_vel_v)(qp_args, 0u) : 0.0,
+                           _vel_w ? (*_vel_w)(qp_args, 0u) : 0.0);
 }
 
 ADReal
 ADIsotopeBase::computeQpTests()
 {
-  const auto qp_arg = std::make_tuple(_current_elem, _qp, _qrule);
-  return _test[_i][_qp] + _supg_tau(qp_arg, 0u) * getQpVelocity() * _grad_test[_i][_qp];
+  auto qp_args = Moose::ElemQpArg();
+  qp_args.elem = _current_elem;
+  qp_args.qp = _qp;
+  qp_args.qrule = _qrule;
+  qp_args.point = _q_point[_qp];
+
+  return _test[_i][_qp] + _supg_tau(qp_args, 0u) * getQpVelocity() * _grad_test[_i][_qp];
 }

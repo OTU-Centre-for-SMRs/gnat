@@ -27,7 +27,12 @@ ADMassFractionNuclideInflowBC::ADMassFractionNuclideInflowBC(const InputParamete
 ADReal
 ADMassFractionNuclideInflowBC::computeQpResidual()
 {
-  const auto qp_arg = std::make_tuple(_current_elem, _qp, _qrule);
+  auto qp_arg = Moose::ElemSideQpArg();
+  qp_arg.elem = _current_elem;
+  qp_arg.side = _current_side;
+  qp_arg.qp = _qp;
+  qp_arg.point = _q_point[_qp];
+
   ADRealVectorValue vel = getQpVelocity();
   ADReal n_dot_v = vel * _normals[_qp];
   return _inflow_rate * n_dot_v * _test[_i][_qp] * _density(qp_arg, 0u);

@@ -43,11 +43,15 @@ ADMassFractionNuclideDecaySource::ADMassFractionNuclideDecaySource(
 ADReal
 ADMassFractionNuclideDecaySource::computeQpResidual()
 {
-  const auto qp_arg = std::make_tuple(_current_elem, _qp, _qrule);
+  auto qp_args = Moose::ElemQpArg();
+  qp_args.elem = _current_elem;
+  qp_args.qp = _qp;
+  qp_args.qrule = _qrule;
+  qp_args.point = _q_point[_qp];
 
   ADReal res = 0.0;
   for (unsigned int i = 0u; i < _isotope_fractions.size(); ++i)
-    res += (*_isotope_fractions[i])[_qp] * _density(qp_arg, 0u) * _decay_consts[i];
+    res += (*_isotope_fractions[i])[_qp] * _density(qp_args, 0u) * _decay_consts[i];
 
   return -1.0 * computeQpTests() * res;
 }

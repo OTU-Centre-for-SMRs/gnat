@@ -25,6 +25,12 @@ ADMassFractionNuclideTimeDerivative::ADMassFractionNuclideTimeDerivative(
 ADReal
 ADMassFractionNuclideTimeDerivative::computeQpResidual()
 {
-  const auto qp_arg = std::make_tuple(_current_elem, _qp, _qrule);
-  return computeQpTests() * (_density(qp_arg, 0u) * _u_dot[_qp] + _density.dot(qp_arg, 0u) * _u[_qp]);
+  auto qp_args = Moose::ElemQpArg();
+  qp_args.elem = _current_elem;
+  qp_args.qp = _qp;
+  qp_args.qrule = _qrule;
+  qp_args.point = _q_point[_qp];
+
+  return computeQpTests() *
+         (_density(qp_args, 0u) * _u_dot[_qp] + _density.dot(qp_args, 0u) * _u[_qp]);
 }
