@@ -21,7 +21,9 @@ INSFVMassFractionScalarFieldAdvection::INSFVMassFractionScalarFieldAdvection(
 ADReal
 INSFVMassFractionScalarFieldAdvection::computeQpResidual()
 {
-  const auto v = _rc_vel_provider.getVelocity(_velocity_interp_method, *_face_info, 0u, _tid);
+  const auto v =
+      _rc_vel_provider.getVelocity(_velocity_interp_method, *_face_info, 0u, _tid, false);
+
   // The mass fraction of the scalar quantity.
   const auto var_face = _var(makeFace(*_face_info,
                                       limiterType(_advected_interp_method),

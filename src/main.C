@@ -8,10 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "GnatApp.h"
-#include "MooseInit.h"
-#include "Moose.h"
-#include "MooseApp.h"
-#include "AppFactory.h"
+#include "MooseMain.h"
 
 // Create a performance log
 PerfLog Moose::perf_log("Gnat");
@@ -20,37 +17,7 @@ PerfLog Moose::perf_log("Gnat");
 int
 main(int argc, char * argv[])
 {
-  // Initialize MPI, solvers and MOOSE
-  MooseInit init(argc, argv);
-
-  // Register this application's MooseApp and any it depends on
-  GnatApp::registerApps();
-
-  // Create an instance of the application and store it in a smart pointer for easy cleanup
-  std::shared_ptr<MooseApp> app = AppFactory::createAppShared("GnatApp", argc, argv);
-
-  app->_console << "-----------------------------------------------------\n"
-                   "---------Generic Neutron Activation Toolkit----------\n"
-                   "-----------------------------------------------------\n"
-                   "                     ,--.\n"
-                   "  ,----..          ,--.'|                      ,----,\n"
-                   " /   /   \\     ,--,:  : |   ,---,            ,/   .`|\n"
-                   "|   :     : ,`--.'`|  ' :  '  .' \\         ,`   .'  :\n"
-                   ".   |  ;. / |   :  :  | | /  ;    '.     ;    ;     /\n"
-                   ".   ; /--`  :   |   \\ | ::  :   .   \\  .'___,/    ,'\n"
-                   ";   | ;  __ |   : '  '; |:  |  / \\   \\ |    :     |\n"
-                   "|   : |.' .''   ' ;.    ;|  :  |--\\   :;    |.';  ;\n"
-                   ".   | '_.' :|   | | \\   ||  |  /\\  \\   `----'  |  |\n"
-                   "'   ; : \\  |'   : |  ; .''  :  | \\  \\ ,'   '   :  ;\n"
-                   "'   | '/  .'|   | '`--'  |  |  '  '--'     |   |  '\n"
-                   "|   :    /  '   : |      |  :  :           '   :  |\n"
-                   " \\   \\ .'   ;   |.'      |  | ,'           ;   |.'\n"
-                   "  `---`     '---'        `--''             '---'\n"
-                   "-----------------------------------------------------"
-                << std::endl;
-
-  // Execute the application
-  app->run();
+  Moose::main<GnatApp>(argc, argv);
 
   return 0;
 }

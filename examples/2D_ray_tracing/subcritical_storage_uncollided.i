@@ -5,67 +5,48 @@
   []
 []
 
-[UserObjects]
-  [UncollidedStudy]
-    type = UncollidedFluxRayStudy
+[UncollidedFlux]
+  [Neutron]
+    uncollided_flux_treatment = ray-tracing
     num_groups = 1
+    max_anisotropy = 1
 
     volumetric_source_blocks = fuel
     volumetric_source_moments = '40.5717'
     volumetric_source_anisotropies = '0'
+
+    rt_n_polar = 4
   []
 []
 
-[RayKernels]
-  [UncollidedFluxKernel]
-    type = UncollidedFluxRayKernel
-    variable = UncollidedFlux
-    num_groups = 1
-    transport_system = ''
-  []
-[]
-
-[AuxVariables]
-  [UncollidedFlux]
-    type = ArrayMooseVariable
-    order = CONSTANT
-    family = MONOMIAL
-    components = 1
-  []
-[]
-
-[Materials]
+[TransportMaterials]
   [Air]
-    type = FileNeutronicsMaterial
-    transport_system = ''
+    type = FileTransportMaterial
+    transport_system = 'Neutron'
     file_name = 'macro_xs.xml'
     source_material_id = '5'
     block = air
-    num_groups = 1
   []
   [Cladding]
-    type = FileNeutronicsMaterial
-    transport_system = ''
+    type = FileTransportMaterial
+    transport_system = 'Neutron'
     file_name = 'macro_xs.xml'
     source_material_id = '6'
     block = cladding
-    num_groups = 1
   []
   [Fuel]
-    type = FileNeutronicsMaterial
-    transport_system = ''
+    type = FileTransportMaterial
+    transport_system = 'Neutron'
     file_name = 'macro_xs.xml'
     source_material_id = '7'
     block = fuel
-    num_groups = 1
   []
   [Wood]
-    type = FileNeutronicsMaterial
-    transport_system = ''
+    type = FileTransportMaterial
+    transport_system = 'Neutron'
     file_name = 'macro_xs.xml'
     source_material_id = '8'
     block = wood
-    num_groups = 1
   []
 []
 
@@ -82,4 +63,5 @@
 
 [Outputs]
   exodus = true
+  execute_on = 'TIMESTEP_END'
 []

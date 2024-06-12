@@ -24,7 +24,7 @@ public:
 private:
   const unsigned int _degree;
 
-  // Storing weights to mirror LegendrePolynomial.s
+  // Storing weights to mirror LegendrePolynomial.
   // _roots stores the roots on -1 \leq y \leq 1
   // _angular_roots stores the roots on 0 \leq \omega \leq 2\pi
   std::vector<Real> _roots;

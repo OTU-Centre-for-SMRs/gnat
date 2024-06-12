@@ -6,7 +6,6 @@
 #include "AddVariableAction.h"
 #include "AddOutputAction.h"
 #include "TransportAction.h"
-#include "ADIsotopeBase.h"
 #include "InputParameterWarehouse.h"
 
 #include "NSFVAction.h"
@@ -117,18 +116,21 @@ MobileDepletionSystemAction::validParams()
   // Boundary condition parameters.
   params.addParam<std::vector<BoundaryName>>(
       "inlet_boundaries",
+      std::vector<BoundaryName>(),
       "The names of boundaries which act as inflow boundaries. GNAT applies a fixed nuclide mass "
       "fraction at each of these boundaries equal to the initial mass fractions specified in "
       "'element_atom_fractions' and 'extra_nuclide_atom_fractions'. This functionality can be "
       "overriden by specifying inlet mass fractions in 'inlet_mass_fractions'.");
   params.addParam<std::vector<std::vector<Real>>>(
       "inlet_atom_fractions",
+      std::vector<std::vector<Real>>(),
       "A double vector of inlet atom fractions. The outer vector must match the ordering of "
       "'inlet_boundaries'. The inner vector must must be arranged so elements go first; extra "
       "nuclides go second. The ordering of elements and nuclides must match the ordering of "
       "'elements' and 'extra_nuclides'.");
   params.addParam<std::vector<BoundaryName>>(
       "outlet_boundaries",
+      std::vector<BoundaryName>(),
       "The names of boundaries which act as outflow boundaries. If 'using_moose_ns_fv' is set to "
       "'true' this parameter will be ignored.");
 
@@ -136,16 +138,21 @@ MobileDepletionSystemAction::validParams()
   // Initial conditions and elemental composition parameters.
   params.addParam<std::vector<std::string>>(
       "elements",
+      std::vector<std::string>(),
       "The elemental composition of the fluid mixture. It is assumed that all elements added with "
       "this syntax are composed of a mixture of nuclides at their natural abundances.");
   params.addParam<std::vector<Real>>(
       "element_atom_fractions",
+      std::vector<Real>(),
       "The atom fractions of each element in 'elements'. Must "
       "follow the same ordering as 'elements'. The sum of all atom fractions (multiplied by the "
       "natural) provided must equal one.");
   params.addParam<std::vector<std::string>>(
-      "extra_nuclides", "Extra nuclides to add to the composition of the fluid mixture.");
+      "extra_nuclides",
+      std::vector<std::string>(),
+      "Extra nuclides to add to the composition of the fluid mixture.");
   params.addParam<std::vector<Real>>("extra_nuclide_atom_fractions",
+                                     std::vector<Real>(),
                                      "The atom fractions of each nuclide in 'extra_nuclides'. Must "
                                      "follow the same ordering as 'extra_nuclides'. The sum of all "
                                      "atom fractions provided must equal one.");
@@ -157,6 +164,33 @@ MobileDepletionSystemAction::validParams()
                         false,
                         "Whether the mass fractions of nuclides should be output alongside their "
                         "respective densities.");
+
+  //----------------------------------------------------------------------------
+  // Parameters for radiological consequence assessment simulations; coupled radiation transport
+  // with mobile depletion where the depleted radionuclides act as photon/neutron decay sources.
+  params.addParam<bool>("add_photon_sources",
+                        false,
+                        "If group-wise radionuclide photon source terms should be added.");
+  params.addParam<std::string>(
+      "photon_source_prefix",
+      "photon_source",
+      "A prefix for the auxvariables which stores the group-wise photon particle source.");
+  params.addParam<bool>("add_neutron_sources",
+                        false,
+                        "If group-wise radionuclide neutron source terms should be added.");
+  params.addParam<std::string>(
+      "neutron_source_prefix",
+      "neutron_source",
+      "A prefix for the auxvariables which stores the group-wise neutron particle source.");
+
+  params.addParam<std::vector<Real>>(
+      "photon_group_boundaries",
+      std::vector<Real>{2.0e7, 0.0},
+      "The photon group structure in descending order of energy (including 0.0 eV)");
+  params.addParam<std::vector<Real>>(
+      "neutron_group_boundaries",
+      std::vector<Real>{2.0e7, 0.0},
+      "The neutron group structure in descending order of energy (including 0.0 eV)");
 
   //----------------------------------------------------------------------------
   // Debug parameters.
@@ -186,6 +220,10 @@ MobileDepletionSystemAction::MobileDepletionSystemAction(const InputParameters &
     _inlet_boundaries(getParam<std::vector<BoundaryName>>("inlet_boundaries")),
     _inlet_atom_fractions(getParam<std::vector<std::vector<Real>>>("inlet_atom_fractions")),
     _outlet_boundaries(getParam<std::vector<BoundaryName>>("outlet_boundaries")),
+    _photon_source_prefix(getParam<std::string>("photon_source_prefix")),
+    _neutron_source_prefix(getParam<std::string>("neutron_source_prefix")),
+    _photon_group_boundaries(getParam<std::vector<Real>>("photon_group_boundaries")),
+    _neutron_group_boundaries(getParam<std::vector<Real>>("neutron_group_boundaries")),
     _debug_filter_nuclides(getParam<std::vector<std::string>>("debug_filter_nuclides"))
 {
   if (_scheme == NuclideScheme::SUPGFE && !_pars.isParamSetByUser("family"))
@@ -198,13 +236,6 @@ MobileDepletionSystemAction::MobileDepletionSystemAction(const InputParameters &
   {
     if (!isParamValid("u"))
       paramError("u", "The x component of the velocity must be supplied using the 'u' parameter.");
-    if (_mesh_dims >= 2u && !isParamValid("v"))
-      paramError(
-          "v",
-          "In >= 2D the y component of the velocity must be supplied using the 'v' parameter.");
-    if (_mesh_dims >= 3u && !isParamValid("w"))
-      paramError("w",
-                 "In 3D the z component of the velocity must be supplied using the 'w' parameter.");
 
     if (!isParamValid("density"))
       paramError("density",
@@ -311,8 +342,9 @@ MobileDepletionSystemAction::addElementsAndNuclides()
       fraction *= NuclearData::Nuclide::getAtomicMass(nuclide);
       total_weight += fraction;
     }
-    for (auto & [nuclide, fraction] : _total_nuclide_list)
-      fraction /= total_weight;
+    if (!MooseUtils::absoluteFuzzyEqual(total_weight, 0.0))
+      for (auto & [nuclide, fraction] : _total_nuclide_list)
+        fraction /= total_weight;
   }
 
   // Sanity check to make sure everything adds up to 1.0. If not, warn the user and scale each
@@ -322,7 +354,7 @@ MobileDepletionSystemAction::addElementsAndNuclides()
     for (auto & [nuclide, fraction] : _total_nuclide_list)
       sum += fraction;
 
-    if (!MooseUtils::absoluteFuzzyGreaterThan(sum, 1.0))
+    if (MooseUtils::absoluteFuzzyGreaterThan(sum, 1.0))
     {
       _console << COLOR_YELLOW << "The sum of all computed weight fractions (" << sum
                << ") is greater than 1. Each weight fraction will be divided by " << sum
@@ -371,8 +403,9 @@ MobileDepletionSystemAction::addElementsAndNuclides()
           fraction *= NuclearData::Nuclide::getAtomicMass(nuclide);
           total_weight += fraction;
         }
-        for (auto & [nuclide, fraction] : _boundary_mass_fractions[i])
-          fraction /= total_weight;
+        if (!MooseUtils::absoluteFuzzyEqual(total_weight, 0.0))
+          for (auto & [nuclide, fraction] : _boundary_mass_fractions[i])
+            fraction /= total_weight;
       }
 
       // Sanity check to make sure everything adds up to 1.0. If not, warn the user and scale each
@@ -382,8 +415,12 @@ MobileDepletionSystemAction::addElementsAndNuclides()
         for (auto & [nuclide, fraction] : _boundary_mass_fractions[i])
           sum += fraction;
 
-        if (!MooseUtils::absoluteFuzzyEqual(sum, 1.0))
+        if (MooseUtils::absoluteFuzzyGreaterThan(sum, 1.0))
         {
+          _console << COLOR_YELLOW << "The sum of all computed boundary weight fractions (" << sum
+                   << ") is greater than 1. Each weight fraction will be divided by " << sum
+                   << " to remain conservative.\n"
+                   << COLOR_DEFAULT;
           for (auto & [nuclide, fraction] : _boundary_mass_fractions[i])
             fraction /= sum;
         }
@@ -447,7 +484,7 @@ MobileDepletionSystemAction::buildDepletionSystem()
   }
 
   // Sanity check to make sure the number of cross-section energy groups are the same.
-  if (_num_groups != _coupled_depletion_lib->numGroups())
+  if (_num_groups != _coupled_depletion_lib->numGroups() && _has_transport_system)
     mooseError("The number of microscopic cross-section energy groups does not match the number of "
                "neutron energy groups.");
 }
@@ -473,10 +510,17 @@ MobileDepletionSystemAction::applyIsotopeParameters(InputParameters & params, bo
       params.set<MooseFunctorName>("density") = getParam<MooseFunctorName>("density");
 
     params.set<MooseFunctorName>("u") = getParam<MooseFunctorName>("u");
-    if (_mesh_dims >= 2u)
+    if (_mesh_dims >= 2u && isParamValid("v"))
       params.set<MooseFunctorName>("v") = getParam<MooseFunctorName>("v");
-    if (_mesh_dims >= 3u)
+    else
+      paramError(
+          "v",
+          "In >= 2D the y component of the velocity must be supplied using the 'v' parameter.");
+    if (_mesh_dims >= 3u && isParamValid("w"))
       params.set<MooseFunctorName>("w") = getParam<MooseFunctorName>("w");
+    else
+      paramError("w",
+                 "In 3D the z component of the velocity must be supplied using the 'w' parameter.");
   }
 }
 
@@ -812,7 +856,7 @@ MobileDepletionSystemAction::addBCs(const std::string & nuclide_var_name)
 {
   const std::string frac_var_name = nuclide_var_name + "_mass_fraction";
 
-  // Add ADFVMassFractionNuclideInflowBC.
+  // Add ADMassFractionNuclideInflowBC.
   if (_inlet_atom_fractions.size() > 0u)
   {
     // Add inlet BCs for the atom densities provided by the user.
@@ -1386,6 +1430,181 @@ MobileDepletionSystemAction::modifyOutputs()
   }
 }
 
+// Auxvariables and auxkernels for radiation transport source terms.
+void
+MobileDepletionSystemAction::addRadiationAuxVariables()
+{
+  if (getParam<bool>("add_photon_sources"))
+  {
+    for (unsigned int g = 0u; g < _photon_group_boundaries.size() - 1u; ++g)
+    {
+      if (_scheme == NuclideScheme::FV)
+      {
+        auto params = _factory.getValidParams("MooseVariableFVReal");
+        params.set<bool>("two_term_boundary_expansion") =
+            getParam<bool>("fv_two_term_boundary_expansion");
+
+        if (isParamValid("block"))
+        {
+          params.set<std::vector<SubdomainName>>("block") =
+              getParam<std::vector<SubdomainName>>("block");
+        }
+
+        _problem->addAuxVariable(
+            "MooseVariableFVReal", _photon_source_prefix + "_g_" + Moose::stringify(g), params);
+        debugOutput("      - Adding auxvariable " + _photon_source_prefix + "_g_" +
+                    Moose::stringify(g) + ".");
+      }
+      else
+      {
+        auto fe_type = AddVariableAction::feType(_pars);
+        auto type = AddVariableAction::variableType(fe_type, false, false);
+        auto params = _factory.getValidParams(type);
+        params.set<MooseEnum>("order") = fe_type.order.get_order();
+        params.set<MooseEnum>("family") = Moose::stringify(fe_type.family);
+
+        if (isParamValid("block"))
+        {
+          params.set<std::vector<SubdomainName>>("block") =
+              getParam<std::vector<SubdomainName>>("block");
+        }
+
+        _problem->addAuxVariable(type, _photon_source_prefix + "_g_" + Moose::stringify(g), params);
+        debugOutput("      - Adding auxvariable " + _photon_source_prefix + "_g_" +
+                    Moose::stringify(g) + ".");
+      }
+    }
+  }
+
+  if (getParam<bool>("add_neutron_sources"))
+  {
+    for (unsigned int g = 0u; g < _neutron_group_boundaries.size() - 1u; ++g)
+    {
+      if (_scheme == NuclideScheme::FV)
+      {
+        auto params = _factory.getValidParams("MooseVariableFVReal");
+        params.set<bool>("two_term_boundary_expansion") =
+            getParam<bool>("fv_two_term_boundary_expansion");
+
+        if (isParamValid("block"))
+        {
+          params.set<std::vector<SubdomainName>>("block") =
+              getParam<std::vector<SubdomainName>>("block");
+        }
+
+        _problem->addAuxVariable(
+            "MooseVariableFVReal", _neutron_source_prefix + "_g_" + Moose::stringify(g), params);
+        debugOutput("      - Adding auxvariable " + _neutron_source_prefix + "_g_" +
+                    Moose::stringify(g) + ".");
+      }
+      else
+      {
+        auto fe_type = AddVariableAction::feType(_pars);
+        auto type = AddVariableAction::variableType(fe_type, false, false);
+        auto params = _factory.getValidParams(type);
+        params.set<MooseEnum>("order") = fe_type.order.get_order();
+        params.set<MooseEnum>("family") = Moose::stringify(fe_type.family);
+
+        if (isParamValid("block"))
+        {
+          params.set<std::vector<SubdomainName>>("block") =
+              getParam<std::vector<SubdomainName>>("block");
+        }
+
+        _problem->addAuxVariable(
+            type, _neutron_source_prefix + "_g_" + Moose::stringify(g), params);
+        debugOutput("      - Adding auxvariable " + _neutron_source_prefix + "_g_" +
+                    Moose::stringify(g) + ".");
+      }
+    }
+  }
+}
+
+void
+MobileDepletionSystemAction::addRadiationAuxKernels()
+{
+  if (getParam<bool>("add_photon_sources"))
+  {
+    for (unsigned int g = 0u; g < _photon_group_boundaries.size() - 1u; ++g)
+    {
+      auto params = _factory.getValidParams("ParticleDecaySource");
+      params.set<AuxVariableName>("variable") = _photon_source_prefix + "_g_" + Moose::stringify(g);
+      params.set<MooseEnum>("particle_type") = MooseEnum("neutron photon", "photon");
+      params.set<std::vector<Real>>("group_boundaries") = _photon_group_boundaries;
+      params.set<unsigned int>("group_index") = g;
+      params.set<bool>("is_number_density") = getParam<bool>("compute_number_density");
+
+      if (_scheme == NuclideScheme::FV)
+      {
+        params.set<bool>("is_fe") = false;
+        for (const auto & [nuclide, weight_fraction] : _total_nuclide_list)
+          params.set<std::vector<MooseFunctorName>>("nuclide_funs").emplace_back(nuclide);
+      }
+      else
+      {
+        params.set<bool>("is_fe") = true;
+        for (const auto & [nuclide, weight_fraction] : _total_nuclide_list)
+          params.set<std::vector<VariableName>>("nuclide_vars").emplace_back(nuclide);
+      }
+
+      params.set<UserObjectName>("data_lib_name") =
+          _coupled_depletion_lib->getParam<std::string>("depletion_uo_name");
+
+      if (isParamValid("block"))
+      {
+        params.set<std::vector<SubdomainName>>("block") =
+            getParam<std::vector<SubdomainName>>("block");
+      }
+
+      _problem->addAuxKernel(
+          "ParticleDecaySource", "ParticleDecaySource_Photon_" + Moose::stringify(g), params);
+      debugOutput("      - Adding auxkernel ParticleDecaySource for the variable " +
+                  _photon_source_prefix + "_g_" + Moose::stringify(g) + ".");
+    }
+  }
+
+  if (getParam<bool>("add_neutron_sources"))
+  {
+    for (unsigned int g = 0u; g < _neutron_group_boundaries.size() - 1u; ++g)
+    {
+      auto params = _factory.getValidParams("ParticleDecaySource");
+      params.set<AuxVariableName>("variable") =
+          _neutron_source_prefix + "_g_" + Moose::stringify(g);
+      params.set<MooseEnum>("particle_type") = MooseEnum("neutron photon", "neutron");
+      params.set<std::vector<Real>>("group_boundaries") = _neutron_group_boundaries;
+      params.set<unsigned int>("group_index") = g;
+      params.set<bool>("is_number_density") = getParam<bool>("compute_number_density");
+
+      if (_scheme == NuclideScheme::FV)
+      {
+        params.set<bool>("is_fe") = false;
+        for (const auto & [nuclide, weight_fraction] : _total_nuclide_list)
+          params.set<std::vector<MooseFunctorName>>("nuclide_funs").emplace_back(nuclide);
+      }
+      else
+      {
+        params.set<bool>("is_fe") = true;
+        for (const auto & [nuclide, weight_fraction] : _total_nuclide_list)
+          params.set<std::vector<VariableName>>("nuclide_vars").emplace_back(nuclide);
+      }
+
+      params.set<UserObjectName>("data_lib_name") =
+          _coupled_depletion_lib->getParam<std::string>("depletion_uo_name");
+
+      if (isParamValid("block"))
+      {
+        params.set<std::vector<SubdomainName>>("block") =
+            getParam<std::vector<SubdomainName>>("block");
+      }
+
+      _problem->addAuxKernel(
+          "ParticleDecaySource", "ParticleDecaySource_Neutron_" + Moose::stringify(g), params);
+      debugOutput("      - Adding auxkernel ParticleDecaySource for the variable " +
+                  _neutron_source_prefix + "_g_" + Moose::stringify(g) + ".");
+    }
+  }
+}
+
 void
 MobileDepletionSystemAction::act()
 {
@@ -1493,6 +1712,22 @@ MobileDepletionSystemAction::act()
     {
       debugOutput("  - Adding auxkernels...");
       addAuxKernels(nuclide);
+    }
+  }
+
+  // Add variables and auxkernels for radionuclide particle sources.
+  if (getParam<bool>("add_photon_sources") || getParam<bool>("add_neutron_sources"))
+  {
+    if (_current_task == "add_aux_variable")
+    {
+      debugOutput("  - Adding radiation transport auxvariables...");
+      addRadiationAuxVariables();
+    }
+
+    if (_current_task == "add_aux_kernel")
+    {
+      debugOutput("  - Adding radiation transport auxkernels...");
+      addRadiationAuxKernels();
     }
   }
 }

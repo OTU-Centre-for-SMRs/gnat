@@ -19,18 +19,11 @@ Extensions:
         menu:
             Getting Started:
                 Installation: getting_started/installation.md
-                Example 1: getting_started/example_1.md
-                Example 2: getting_started/example_2.md
-                Example 3: getting_started/example_3.md
-                Example 4: getting_started/example_4.md
-                Other Examples: getting_started/other_examples.md
+                Tutorials: tutorials/index.md
             Theory and Implementation:
-                Governing Equations: about/equations.md
-                FEM Stabilization: about/stabilization.md
-                NTE Angular Approach: about/nte_angular_approach.md
-                Implementation in Moose: about/implementation.md
+                Radiation Transport: about/radiation_transport.md
+                Mobile Depletion: about/mobile_depletion.md
             Documentation:
-                Gnat Syntax Pages: syntax/NeutronActivationStudy/index.md
                 Gnat Source Pages: source/index.md
                 MOOSE Source Pages: https://mooseframework.inl.gov/source/index.html
     MooseDocs.extensions.appsyntax:

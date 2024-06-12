@@ -20,6 +20,26 @@ GnatApp::validParams()
 GnatApp::GnatApp(InputParameters parameters) : MooseApp(parameters)
 {
   GnatApp::registerAll(_factory, _action_factory, _syntax);
+
+  _console << "-----------------------------------------------------\n"
+              "------General Neutral Particle Analysis Toolkit------\n"
+              "-----------------------------------------------------\n"
+              "                     ,--.\n"
+              "  ,----..          ,--.'|                      ,----,\n"
+              " /   /   \\     ,--,:  : |   ,---,            ,/   .`|\n"
+              "|   :     : ,`--.'`|  ' :  '  .' \\         ,`   .'  :\n"
+              ".   |  ;. / |   :  :  | | /  ;    '.     ;    ;     /\n"
+              ".   ; /--`  :   |   \\ | ::  :   .   \\  .'___,/    ,'\n"
+              ";   | ;  __ |   : '  '; |:  |  / \\   \\ |    :     |\n"
+              "|   : |.' .''   ' ;.    ;|  :  |--\\   :;    |.';  ;\n"
+              ".   | '_.' :|   | | \\   ||  |  /\\  \\   `----'  |  |\n"
+              "'   ; : \\  |'   : |  ; .''  :  | \\  \\ ,'   '   :  ;\n"
+              "'   | '/  .'|   | '`--'  |  |  '  '--'     |   |  '\n"
+              "|   :    /  '   : |      |  :  :           '   :  |\n"
+              " \\   \\ .'   ;   |.'      |  | ,'           ;   |.'\n"
+              "  `---`     '---'        `--''             '---'\n"
+              "-----------------------------------------------------"
+           << std::endl;
 }
 
 GnatApp::~GnatApp() {}
@@ -37,6 +57,7 @@ associateSyntaxInner(Syntax & syntax, ActionFactory & /*action_factory*/)
 
   // Mobile depletion syntax.
   syntax.registerActionSyntax("MobileDepletionSystemAction", "MobileDepletionSystem");
+  syntax.registerActionSyntax("TracerDepletionSystemAction", "TracerDepletionSystem");
 }
 
 void

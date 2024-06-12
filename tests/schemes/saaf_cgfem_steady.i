@@ -33,8 +33,6 @@
     aq = AQ
     degree = 0
     order = 0
-    group_index = 0
-    num_groups = 1
   []
 []
 
@@ -110,9 +108,9 @@
 
 [Materials]
   [Domain]
-    type = AbsorbingNeutronicsMaterial
+    type = AbsorbingTransportMaterial
     num_groups = 1
-    group_absorption = 1.0
+    group_total = 1.0
     group_speeds = 1.0
   []
 []

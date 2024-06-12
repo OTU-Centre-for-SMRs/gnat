@@ -26,7 +26,7 @@ SASFAdvection::validParams()
 SASFAdvection::SASFAdvection(const InputParameters & parameters)
   : Kernel(parameters),
     _source_location(getParam<Point>("source_location")),
-    _div_mult(-1.0 * static_cast<Real>(_subproblem.mesh().dimension() - 1u)),
+    _div_mult(static_cast<Real>(_subproblem.mesh().dimension() - 1u)),
     _group_index(getParam<unsigned int>("group_index")),
     _sigma_t_g(getADMaterialProperty<std::vector<Real>>(getParam<std::string>("transport_system") +
                                                         "total_xs_g")),

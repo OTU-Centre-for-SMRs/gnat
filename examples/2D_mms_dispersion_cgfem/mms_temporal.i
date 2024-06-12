@@ -1,8 +1,8 @@
 [Mesh]
   type = GeneratedMesh
   dim = 2
-  nx = 8
-  ny = 8
+  nx = 64
+  ny = 64
 []
 
 [Variables]
@@ -12,32 +12,36 @@
 
 [Kernels]
   [Time]
-    type = ADIsotopeTimeDerivative
+    type = ADMassFractionNuclideTimeDerivative
     variable = u
+    density = 1.0
     u = 1.0
     v = 1.0
   []
 
   [Diffusion]
-    type = ADIsotopeDiffusion
+    type = ADMassFractionNuclideDiffusion
     variable = u
+    density = 1.0
     u = 1.0
     v = 1.0
   []
 
   [Advection]
-    type = ADIsotopeAdvection
+    type = ADMassFractionNuclideAdvection
     variable = u
     u = 1.0
     v = 1.0
+    density = 1.0
   []
 
   [Decay]
-    type = ADIsotopeDecaySink
+    type = ADMassFractionNuclideDecaySink
     variable = u
+    decay_const = 1.0
+    density = 1.0
     u = 1.0
     v = 1.0
-    decay_const = 1.0
   []
 
   [Force]
@@ -46,6 +50,7 @@
     u = 1.0
     v = 1.0
     forcing = force
+    density = 1.0
   []
 []
 

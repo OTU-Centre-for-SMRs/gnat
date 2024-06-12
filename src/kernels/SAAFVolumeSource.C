@@ -10,8 +10,8 @@ SAAFVolumeSource::validParams()
   auto params = SAAFBaseKernel::validParams();
   params.addClassDescription("Computes the source term for the SAAF "
                              "discrete ordinates particle transport equation, "
-                             "where the source moments are provided by the "
-                             "material system. The weak form is given by "
+                             "where the source moments are defined over a block. "
+                             "The weak form is given by "
                              "$-(\\psi_{j} + \\tau_{g}\\vec{\\nabla}\\psi_{j}"
                              "\\cdot\\hat{\\Omega}, \\sum_{l = 0}^{L_{sr}} "
                              "\\frac{2l + 1}{4\\pi}\\sum_{m = -1}^{l} "

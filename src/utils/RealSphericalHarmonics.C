@@ -13,10 +13,10 @@ factorial(int n)
 }
 
 Real
-normalizationConstant(unsigned int degree, int order)
+normalizationConstant(unsigned int degree, unsigned int order)
 {
-  return std::sqrt(static_cast<Real>(factorial(degree - std::abs(order))) /
-                   static_cast<Real>(factorial(degree + std::abs(order))));
+  return std::sqrt(static_cast<Real>(factorial(degree - order)) /
+                   static_cast<Real>(factorial(degree + order)));
 }
 
 Real
@@ -40,18 +40,22 @@ RealSphericalHarmonics::evaluate(unsigned int degree,
                                  const Real & mu,
                                  const Real & omega)
 {
-  if (0 < order && order <= static_cast<int>(degree))
-    return std::sqrt(2.0) * normalizationConstant(degree, order) *
-           std::assoc_legendre(degree, static_cast<unsigned int>(order), mu) *
-           std::cos(static_cast<Real>(std::abs(order)) * omega);
+  if (order > 0)
+    if (order <= static_cast<int>(degree))
+      return std::sqrt(2.0) *
+             normalizationConstant(degree, static_cast<unsigned int>(std::abs(order))) *
+             std::assoc_legendre(degree, static_cast<unsigned int>(std::abs(order)), mu) *
+             std::cos(static_cast<Real>(std::abs(order)) * omega);
 
   if (order == 0)
     return normalizationConstant(degree, 0) * std::assoc_legendre(degree, 0u, mu);
 
-  if (-1 * static_cast<int>(degree) <= order && order < 0)
-    return std::sqrt(2.0) * normalizationConstant(degree, order) *
-           std::assoc_legendre(degree, static_cast<unsigned int>(order), mu) *
-           std::sin(static_cast<Real>(std::abs(order)) * omega);
+  if (order < 0)
+    if (-1 * static_cast<int>(degree) <= order)
+      return std::sqrt(2.0) *
+             normalizationConstant(degree, static_cast<unsigned int>(std::abs(order))) *
+             std::assoc_legendre(degree, static_cast<unsigned int>(std::abs(order)), mu) *
+             std::sin(static_cast<Real>(std::abs(order)) * omega);
 
   return 0.0;
 }

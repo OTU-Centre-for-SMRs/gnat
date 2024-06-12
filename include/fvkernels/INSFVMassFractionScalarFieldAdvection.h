@@ -13,6 +13,8 @@ public:
 protected:
   ADReal computeQpResidual() override;
 
+  virtual bool hasMaterialTimeDerivative() const override { return true; }
+
   // Density of the bulk fluid.
   const Moose::Functor<ADReal> & _density;
 }; // class INSFVMassFractionScalarFieldAdvection

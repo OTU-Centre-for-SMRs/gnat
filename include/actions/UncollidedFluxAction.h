@@ -14,13 +14,22 @@ public:
 protected:
   // Different act functions for each uncollided flux scheme.
   void actUncollidedFluxRT();
+  void actUncollidedFluxSASF();
 
-  // Member functions to add objects required for the uncollided flux treatment(s).
+  // Member functions to add objects required for the ray traced uncollided flux treatment.
   void addUncollidedRayKernels();
   void addUncollidedRayStudies();
   void addUncollidedRayAuxVars();
   void addUncollidedRayAuxKernels();
   void addUncollidedRayPostProcessors();
+
+  // Member functions required to add objects required for the SASF uncollided flux treatment.
+  void addUncollidedSASFVariables();
+  void addUncollidedSASFKernels();
+  void addUncollidedSASFBCs();
+  void addUncollidedSASFAuxVars();
+  void addUncollidedSASFAuxKernels();
+  void addUncollidedSASFPostProcessors();
 
   void modifyRTOutputs();
 
@@ -56,4 +65,9 @@ protected:
   const std::vector<SubdomainName> & _volumetric_source_blocks;
   const std::vector<std::vector<Real>> & _volumetric_source_moments;
   const std::vector<unsigned int> & _volumetric_source_anisotropy;
+
+  // SASF parameters.
+  const BoundaryName & _sasf_near_source_boundary;
+  const std::vector<BoundaryName> & _sasf_vacuum_boundaries;
+  const std::vector<Real> & _sasf_near_source_cross_sections;
 };

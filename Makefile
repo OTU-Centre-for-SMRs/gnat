@@ -34,7 +34,7 @@ FLUID_PROPERTIES            := yes
 FSI                         := no
 FUNCTIONAL_EXPANSION_TOOLS  := no
 GEOCHEMISTRY                := no
-HEAT_CONDUCTION             := no
+HEAT_TRANSFER               := yes
 LEVEL_SET                   := no
 MISC                        := no
 NAVIER_STOKES               := yes
@@ -46,7 +46,7 @@ REACTOR                     := yes
 RDG                         := no
 RICHARDS                    := no
 STOCHASTIC_TOOLS            := no
-THERMAL_HYDRAULICS          := no
+THERMAL_HYDRAULICS          := yes
 TENSOR_MECHANICS            := no
 XFEM                        := no
 

@@ -1,19 +1,18 @@
+# The 2D Ackroyd-Riyait voided dog-legged duct benchmark problem.
+
 [Mesh]
   [domain]
     type = CartesianMeshGenerator
     dim = 2
-    dx = '5 3 3 6 3 3 5'
-    dy = '6 3 6 6 6 3 6'
-    ix = '5 3 3 6 3 3 5'
-    iy = '6 3 6 6 6 3 6'
+    dx = '3 3 3 5'
+    dy = '3 6 3 6'
+    ix = '3 3 3 5'
+    iy = '3 6 3 6'
     subdomain_id = '
-    2 1 2 2 2 1 2
-    2 1 1 1 1 1 2
-    2 2 2 1 2 2 2
-    2 2 2 0 2 2 2
-    2 2 2 1 2 2 2
-    2 1 1 1 1 1 2
-    2 1 2 2 2 1 2'
+    0 2 2 2
+    1 2 2 2
+    1 1 1 2
+    2 2 1 2'
   []
   uniform_refine = 2
 []
@@ -28,10 +27,11 @@
     order = FIRST
     family = LAGRANGE
 
-    n_azimuthal = 13
-    n_polar = 13
+    n_azimuthal = 10
+    n_polar = 10
 
-    vacuum_boundaries = 'left right top bottom'
+    vacuum_boundaries = 'right top'
+    reflective_boundaries = 'left bottom'
 
     volumetric_source_blocks = '0'
     volumetric_source_moments = '1.0'
@@ -41,17 +41,15 @@
 
 [TransportMaterials]
   [Duct]
-    type = AbsorbingNeutronicsMaterial
+    type = AbsorbingTransportMaterial
     transport_system = Neutron
-    group_absorption = '0.0'
-    group_speeds = '220000'
+    group_total = '0.0'
     block = '1'
   []
   [Other]
-    type = AbsorbingNeutronicsMaterial
+    type = AbsorbingTransportMaterial
     transport_system = Neutron
-    group_absorption = '0.5'
-    group_speeds = '220000'
+    group_total = '0.5'
     block = '0 2'
   []
 []
@@ -59,6 +57,8 @@
 [Executioner]
   type = Steady
   solve_type = PJFNK
+  petsc_options_iname = '-ksp_gmres_restart'
+  petsc_options_value = ' 100'
   l_max_its = 50
   nl_rel_tol = 1e-12
 
@@ -69,4 +69,5 @@
 
 [Outputs]
   exodus = true
+  execute_on = 'TIMESTEP_END'
 []

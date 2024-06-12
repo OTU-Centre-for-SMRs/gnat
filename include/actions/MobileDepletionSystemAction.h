@@ -6,6 +6,8 @@
 class NSFVAction;
 class DepletionLibraryAction;
 
+// A class which sets up depletion problems using a mass/number fraction based approach. More
+// effective for problems where a fluid undergoes neutron transmutation and decay.
 class MobileDepletionSystemAction : public GnatBaseAction
 {
 public:
@@ -43,6 +45,10 @@ protected:
   void addAuxVariables(const std::string & nuclide_var_name);
   void addAuxKernels(const std::string & nuclide_var_name);
 
+  // Auxvariables and auxkernels for radiation transport source terms.
+  void addRadiationAuxVariables();
+  void addRadiationAuxKernels();
+
   unsigned int _mesh_dims;
   bool _using_moose_ns;
 
@@ -79,6 +85,12 @@ protected:
   const std::vector<std::vector<Real>> & _inlet_atom_fractions;
   const std::vector<BoundaryName> & _outlet_boundaries;
   std::vector<std::unordered_map<std::string, Real>> _boundary_mass_fractions;
+
+  // For particle decay sources.
+  const std::string & _photon_source_prefix;
+  const std::string & _neutron_source_prefix;
+  const std::vector<Real> & _photon_group_boundaries;
+  const std::vector<Real> & _neutron_group_boundaries;
 
   // Debug options.
   const std::vector<std::string> & _debug_filter_nuclides;

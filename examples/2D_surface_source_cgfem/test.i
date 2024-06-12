@@ -37,7 +37,7 @@
 
 [TransportMaterials]
   [Water]
-    type = FileNeutronicsMaterial
+    type = FileTransportMaterial
     transport_system = Neutron
     file_name = 'macro_xs.xml'
     source_material_id = '1'
@@ -55,4 +55,5 @@
 
 [Outputs]
   exodus = true
+  execute_on = 'TIMESTEP_END'
 []

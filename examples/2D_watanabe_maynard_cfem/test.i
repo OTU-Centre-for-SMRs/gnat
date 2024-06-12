@@ -40,19 +40,17 @@
 
 [TransportMaterials]
   [Void]
-    type = ConstantNeutronicsMaterial
+    type = ConstantTransportMaterial
     transport_system = Neutron
-    group_absorption = '1e-11'
+    group_total = '2.0e-10'
     group_scattering = '1.9e-10'
-    group_speeds = '220000'
     block = '2'
   []
   [Other]
-    type = ConstantNeutronicsMaterial
+    type = ConstantTransportMaterial
     transport_system = Neutron
-    group_absorption = '0.01'
+    group_total = '0.2'
     group_scattering = '0.19'
-    group_speeds = '220000'
     block = '1 3'
   []
 []
@@ -73,4 +71,5 @@
 
 [Outputs]
   exodus = true
+  execute_on = 'TIMESTEP_END'
 []

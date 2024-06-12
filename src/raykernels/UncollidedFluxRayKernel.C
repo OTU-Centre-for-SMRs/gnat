@@ -274,8 +274,8 @@ UncollidedFluxRayKernel::computeUncollidedFluxSourceNotTarget()
       {
         for (int m = 0; m <= static_cast<int>(l); ++m)
         {
-          // 1 / ||r_{q'} - r_{q}||^2.
-          val[index] = 1.0 / std::max(ray->distance() * ray->distance(), libMesh::TOLERANCE);
+          // 1 / ||r_{q'} - r_{q}||.
+          val[index] = 1.0 / std::max(ray->distance(), libMesh::TOLERANCE);
 
           // e^{-\tau(r_{q'}, r_{q})}
           val[index] *= std::exp(-1.0 * ray->data(_integral_data_indices[g]));
@@ -298,7 +298,8 @@ UncollidedFluxRayKernel::computeUncollidedFluxSourceNotTarget()
         for (int m = -1 * static_cast<int>(l); m <= static_cast<int>(l); ++m)
         {
           // 1 / ||r_{q'} - r_{q}||^2.
-          val[index] = 1.0 / std::max(ray->distance() * ray->distance(), libMesh::TOLERANCE);
+          val[index] = 1.0 / std::max(ray->distance() * ray->distance(),
+                                      libMesh::TOLERANCE * libMesh::TOLERANCE);
 
           // e^{-\tau(r_{q'}, r_{q})}
           val[index] *= std::exp(-1.0 * ray->data(_integral_data_indices[g]));

@@ -63,8 +63,7 @@ AddTransportMaterialAction::act()
       {
         _num_groups = uncollided_flux_actions[0u]->getParam<unsigned int>("num_groups");
         _particle = MooseEnum("neutron photon", "photon");
-        _scheme =
-            MooseEnum("saaf_cfem diffusion_cfem flux_moment_transfer", "flux_moment_transfer");
+        _scheme = MooseEnum("saaf_cfem diffusion_cfem flux_moment_transfer", "saaf_cfem");
         _disable_fission = true;
 
         _parent_transport_system = uncollided_flux_actions[0u]->name();
@@ -99,8 +98,7 @@ AddTransportMaterialAction::act()
             _awh.getAction<UncollidedFluxAction>(_parent_transport_system);
         _num_groups = uncollided_flux_action.getParam<unsigned int>("num_groups");
         _particle = MooseEnum("neutron photon", "photon");
-        _scheme =
-            MooseEnum("saaf_cfem diffusion_cfem flux_moment_transfer", "flux_moment_transfer");
+        _scheme = MooseEnum("saaf_cfem diffusion_cfem flux_moment_transfer", "saaf_cfem");
         _disable_fission = true;
 
         _parent_transport_system = uncollided_flux_action.name();

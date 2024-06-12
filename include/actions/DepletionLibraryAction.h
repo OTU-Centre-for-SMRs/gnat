@@ -12,9 +12,15 @@ public:
 
   DepletionLibraryAction(const InputParameters & parameters);
 
-  virtual void act() final {}
+  virtual void act() override;
 
-  bool hasNuclide(const std::string & nuclide) const { return _nuclide_list.count(nuclide) > 0; }
+  bool hasNuclide(const std::string & nuclide) const
+  {
+    if (nuclide.find('_') != std::string::npos)
+      return _nuclide_list.count(nuclide.substr(0u, nuclide.find('_'))) > 0u;
+    else
+      return _nuclide_list.count(nuclide) > 0u;
+  }
 
   const NuclearData::Nuclide & getNuclide(const std::string & nuclide) const
   {
@@ -67,12 +73,8 @@ protected:
     InvCm2 = 0u,
     Barns = 1u
   } _xs_units;
-  enum class EnergyUnits
-  {
-    eV = 0u,
-    keV = 1u,
-    MeV = 2u
-  } _energy_units;
+
+  Real _convert_to_eV;
 
   unsigned int _num_groups;
   std::vector<Real> _group_bounds;

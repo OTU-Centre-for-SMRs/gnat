@@ -21,7 +21,7 @@ LegendrePolynomial::LegendrePolynomial(unsigned int degree) : _degree(std::move(
   {
     dr = 1;
 
-    x = std::cos(libMesh::pi * (static_cast<Real>(i - 0.25)) /
+    x = std::cos(libMesh::pi * (static_cast<Real>(i) - 0.25) /
                  (static_cast<Real>(_degree) + 0.5)); // Magical initial guess.
     v = evaluate(x);
     d = evaluateDerivative(x);

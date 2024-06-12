@@ -12,25 +12,28 @@
 
 [Kernels]
   [Diffusion]
-    type = ADIsotopeDiffusion
+    type = ADMassFractionNuclideDiffusion
     variable = u
     u = 1.0
     v = 1.0
+    density = 1.0
   []
 
   [Advection]
-    type = ADIsotopeAdvection
+    type = ADMassFractionNuclideAdvection
     variable = u
     u = 1.0
     v = 1.0
+    density = 1.0
   []
 
   [Decay]
-    type = ADIsotopeDecaySink
+    type = ADMassFractionNuclideDecaySink
     variable = u
     u = 1.0
     v = 1.0
     decay_const = 1.0
+    density = 1.0
   []
 
   [Force]
@@ -39,6 +42,7 @@
     u = 1.0
     v = 1.0
     forcing = force
+    density = 1.0
   []
 []
 

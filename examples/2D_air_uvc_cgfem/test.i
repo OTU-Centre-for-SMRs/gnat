@@ -1,5 +1,5 @@
-# A simple test case with a purely absorbing medium and a point source in the
-# middle of the domain.
+# Simulating the 222 nm radiation fields caused by a
+# far UV-C lamp in the corner of a room in air. The lamp is modelled as a point source.
 
 [Mesh]
   [domain]
@@ -36,19 +36,18 @@
 
 [TransportMaterials]
   [Domain]
-    type = ConstantNeutronicsMaterial
+    type = ConstantTransportMaterial
     transport_system = UVC
-    group_absorption = 2.83e-5
+    group_total = 0.0000329
     group_scattering = 4.6e-6
-    group_speeds = 0.0 # Need to find a way to ignore params if photon. Might need to handle it manually.
   []
 []
 
 [Executioner]
   type = Steady
   solve_type = PJFNK
-  petsc_options_iname = '-pc_type -pc_factor_shift_type'
-  petsc_options_value = ' lu       NONZERO'
+  petsc_options_iname = '-ksp_gmres_restart'
+  petsc_options_value = ' 600'
 
   l_max_its = 50
   nl_abs_tol = 1e-12
@@ -60,4 +59,5 @@
 
 [Outputs]
   exodus = true
+  execute_on = 'TIMESTEP_END'
 []

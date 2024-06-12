@@ -23,6 +23,7 @@ public:
   unsigned int i() const { return _z_a_i._i; }
 
   void addDecay(Decay::Mode mode, const Real & factor, const std::string & target);
+  void addSource(Particletype particle, const std::vector<Real> & energies_factors);
   std::string addReaction(Reaction::Mode mode,
                           const Real & factor,
                           const std::string & target,
@@ -32,6 +33,7 @@ public:
   bool addReactionCrossSections(Reaction::Mode mode, const std::vector<Real> & cross_sections);
 
   const std::vector<Decay::Info> & getDecays() const { return _decays; };
+  const std::vector<Source::Info> & getSources() const { return _sources; };
   const std::vector<Reaction::Info> & getReactions() const { return _reactions; };
 
 private:
@@ -46,6 +48,7 @@ private:
   const NuclearData::ZAI _z_a_i; // The Z-A-I index.
 
   std::vector<Decay::Info> _decays;
+  std::vector<Source::Info> _sources;
   std::vector<Reaction::Info> _reactions;
 };
 }

@@ -9,8 +9,8 @@
   # Mesh is in cm, need to convert all units to cm.
   [Domain]
     type = FileMeshGenerator
-    file = main_out.e
-    use_for_exodus_restart = true
+    file = containment.e
+    #use_for_exodus_restart = true
   []
 []
 
@@ -74,7 +74,7 @@
     from_multi_app = Neutronics
     from_flux_moment_names = Flux_Moment
     use_copy = false
-    init_from_file = true
+    #init_from_file = true
 
     flux_moment_names = 'Flux_Moment'
 
@@ -121,14 +121,14 @@
   compute_scaling_once = false
 []
 
-#[MultiApps]
-#  [Neutronics]
-#    type = FullSolveMultiApp
-#    app_type = GnatApp
-#    input_files = 'neutronics.i'
-#    execute_on = INITIAL
-#  []
-#[]
+[MultiApps]
+  [Neutronics]
+    type = FullSolveMultiApp
+    app_type = GnatApp
+    input_files = 'neutronics.i'
+    execute_on = INITIAL
+  []
+[]
 
 [Outputs]
   exodus = true

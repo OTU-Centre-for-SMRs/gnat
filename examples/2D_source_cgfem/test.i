@@ -40,10 +40,9 @@
 
 [TransportMaterials]
   [Domain]
-    type = ConstantNeutronicsMaterial
+    type = ConstantTransportMaterial
     transport_system = Neutron
-    group_speeds = 220000.0
-    group_absorption = '1e-7'
+    group_total = '1.1e-6'
     group_scattering = '1e-6'
     block = '1 2'
   []
@@ -52,13 +51,15 @@
 [Executioner]
   type = Steady
   solve_type = PJFNK
-  petsc_options_iname = '-pc_type -pc_factor_shift_type'
-  petsc_options_value = ' lu       NONZERO'
-
+  #petsc_options_iname = '-pc_type -pc_hypre_type -ksp_gmres_restart'
+  #petsc_options_value = ' hypre    boomeramg      600'
+  petsc_options_iname = '-ksp_gmres_restart'
+  petsc_options_value = ' 600'
   l_max_its = 50
   nl_rel_tol = 1e-12
 []
 
 [Outputs]
   exodus = true
+  execute_on = 'TIMESTEP_END'
 []

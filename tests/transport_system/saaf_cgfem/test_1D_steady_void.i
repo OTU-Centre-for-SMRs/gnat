@@ -34,7 +34,7 @@
 
 [TransportMaterials]
   [Domain]
-    type = VoidNeutronicsMaterial
+    type = VoidTransportMaterial
     transport_system = Neutron
     group_speeds = 2200.0
   []

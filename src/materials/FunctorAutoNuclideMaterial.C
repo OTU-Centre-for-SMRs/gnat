@@ -7,7 +7,6 @@ FunctorAutoNuclideMaterial::validParams()
 {
   auto params = FunctorMaterial::validParams();
   params += SetupInterface::validParams();
-  params.set<ExecFlagEnum>("execute_on") = {EXEC_ALWAYS};
   params.addClassDescription(
       "This material provides parameters for isotope mass transport problems. It "
       "should not be exposed to the user, but should be automatically generated using a "

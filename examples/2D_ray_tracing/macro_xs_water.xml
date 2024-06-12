@@ -1,8 +1,0 @@
-<macroscopic_cross_sections generator="openmc" num_groups="2" group_bounds="20000000.0 0.625 0.0" energy_units="eV" xs_units="cm^-1">
-  <domain type="material" name="water" id="1" num_legendre="1">
-    <reaction type="total" mgxs="0.7266205448000684 2.0317138835091364"/>
-    <reaction type="absorption" mgxs="0.0004172872252566891 0.018484128769250232"/>
-    <reaction type="scatter" mgxs="0.6996582182798062 0.41145674349949385 0.026545039295004513 0.010480934364142833 0.00017643683550812333 0.00014795153187992913 2.013053317904379 0.7467596950881902"/>
-    <reaction type="inverse-velocity" mgxs="3.785272581142552e-08 3.777112680077942e-06"/>
-  </domain>
-</macroscopic_cross_sections>

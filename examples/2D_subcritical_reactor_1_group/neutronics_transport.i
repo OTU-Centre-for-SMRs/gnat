@@ -18,8 +18,8 @@
     order = FIRST
     family = LAGRANGE
 
-    n_azimuthal = 3
-    n_polar = 3
+    n_azimuthal = 5
+    n_polar = 5
 
     vacuum_boundaries = 'vacuum'
 
@@ -32,7 +32,7 @@
 
 [TransportMaterials]
   [Air]
-    type = FileNeutronicsMaterial
+    type = FileTransportMaterial
     transport_system = Neutron
     file_name = 'macro_xs.xml'
     source_material_id = '5'
@@ -40,7 +40,7 @@
   []
 
   [Cladding]
-    type = FileNeutronicsMaterial
+    type = FileTransportMaterial
     transport_system = Neutron
     file_name = 'macro_xs.xml'
     source_material_id = '7' #
@@ -48,7 +48,7 @@
   []
 
   [Fuel]
-    type = FileNeutronicsMaterial
+    type = FileTransportMaterial
     transport_system = Neutron
     file_name = 'macro_xs.xml'
     source_material_id = '6' #
@@ -56,7 +56,7 @@
   []
 
   [Graphite]
-    type = FileNeutronicsMaterial
+    type = FileTransportMaterial
     transport_system = Neutron
     file_name = 'macro_xs.xml'
     source_material_id = '8' #
@@ -64,7 +64,7 @@
   []
 
   [Control]
-    type = FileNeutronicsMaterial
+    type = FileTransportMaterial
     transport_system = Neutron
     file_name = 'macro_xs.xml'
     source_material_id = '9' #
@@ -75,8 +75,8 @@
 [Executioner]
   type = Steady
   solve_type = PJFNK
-  petsc_options_iname = '-pc_type -pc_hypre_type -ksp_gmres_restart'
-  petsc_options_value = ' hypre    boomeramg      300'
+  petsc_options_iname = '-ksp_gmres_restart'
+  petsc_options_value = ' 600'
 
   l_max_its = 50
   nl_abs_tol = 1e-12
@@ -88,4 +88,5 @@
 
 [Outputs]
   exodus = true
+  execute_on = 'TIMESTEP_END'
 []

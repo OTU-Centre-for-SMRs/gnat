@@ -62,7 +62,7 @@
 
 [TransportMaterials]
   [Water1]
-    type = FileNeutronicsMaterial
+    type = FileTransportMaterial
     transport_system = NeutronSN
     file_name = 'macro_xs.xml'
     source_material_id = '1'
@@ -70,7 +70,7 @@
   []
 
   [Water2]
-    type = FileNeutronicsMaterial
+    type = FileTransportMaterial
     transport_system = PhotonSN
     file_name = 'macro_xs.xml'
     source_material_id = '1'
@@ -85,8 +85,8 @@
 [Executioner]
   type = Steady
   solve_type = PJFNK
-  petsc_options_iname = '-pc_type -pc_factor_shift_type'
-  petsc_options_value = ' lu       NONZERO'
+  petsc_options_iname = '-pc_type -pc_hypre_type -ksp_gmres_restart'
+  petsc_options_value = ' hypre    boomeramg      600'
 
   l_max_its = 50
   nl_rel_tol = 1e-12

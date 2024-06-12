@@ -29,9 +29,9 @@ MassFractionConcentration::validParams()
 
 MassFractionConcentration::MassFractionConcentration(const InputParameters & parameters)
   : AuxKernel(parameters),
-    _is_fe(getParam<bool>("is_fe")),
     _output_number_density(getParam<bool>("compute_number_density")),
     _density(getFunctor<ADReal>("density")),
+    _is_fe(getParam<bool>("is_fe")),
     _mass_fraction_var(nullptr),
     _mass_fraction_fun(nullptr)
 {

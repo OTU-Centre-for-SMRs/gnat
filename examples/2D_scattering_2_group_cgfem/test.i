@@ -37,12 +37,11 @@
 
 [TransportMaterials]
   [Domain]
-    type = ConstantNeutronicsMaterial
+    type = ConstantTransportMaterial
     transport_system = Neutron
     anisotropy = 0
-    group_absorption = '0.1 1.0'
-    group_scattering = '0.5 1.0 0.0 0.0'
-    group_speeds = '220000.0 220000.0'
+    group_total = '1.1 1.0'
+    group_scattering = '0.5 0.5 0.0 1.0'
   []
 []
 
@@ -57,4 +56,5 @@
 
 [Outputs]
   exodus = true
+  execute_on = 'TIMESTEP_END'
 []

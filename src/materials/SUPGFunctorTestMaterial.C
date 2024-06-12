@@ -7,7 +7,6 @@ SUPGFunctorTestMaterial::validParams()
 {
   auto params = FunctorMaterial::validParams();
   params += SetupInterface::validParams();
-  params.set<ExecFlagEnum>("execute_on") = {EXEC_ALWAYS};
   params.addClassDescription(
       "This material provides parameters for testing isotope mass transport kernels.");
 

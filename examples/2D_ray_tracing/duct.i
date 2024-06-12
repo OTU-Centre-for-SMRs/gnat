@@ -37,23 +37,21 @@
     volumetric_source_anisotropies = '0'
     volumetric_source_moments = '1.0 0.5'
 
-    rt_n_polar = 10
+    rt_n_polar = 3
   []
 []
 
 [TransportMaterials]
   [Shield]
-    type = AbsorbingNeutronicsMaterial
+    type = AbsorbingTransportMaterial
     transport_system = 'Neutron'
-    group_absorption = '0.5 1.0'
-    group_speeds = '220000 220000'
+    group_total = '0.5 1.0'
     block = '1 2'
   []
   [Duct]
-    type = AbsorbingNeutronicsMaterial
+    type = AbsorbingTransportMaterial
     transport_system = 'Neutron'
-    group_absorption = '0.0 0.0'
-    group_speeds = '220000 220000'
+    group_total = '0.0 0.0'
     block = '0'
   []
 []
@@ -70,4 +68,5 @@
 
 [Outputs]
   exodus = true
+  execute_on = 'TIMESTEP_END'
 []

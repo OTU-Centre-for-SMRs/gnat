@@ -37,10 +37,10 @@
 
 [TransportMaterials]
   [Domain1]
-    type = ConstantNeutronicsMaterial
+    type = ConstantTransportMaterial
     transport_system = Neutron
     anisotropy = 0
-    group_absorption = 1.0
+    group_total = 2.0
     group_scattering = 1.0
     group_speeds = 2200.0
   []

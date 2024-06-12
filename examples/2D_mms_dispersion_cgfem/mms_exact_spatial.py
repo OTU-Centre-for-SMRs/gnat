@@ -8,7 +8,7 @@ PAD = 0.5
 
 df1 = mms.run_spatial('mms_spatial.i', 4, console=False, executable='../../')
 df2 = mms.run_spatial('mms_spatial.i', 4, 'Mesh/second_order=true', 'Variables/u/order=SECOND',
-                      console=False, executable='../../')
+                      console=True, executable='../../')
 fig = mms.ConvergencePlot(xlabel='Element Size ($h$)', ylabel='$L_2$ Error')
 fig.plot(df1, label='1st Order', marker='o', markersize=8)
 fig.plot(df2, label='2nd Order', marker='o', markersize=8)

@@ -38,9 +38,9 @@
 
 [TransportMaterials]
   [Domain]
-    type = AbsorbingNeutronicsMaterial
+    type = AbsorbingTransportMaterial
     transport_system = Neutron
-    group_absorption = 0.0
+    group_total = 0.0
     group_speeds = 2200.0
     #saaf_eta = 0.0
   []

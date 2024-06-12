@@ -12,10 +12,15 @@ DepletionDataProvider::validParams()
   params.addClassDescription("A user object which provides and maintains a depletion library for "
                              "both stationary depletion and mobile depletion.");
   params.addRequiredParam<std::string>("depletion_file_name", "The name of the depletion file.");
+  params.addRequiredParam<std::string>("xs_file_name", "The name of the depletion xs file.");
   params.addParam<MooseEnum>("depletion_file_source",
                              MooseEnum("openmc", "openmc"),
                              "The depletion file generator. More depletion file sources will be "
                              "supported at a later date.");
+  params.addRequiredParam<std::vector<Real>>("group_boundaries",
+                                             "The group structure (including 0.0 eV)");
+  params.addParam<bool>(
+      "show_warnings", false, "Whether or not this object should show warnings or not.");
 
   return params;
 }
@@ -23,9 +28,14 @@ DepletionDataProvider::validParams()
 DepletionDataProvider::DepletionDataProvider(const InputParameters & parameters)
   : ThreadedGeneralUserObject(parameters),
     _file_source(getParam<MooseEnum>("depletion_file_source").getEnum<DepletionFileSource>()),
-    _depletion_file_name((std::filesystem::path(_app.getInputFileName()).parent_path() /
-                          std::filesystem::path(getParam<std::string>("depletion_file_name")))
-                             .string())
+    _depletion_file((std::filesystem::path(_app.getLastInputFileName()).parent_path() /
+                     std::filesystem::path(getParam<std::string>("depletion_file_name")))
+                        .string()),
+    _xs_file((std::filesystem::path(_app.getLastInputFileName()).parent_path() /
+              std::filesystem::path(getParam<std::string>("xs_file_name")))
+                 .string()),
+    _group_bounds(getParam<std::vector<Real>>("group_boundaries")),
+    _warnings(getParam<bool>("show_warnings"))
 {
   switch (_file_source)
   {
@@ -44,10 +54,11 @@ DepletionDataProvider::loadOpenMCXML()
   using namespace NuclearData;
 
   pugi::xml_document doc;
-  if (!doc.load_file(_depletion_file_name.c_str()))
-    mooseError("Failed to load the depletion file: " + _depletion_file_name);
+  if (!doc.load_file(_depletion_file.c_str()))
+    mooseError("Failed to load the depletion file: " + _depletion_file);
 
   // Traverse through the document and fetch the nuclides.
+  std::vector<Real> storage;
   for (auto & nuclide_node : doc.child("depletion_chain"))
   {
     // Name and half-life.
@@ -87,8 +98,39 @@ DepletionDataProvider::loadOpenMCXML()
           _nuclide_list.at(name).addDecay(Decay::Mode::SF,
                                           data_node.attribute("branching_ratio").as_double(),
                                           std::string(data_node.attribute("target").as_string()));
-        else
-          _console << "Unknown decay '" << data_node.attribute("type").as_string() << "'.\n";
+        else if (_warnings)
+          _console << COLOR_YELLOW << "Unknown decay '" << data_node.attribute("type").as_string()
+                   << "'.\n"
+                   << COLOR_DEFAULT;
+      }
+
+      // Parse particle sources (per decay).
+      if (std::string(data_node.name()) == "source")
+      {
+        if (std::string(data_node.attribute("type").as_string()) == "discrete")
+        {
+          if (std::string(data_node.attribute("particle").as_string()) == "photon")
+          {
+            parseToVector(std::string(data_node.child("parameters").child_value()), storage);
+            if (storage.size() > 0u)
+              _nuclide_list.at(name).addSource(Particletype::GammaPhoton, storage);
+            storage.clear();
+          }
+          else if (std::string(data_node.attribute("particle").as_string()) == "neutron")
+          {
+            parseToVector(std::string(data_node.child("parameters").child_value()), storage);
+            if (storage.size() > 0u)
+              _nuclide_list.at(name).addSource(Particletype::Neutron, storage);
+            storage.clear();
+          }
+          else if (_warnings)
+            _console << "Source particle '" << data_node.attribute("particle").as_string()
+                     << "' is not supported.\n";
+        }
+        else if (_warnings)
+          _console << COLOR_YELLOW << "Source distribution '"
+                   << data_node.attribute("type").as_string() << "' is not supported.\n"
+                   << COLOR_DEFAULT;
       }
 
       // Parsing reaction data. Radiative capture (n, \gamma) are the only supported reactions at
@@ -105,4 +147,25 @@ DepletionDataProvider::loadOpenMCXML()
       }
     }
   }
+}
+
+void
+DepletionDataProvider::parseToVector(const std::string & string_rep, std::vector<Real> & real_rep)
+{
+  if (string_rep.size() == 0u)
+    return;
+
+  auto current_delim_pos = string_rep.find(" ");
+  std::size_t offset = 0u;
+  auto previous_delim_pos = 0u;
+  while (current_delim_pos != std::string::npos)
+  {
+    real_rep.emplace_back(std::stod(string_rep.substr(
+        previous_delim_pos + offset, current_delim_pos - (previous_delim_pos + offset))));
+    previous_delim_pos = current_delim_pos;
+    current_delim_pos = string_rep.find(" ", current_delim_pos + 1);
+    offset = 1u;
+  }
+
+  real_rep.emplace_back(std::stod(string_rep.substr(previous_delim_pos)));
 }

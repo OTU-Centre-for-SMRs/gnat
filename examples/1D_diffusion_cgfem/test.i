@@ -30,9 +30,9 @@
 
 [TransportMaterials]
   [Domain]
-    type = AbsorbingNeutronicsMaterial
+    type = AbsorbingTransportMaterial
     transport_system = Neutron
-    group_absorption = 0.5
+    group_total = 0.5
     group_speeds = 2200.0
   []
 []

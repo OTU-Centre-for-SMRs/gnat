@@ -18,6 +18,7 @@ GnatBaseAction::validParams()
                              "system should be. level0 is fully verbose. "
                              "level1 outputs less debugging information.");
   params.addParam<std::vector<SubdomainName>>("block",
+                                              std::vector<SubdomainName>(),
                                               "The list of blocks (ids or "
                                               "names) that this variable will "
                                               "be applied.");

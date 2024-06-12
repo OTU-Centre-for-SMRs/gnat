@@ -3,7 +3,7 @@
     type = FileMeshGenerator
     file = Full_Neutronics_3_Simple.e
   []
-  uniform_refine = 2
+  uniform_refine = 0
 []
 
 [TransportSystems]
@@ -18,6 +18,8 @@
 
     order = FIRST
     family = LAGRANGE
+
+    is_conservative_transfer_src = true
 
     n_azimuthal = 5
     n_polar = 5
@@ -34,21 +36,21 @@
 
 [TransportMaterials]
   [RPV]
-    type = FileNeutronicsMaterial
+    type = FileTransportMaterial
     transport_system = Neutron
     file_name = 'data/xs_macro.xml'
     source_material_id = '6'
     block = rpv
   []
   [Air]
-    type = FileNeutronicsMaterial
+    type = FileTransportMaterial
     transport_system = Neutron
     file_name = 'data/xs_macro.xml'
     source_material_id = '5'
     block = air
   []
   [Walls]
-    type = FileNeutronicsMaterial
+    type = FileTransportMaterial
     transport_system = Neutron
     file_name = 'data/xs_macro.xml'
     source_material_id = '7'

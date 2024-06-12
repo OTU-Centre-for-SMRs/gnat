@@ -3807,6 +3807,12 @@ Nuclide::addDecay(Decay::Mode mode, const Real & factor, const std::string & tar
   _decays.emplace_back(mode, factor, target);
 }
 
+void
+Nuclide::addSource(Particletype particle, const std::vector<Real> & energies_factors)
+{
+  _sources.emplace_back(particle, energies_factors);
+}
+
 std::string
 Nuclide::addReaction(Reaction::Mode mode,
                      const Real & factor,

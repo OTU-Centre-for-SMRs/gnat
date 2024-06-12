@@ -26,8 +26,6 @@ ParticleFluxMoment::validParams()
 
   params.addParam<Real>("scale_factor", 1.0, "A scaling factor to apply to the flux moments.");
 
-  params.addRequiredParam<unsigned int>("group_index", "The current spectral energy group.");
-  params.addRequiredParam<unsigned int>("num_groups", "The number of spectral energy groups.");
   params.addCoupledVar("uncollided_flux_moment",
                        "The uncollided flux moments. Currently only supports uncollided scalar "
                        "fluxes.");

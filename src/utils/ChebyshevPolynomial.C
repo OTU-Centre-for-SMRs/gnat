@@ -6,7 +6,7 @@ ChebyshevPolynomial::ChebyshevPolynomial(unsigned int degree) : _degree(std::mov
 {
   _roots.resize(_degree, 0.0);
   _angular_roots.resize(_degree, 0.0);
-  _weights.resize(_degree, libMesh::pi / _degree);
+  _weights.resize(_degree, libMesh::pi / static_cast<Real>(_degree));
 
   for (unsigned int i = 1; i <= _degree; ++i)
   {

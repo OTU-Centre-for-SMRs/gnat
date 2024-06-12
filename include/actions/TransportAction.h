@@ -18,6 +18,10 @@ public:
   virtual void act() override;
 
 protected:
+  static bool vecEquals(const RealVectorValue & first,
+                        const RealVectorValue & second,
+                        const Real & tol = libMesh::TOLERANCE);
+
   // Helper member function to initialize SN quadrature parameters.
   void applyQuadratureParameters(InputParameters & params);
 
@@ -112,6 +116,12 @@ protected:
   const std::vector<SubdomainName> & _volumetric_source_blocks;
   std::vector<std::vector<Real>> _volumetric_source_moments;
   const std::vector<unsigned int> & _volumetric_source_anisotropy;
+
+  // Field sources (radionuclides in plumes and similar sources).
+  const std::vector<SubdomainName> & _field_source_blocks;
+  const std::vector<std::vector<VariableName>> & _field_source_moments;
+  const std::vector<unsigned int> & _field_source_anisotropy;
+  const std::vector<Real> & _field_source_scaling;
 
   // Multi-app properties.
   const MultiAppName & _from_multi_app_name;

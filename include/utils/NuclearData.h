@@ -1,6 +1,7 @@
 #pragma once
 
 #include "MooseTypes.h"
+#include "GnatBase.h"
 
 #include <vector>
 
@@ -46,6 +47,28 @@ struct Info
 };
 }
 
+namespace NuclearData::Source
+{
+struct Info
+{
+  const Particletype _particle;         // The decay reaction type.
+  std::vector<Real> _p_energies;        // The particle energies
+  std::vector<Real> _p_decay_constants; // The decay energy decay constants.
+  Real _sum; // Total particle decay constant (regardless of the particle energies).
+
+  Info(Particletype p, const std::vector<Real> & energies_factors) : _particle(p), _sum(0.0)
+  {
+    for (unsigned int i = 0u; i < energies_factors.size() / 2u; ++i)
+    {
+      _p_energies.emplace_back(energies_factors[i]);
+      _p_decay_constants.emplace_back(energies_factors[(energies_factors.size() / 2u) + i]);
+
+      _sum += energies_factors[(energies_factors.size() / 2u) + i];
+    }
+  }
+};
+}
+
 namespace NuclearData::Reaction
 {
 // TODO: support more reaction types:
@@ -68,14 +91,14 @@ enum class Mode
 
 struct Info
 {
-  const Mode _mode;                  // The neutron reaction type.
+  const Mode _mode; // The neutron reaction type.
 
-  const Real _branching_factor;      // The reaction branching factor.
+  const Real _branching_factor; // The reaction branching factor.
 
-  const int _dz;                     // The change in atomic number due to this reaction.
-  const int _da;                     // The change in mass number due to this reaction.
+  const int _dz; // The change in atomic number due to this reaction.
+  const int _da; // The change in mass number due to this reaction.
 
-  const Real _q;                     // The Q-value for this reaction.
+  const Real _q; // The Q-value for this reaction.
 
   std::vector<Real> _cross_sections; // The group-wise cross-sections for this reaction.
   std::string _target; // The resulting radionuclide (if provided). Required for certain neutron

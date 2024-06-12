@@ -11,7 +11,7 @@
     iy = '35 31 35'
     subdomain_id = '
       2 2 2
-      2 1 1
+      2 1 2
       2 2 2'
   []
 []
@@ -35,7 +35,7 @@
 
 [TransportMaterials]
   [Water]
-    type = FileNeutronicsMaterial
+    type = FileTransportMaterial
     transport_system = Neutron
     file_name = 'macro_xs.xml'
     source_material_id = '1'

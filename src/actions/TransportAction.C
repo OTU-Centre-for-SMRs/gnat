@@ -18,6 +18,8 @@
 #include "libmesh/string_to_enum.h"
 #include "libmesh/fe_type.h"
 
+#include "GaussAngularQuadrature.h"
+
 // All schemes.
 registerMooseAction("GnatApp", TransportAction, "add_variable");
 registerMooseAction("GnatApp", TransportAction, "add_kernel");
@@ -36,6 +38,18 @@ registerMooseAction("GnatApp", TransportAction, "add_postprocessor");
 // Restart.
 registerMooseAction("GnatApp", TransportAction, "check_copy_nodal_vars");
 registerMooseAction("GnatApp", TransportAction, "copy_nodal_vars");
+
+bool
+TransportAction::vecEquals(const RealVectorValue & first,
+                           const RealVectorValue & second,
+                           const Real & tol)
+{
+  bool comp_1 = std::abs(first(0) - second(0)) <= tol;
+  bool comp_2 = std::abs(first(1) - second(1)) <= tol;
+  bool comp_3 = std::abs(first(2) - second(2)) <= tol;
+
+  return comp_1 && comp_2 && comp_3;
+}
 
 InputParameters
 TransportAction::validParams()
@@ -148,37 +162,46 @@ TransportAction::validParams()
   //----------------------------------------------------------------------------
   // Boundary conditions.
   params.addParam<std::vector<BoundaryName>>("vacuum_boundaries",
+                                             std::vector<BoundaryName>(),
                                              "The boundaries to apply vacuum "
                                              "boundary conditions.");
   params.addParam<std::vector<BoundaryName>>("source_boundaries",
+                                             std::vector<BoundaryName>(),
                                              "The boundaries to apply incoming "
                                              "flux boundary conditions.");
   params.addParam<std::vector<BoundaryName>>(
       "current_boundaries",
+      std::vector<BoundaryName>(),
       "The boundaries to apply the current boundary conditions to. This is a specialization of the "
       "source boundary condition for a particle direction equal to the surface normal.");
   params.addParam<std::vector<BoundaryName>>("reflective_boundaries",
+                                             std::vector<BoundaryName>(),
                                              "The boundaries to apply reflective "
                                              "boundary conditions.");
 
   params.addParam<std::vector<std::vector<Real>>>(
       "boundary_source_moments",
+      std::vector<std::vector<Real>>(),
       "A double vector containing the external source moments for "
-      "all boundaries. The exterior vector must correspond with the surface source boundary "
+      "all boundaries. The exterior vector must correspond with "
+      "the surface source boundary "
       "conditions provided in 'source_boundaries'.");
   params.addParam<std::vector<unsigned int>>(
       "boundary_source_anisotropy",
+      std::vector<unsigned int>(),
       "The degree of anisotropy of the boundary source moments. The exterior vector must "
       "correspond with the surface source boundary "
       "conditions provided in 'source_boundaries'.");
 
   params.addParam<std::vector<std::vector<Real>>>(
       "boundary_currents",
+      std::vector<std::vector<Real>>(),
       "A double vector containing the external currents for all boundaries. The exterior vector "
       "must correspond with the surface current boundary conditions provided in "
       "'current_boundaries'.");
   params.addParam<std::vector<unsigned int>>(
       "boundary_current_anisotropy",
+      std::vector<unsigned int>(),
       "The degree of anisotropy to be applied to the boundary currents. The vector must correspond "
       "with the surface current boundary conditions provided in 'current_boundaries'.");
 
@@ -191,15 +214,18 @@ TransportAction::validParams()
   //----------------------------------------------------------------------------
   // Volumetric sources.
   params.addParam<std::vector<SubdomainName>>("volumetric_source_blocks",
+                                              std::vector<SubdomainName>(),
                                               "The list of blocks (ids or "
                                               "names) that host a volumetric source.");
   params.addParam<std::vector<std::vector<Real>>>(
       "volumetric_source_moments",
+      std::vector<std::vector<Real>>(),
       "A double vector containing a list of external source moments for all volumetric particle "
       "sources. The external vector should correspond with the order of "
       "'volumetric_source_blocks'.");
   params.addParam<std::vector<unsigned int>>(
       "volumetric_source_anisotropies",
+      std::vector<unsigned int>(),
       "The anisotropies of the volumetric sources. The vector should correspond with the order of "
       "'volumetric_source_blocks'");
   params.addParamNamesToGroup(
@@ -209,21 +235,50 @@ TransportAction::validParams()
   //----------------------------------------------------------------------------
   // Point sources.
   params.addParam<std::vector<Point>>("point_source_locations",
+                                      std::vector<Point>(),
                                       "The locations of all isotropic "
                                       "point sources in the problem "
                                       "space.");
   params.addParam<std::vector<std::vector<Real>>>(
       "point_source_moments",
+      std::vector<std::vector<Real>>(),
       "A double vector containing a list of external source moments for all point particle "
       "sources. The external vector should correspond with the order of "
       "'point_source_locations'.");
   params.addParam<std::vector<unsigned int>>(
       "point_source_anisotropies",
+      std::vector<unsigned int>(),
       "The anisotropies of the point sources. The vector should correspond with the order of "
       "'point_source_locations'");
   params.addParamNamesToGroup("point_source_locations point_source_moments "
                               "point_source_anisotropies",
                               "Point Source");
+
+  //----------------------------------------------------------------------------
+  // Field sources.
+  params.addParam<std::vector<SubdomainName>>("field_source_blocks",
+                                              std::vector<SubdomainName>(),
+                                              "The list of blocks (ids or "
+                                              "names) that host a field source.");
+  params.addParam<std::vector<std::vector<VariableName>>>(
+      "field_source_moments",
+      std::vector<std::vector<VariableName>>(),
+      "A double vector containing a list of external source moments for all field particle "
+      "sources. The external vector should correspond with the order of "
+      "'field_source_locations'.");
+  params.addParam<std::vector<unsigned int>>(
+      "field_source_anisotropies",
+      std::vector<unsigned int>(),
+      "The anisotropies of the field sources. The vector should correspond with the order of "
+      "'field_source_locations'.");
+  params.addParam<std::vector<Real>>("field_source_scaling",
+                                     std::vector<Real>(),
+                                     "Scaling factors to apply to field radiation sources. The "
+                                     "vector should correspond with the order of "
+                                     "'field_source_locations'.");
+  params.addParamNamesToGroup("field_source_blocks field_source_moments "
+                              "field_source_anisotropies field_source_scaling",
+                              "Field Source");
 
   //----------------------------------------------------------------------------
   // Initial conditions.
@@ -233,7 +288,7 @@ TransportAction::validParams()
                              "multiple are provided). Defaults to constant "
                              "initial conditions.");
   params.addParam<std::vector<Real>>("constant_ic",
-                                     std::vector<Real>(0.0),
+                                     std::vector<Real>({0.0}),
                                      "A constant initial condition for the "
                                      "angular fluxes.");
   params.addParamNamesToGroup("ic_type constant_ic", "Initial Condition");
@@ -246,6 +301,7 @@ TransportAction::validParams()
   params.addParam<std::string>(
       "from_flux_moment_names", "flux_moment", "The names of the source flux moments.");
   params.addParam<std::vector<SubdomainName>>("from_blocks",
+                                              std::vector<SubdomainName>(),
                                               "The list of blocks (ids or "
                                               "names) that we are pulling from.");
   params.addParam<bool>(
@@ -279,6 +335,7 @@ TransportAction::validParams()
                                "uncollided_flux_moment",
                                "The names of the source flux moments.");
   params.addParam<std::vector<SubdomainName>>("uncollided_from_blocks",
+                                              std::vector<SubdomainName>(),
                                               "The list of blocks (ids or "
                                               "names) that we are pulling from.");
   params.addParam<bool>("use_conservative_uncollided_transfers",
@@ -341,6 +398,10 @@ TransportAction::TransportAction(const InputParameters & params)
         getParam<std::vector<std::vector<Real>>>("volumetric_source_moments")),
     _volumetric_source_anisotropy(
         getParam<std::vector<unsigned int>>("volumetric_source_anisotropies")),
+    _field_source_blocks(getParam<std::vector<SubdomainName>>("field_source_blocks")),
+    _field_source_moments(getParam<std::vector<std::vector<VariableName>>>("field_source_moments")),
+    _field_source_anisotropy(getParam<std::vector<unsigned int>>("field_source_anisotropies")),
+    _field_source_scaling(getParam<std::vector<Real>>("field_source_scaling")),
     _from_multi_app_name(getParam<MultiAppName>("from_multi_app")),
     _from_subdomain_ids(getParam<std::vector<SubdomainName>>("from_blocks")),
     _source_flux_moment_names(getParam<std::string>("from_flux_moment_names")),
@@ -371,8 +432,11 @@ TransportAction::TransportAction(const InputParameters & params)
       for (const auto & volume_moment : volume_moments)
         _source_scale_factor = std::max(_source_scale_factor, volume_moment);
 
-    // Divide all source moments by the maximum. This will be reverted when the scaled flux moments
-    // are calculated.
+    for (const auto & field_scaling : _field_source_scaling)
+      _source_scale_factor = std::max(_source_scale_factor, field_scaling);
+
+    // Divide all source moments by the maximum. This will be reverted when the scaled flux
+    // moments are calculated.
     for (auto & point_moments : _point_source_moments)
       for (auto & point_moment : point_moments)
         point_moment /= _source_scale_factor;
@@ -559,6 +623,11 @@ TransportAction::actCommon()
         case 3u:
           _p_type = ProblemType::Cartesian3D;
           _num_group_moments = (_max_eval_anisotropy + 1u) * (_max_eval_anisotropy + 1u);
+
+          if (_max_eval_anisotropy > 0u)
+            mooseWarning(
+                "Anisotropic scattering is currently bugged in 3D and will occasionally "
+                "result in a DIVERGED_FNORM_NAN error during parallel residual evaluations.");
 
           for (unsigned int g = 0; g < _num_groups; ++g)
           {
@@ -773,7 +842,7 @@ TransportAction::actCommon()
   // Add all required variables to a list for reinitialization from a file.
   if (_current_task == "copy_nodal_vars" && getParam<bool>("init_from_file"))
   {
-    auto & system = _problem->getNonlinearSystemBase();
+    auto & system = _problem->getNonlinearSystemBase(0u);
     auto & aux_system = _problem->getAuxiliarySystem();
 
     switch (_transport_scheme)
@@ -1377,23 +1446,109 @@ TransportAction::addSNBCs(const std::string & var_name, unsigned int g, unsigned
   } // SNNormalCurrentBC
 
   // Add ADSNReflectiveBC.
+  // TODO: Spherical interpolation for reflected directions which aren't in the quadrature set?
   if (_reflective_side_sets.size() > 0u)
   {
-    auto params = _factory.getValidParams("ADSNReflectiveBC");
-    params.set<NonlinearVariableName>("variable") = var_name;
-    // Ordinate index is required to fetch the particle direction.
-    params.set<unsigned int>("ordinate_index") = n;
+    // Spatial quadrature sets to fetch the normal vector.
+    std::unique_ptr<FEBase> face_fe(FEBase::build(_mesh->dimension(), FEType(CONSTANT, MONOMIAL)));
+    std::unique_ptr<QBase> q_face(QBase::build(Moose::stringToEnum<QuadratureType>("GRID"),
+                                               _mesh->dimension() - 1u,
+                                               Moose::stringToEnum<Order>("CONSTANT")));
+    face_fe->attach_quadrature_rule(q_face.get());
 
-    // The flux ordinates for this group.
-    params.set<std::vector<VariableName>>("psi_ref") = _group_angular_fluxes[g];
+    // The angular quadrature set to calculate reflected directions.
+    const auto aq = GaussAngularQuadrature(
+        2u * _n_c, 2u * _n_l, getParam<MooseEnum>("major_axis").getEnum<MajorAxis>(), _p_type);
 
-    // Apply the parameters for the quadrature rule.
-    applyQuadratureParameters(params);
+    const auto & bnd_ids = _mesh->getBoundaryIDs(_reflective_side_sets);
 
-    params.set<std::vector<BoundaryName>>("boundary") = _reflective_side_sets;
+    std::vector<std::vector<RealVectorValue>> unique_bnd_normals;
+    unique_bnd_normals.resize(bnd_ids.size());
 
-    _problem->addBoundaryCondition("ADSNReflectiveBC", "ADSNReflectiveBC_" + var_name, params);
-    debugOutput("Adding BC ADSNReflectiveBC for the variable " + var_name + ".");
+    for (unsigned int i = 0u; i < bnd_ids.size(); ++i)
+    {
+      const auto & elem_normals = face_fe->get_normals();
+
+      // Find all of the unique normals for the boundary at index i.
+      for (const auto & b_elem : *_mesh->getBoundaryElementRange())
+      {
+        if (b_elem->_bnd_id == bnd_ids[i])
+        {
+          face_fe->reinit(b_elem->_elem, b_elem->_side);
+
+          bool has_normal = false;
+          for (const auto & norm : unique_bnd_normals[i])
+            has_normal = has_normal || vecEquals(norm, elem_normals[0u]);
+
+          if (!has_normal)
+            unique_bnd_normals[i].emplace_back(elem_normals[0u]);
+        }
+      }
+
+      // Check to make sure the normals point along a cartesian direction.
+      for (const auto & norm : unique_bnd_normals[i])
+        if (!(vecEquals(norm, RealVectorValue(1.0, 0.0, 0.0)) ||
+              vecEquals(norm, RealVectorValue(-1.0, 0.0, 0.0)) ||
+              vecEquals(norm, RealVectorValue(0.0, 1.0, 0.0)) ||
+              vecEquals(norm, RealVectorValue(0.0, -1.0, 0.0)) ||
+              vecEquals(norm, RealVectorValue(0.0, 0.0, 1.0)) ||
+              vecEquals(norm, RealVectorValue(0.0, 0.0, -1.0))))
+          mooseError("The normal vector does not point along a principal cartesian axis. The "
+                     "reflected direction is not guaranteed to be in the quadrature set. " +
+                     Moose::stringify(static_cast<Point>(norm)));
+
+      // Find the reflected directions.
+      auto curr_dir = aq.direction(n);
+      RealVectorValue refl_dir(0.0, 0.0, 0.0);
+
+      std::vector<int> reflected_direction_indices;
+      reflected_direction_indices.resize(unique_bnd_normals[i].size(), -1);
+
+      for (unsigned int norm_ind = 0u; norm_ind < unique_bnd_normals[i].size(); ++norm_ind)
+      {
+        for (unsigned int n_prime = 0u; n_prime < aq.totalOrder(); ++n_prime)
+        {
+          refl_dir = aq.direction(n_prime) -
+                     (2.0 * aq.direction(n_prime) * unique_bnd_normals[i][norm_ind]) *
+                         unique_bnd_normals[i][norm_ind];
+
+          if (vecEquals(curr_dir, refl_dir))
+          {
+            reflected_direction_indices[norm_ind] = static_cast<int>(n_prime);
+            break;
+          }
+        }
+
+        if (reflected_direction_indices[norm_ind] < 0)
+          mooseError("Reflected direction for the normal " +
+                     Moose::stringify(static_cast<Point>(unique_bnd_normals[i][norm_ind])) +
+                     " is not in the quadrature set.");
+      }
+
+      // Add the reflective boundary condition.
+      auto params = _factory.getValidParams("SNReflectiveBC");
+      params.set<NonlinearVariableName>("variable") = var_name;
+      // Ordinate index is required to fetch the particle direction.
+      params.set<unsigned int>("ordinate_index") = n;
+
+      // The flux ordinates for this group.
+      for (auto refl_index : reflected_direction_indices)
+        params.set<std::vector<VariableName>>("psi_ref").emplace_back(
+            _group_angular_fluxes[g][static_cast<unsigned int>(refl_index)]);
+
+      // The unique boundary normals for this BC.
+      for (const auto & norm : unique_bnd_normals[i])
+        params.set<std::vector<RealVectorValue>>("unique_normals").emplace_back(norm);
+
+      // Apply the parameters for the quadrature rule.
+      applyQuadratureParameters(params);
+
+      params.set<std::vector<BoundaryName>>("boundary").emplace_back(_reflective_side_sets[i]);
+
+      _problem->addBoundaryCondition(
+          "SNReflectiveBC", "SNReflectiveBC_" + _reflective_side_sets[i] + "_" + var_name, params);
+      debugOutput("Adding BC SNReflectiveBC for the variable " + var_name + ".");
+    }
   } // ADSNReflectiveBC
 }
 
@@ -1401,9 +1556,6 @@ TransportAction::addSNBCs(const std::string & var_name, unsigned int g, unsigned
 void
 TransportAction::addSNICs(const std::string & var_name, unsigned int g)
 {
-  if (_exec_type != ExecutionType::Transient)
-    return;
-
   switch (static_cast<int>(getParam<MooseEnum>("ic_type")))
   {
     case 0:
@@ -1495,8 +1647,6 @@ TransportAction::addAuxKernels(const std::string & var_name, unsigned int g, uns
     // Flux moment degree and order.
     params.set<unsigned int>("degree") = l;
     params.set<int>("order") = m;
-    params.set<unsigned int>("group_index") = g;
-    params.set<unsigned int>("num_groups") = _num_groups;
 
     params.set<ExecFlagEnum>("execute_on") = {EXEC_INITIAL, EXEC_TIMESTEP_BEGIN, EXEC_LINEAR};
 
@@ -1529,8 +1679,6 @@ TransportAction::addAuxKernels(const std::string & var_name, unsigned int g, uns
     // Flux moment degree and order.
     params.set<unsigned int>("degree") = l;
     params.set<int>("order") = m;
-    params.set<unsigned int>("group_index") = g;
-    params.set<unsigned int>("num_groups") = _num_groups;
 
     if (!_using_uncollided)
       params.set<Real>("scale_factor") = _source_scale_factor;
@@ -1670,32 +1818,38 @@ TransportAction::addSAAFKernels(const std::string & var_name, unsigned int g, un
     }
   } // SAAFVolumeSource
 
-  // Add SAAFMaterialSource.
-  if (!_is_eigen && !_using_uncollided)
+  // Add SAAFFieldSource
+  if (_field_source_blocks.size() > 0u && !_is_eigen && !_using_uncollided)
   {
-    auto params = _factory.getValidParams("SAAFMaterialSource");
-    params.set<NonlinearVariableName>("variable") = var_name;
-    // Set the name of the TransportAction so it can fetch the appropriate material properties.
-    params.set<std::string>("transport_system") = name();
-    // Group index and the number of groups are required to fetch the
-    // source moments for the proper spectral energy group.
-    params.set<unsigned int>("group_index") = g;
-    params.set<unsigned int>("num_groups") = _num_groups;
-    // Ordinate index is required to fetch the particle direction.
-    params.set<unsigned int>("ordinate_index") = n;
-
-    // Apply the parameters for the quadrature rule.
-    applyQuadratureParameters(params);
-
-    if (isParamValid("block"))
+    for (unsigned int i = 0u; i < _field_source_blocks.size(); ++i)
     {
-      params.set<std::vector<SubdomainName>>("block") =
-          getParam<std::vector<SubdomainName>>("block");
-    }
+      auto params = _factory.getValidParams("SAAFFieldSource");
+      params.set<NonlinearVariableName>("variable") = var_name;
+      // Set the name of the TransportAction so it can fetch the appropriate material properties.
+      params.set<std::string>("transport_system") = name();
+      // Group index is required to fetch the group particle removal cross-section
+      // for stabilization.
+      params.set<unsigned int>("group_index") = g;
+      // Number of groups
+      params.set<unsigned int>("num_groups") = _num_groups;
+      // Ordinate index is required to fetch the particle direction.
+      params.set<unsigned int>("ordinate_index") = n;
 
-    _problem->addKernel("SAAFMaterialSource", "SAAFMaterialSource_" + var_name, params);
-    debugOutput("      - Adding kernel SAAFMaterialSource for the variable " + var_name + ".");
-  } // SAAFMaterialSource
+      params.set<std::vector<VariableName>>("group_source") = _field_source_moments[i];
+      params.set<unsigned int>("source_anisotropy") = _field_source_anisotropy[i];
+      params.set<Real>("scale_factor") =
+          getParam<bool>("scale_sources") ? 1.0 / _source_scale_factor : 1.0;
+
+      // Apply the parameters for the quadrature rule.
+      applyQuadratureParameters(params);
+
+      params.set<std::vector<SubdomainName>>("block").emplace_back(_field_source_blocks[i]);
+
+      _problem->addKernel(
+          "SAAFFieldSource", "SAAFFieldSource_" + var_name + "_" + _field_source_blocks[i], params);
+      debugOutput("      - Adding kernel SAAFFieldSource for the variable " + var_name + ".");
+    }
+  } // SAAFFieldSource
 
   // Only add fission kernels if debug doesn't disable them AND this transport system represents a
   // neutron field.
@@ -2047,28 +2201,6 @@ TransportAction::addDiffusionKernels(const std::string & var_name, unsigned int 
       debugOutput("      - Adding kernel DiffusionVolumeSource for the variable " + var_name + ".");
     }
   } // DiffusionVolumeSource
-
-  // Add DiffusionMaterialSource.
-  if (!_is_eigen)
-  {
-    auto params = _factory.getValidParams("DiffusionMaterialSource");
-    params.set<NonlinearVariableName>("variable") = var_name;
-    // Set the name of the TransportAction so it can fetch the appropriate material properties.
-    params.set<std::string>("transport_system") = name();
-    // Group index and the number of groups are required to fetch the
-    // source moments for the proper spectral energy group.
-    params.set<unsigned int>("group_index") = g;
-    params.set<unsigned int>("num_groups") = _num_groups;
-
-    if (isParamValid("block"))
-    {
-      params.set<std::vector<SubdomainName>>("block") =
-          getParam<std::vector<SubdomainName>>("block");
-    }
-
-    _problem->addKernel("DiffusionMaterialSource", "DiffusionMaterialSource_" + var_name, params);
-    debugOutput("      - Adding kernel DiffusionMaterialSource for the variable " + var_name + ".");
-  } // DiffusionMaterialSource
 
   // Only add fission kernels if debug doesn't disable them AND this transport system represents a
   // neutron field.
