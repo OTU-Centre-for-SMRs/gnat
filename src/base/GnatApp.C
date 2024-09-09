@@ -13,6 +13,7 @@ GnatApp::validParams()
   params.set<bool>("use_legacy_uo_aux_computation") = false;
   params.set<bool>("use_legacy_output_syntax") = false;
   params.set<bool>("use_legacy_material_output") = false;
+  params.set<bool>("use_legacy_initial_residual_evaluation_behavior") = false;
 
   return params;
 }
