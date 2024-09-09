@@ -55,9 +55,19 @@ Review the [radiation transport](about/radiation_transport.md) and
 
 !gallery! large=4
 !card media/landing_page/subcritical_g25.png title=Criticality Calculations
-Simulation of a graphite moderated natural uranium fueled subcritical assembly. Figure shows the thermal (group 25) scalar neutron flux.
+Simulation of a graphite moderated natural uranium fueled subcritical assembly using the S@N@ radiation transport solver running in eigenvalue mode. Figure shows the thermal neutron flux.
 
-!card media/landing_page/bwr_g2.png title=Ex-core Radiation Transport
-Simulation of the neutron fields in a concrete-walled containment system caused by a small BWR. Figure shows the fast (group 2) scalar neutron flux.
+!card media/landing_page/bwr_g2.png title=Ex-Core Radiation Transport
+Simulation of the neutron fields in a concrete-walled containment system caused by a small BWR using the S@N@ radiation transport solver driven by a surface source. Figure shows the fast (group 2) scalar neutron flux.
+
+!card media/landing_page/bwr_ar41.png title=Neutron Activation of Fluids
+Transient activation of Ar-40 to Ar-41 in air near a small BWR using the neutron transport and fluid activation solvers. Figure shows the activity of Ar-41 in the containment system.
 !gallery-end!
 
+!gallery! large=6
+!card media/landing_page/plume_cs137.png title=Radionuclide Plumes
+Simulation of short length and time scale plume release from nuclear facilities with the tracer transport model. Figure shows the concentration of Cs-137 after 7.5 minutes of the release.
+
+!card media/landing_page/plume_flux_log.png title=External Photon Dosimetry
+Simulation of skyshine from the decay of Ba-137m in a plume release using the coupled tracer transport and photon transport solvers. Figure shows the monochromatic 662 keV photon flux.
+!gallery-end!

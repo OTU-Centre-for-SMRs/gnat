@@ -1,20 +1,13 @@
-# A simple test case with a purely absorbing medium and a point source in the
-# middle of the domain.
-
 src_x = 0.0
 src_y = 0.0
 src_z = 0.0
 
-[GlobalParams]
-  source_location = '${src_x} ${src_y} ${src_z}'
-[]
-
 [Mesh]
   [domain]
     type = FileMeshGenerator
-    file = 'shield.e'
+    file = 'mesh_in.e'
   []
-  uniform_refine = 3
+  uniform_refine = 0
 []
 
 [Variables]
@@ -31,6 +24,7 @@ src_z = 0.0
     variable = UncollidedFlux
     group_index = 0
     transport_system = ''
+    source_location = '${src_x} ${src_y} ${src_z}'
   []
   [UncollidedFluxRemoval]
     type = SASFRemoval
@@ -45,35 +39,44 @@ src_z = 0.0
     type = SASFVacuumBC
     variable = UncollidedFlux
     boundary = 'vacuum'
+    source_location = '${src_x} ${src_y} ${src_z}'
   []
 
   [UncollidedFluxSourceBC]
     type = SASFAnalyticalFluxBC
     variable = UncollidedFlux
-    boundary = 'analytical_flux'
+    boundary = 'nsr'
     group_index = 0
     group_source = 1.0
     group_total = 0.0
+    source_location = '${src_x} ${src_y} ${src_z}'
   []
 []
 
 [Materials]
   [Vacuum]
-    type = AbsorbingNeutronicsMaterial
+    type = AbsorbingTransportMaterial
     transport_system = ''
     num_groups = 1
     group_total = 0.0
-    block = 'empty'
+    group_speeds = '1.0'
+    block = '0'
     saaf_eta = 1.0
   []
   [Shield]
-    type = AbsorbingNeutronicsMaterial
+    type = AbsorbingTransportMaterial
     transport_system = ''
     num_groups = 1
-    group_total = 1.0
-    block = 'shield'
+    #group_total = 1.0
+    group_total = 10.0
+    group_speeds = '1.0'
+    block = '1'
     saaf_eta = 1.0
   []
+[]
+
+[Postprocessors/Num_Elements]
+  type = NumElems
 []
 
 [Executioner]
@@ -92,5 +95,5 @@ src_z = 0.0
 
 [Outputs]
   exodus = true
-  execute_on = TIMESTEP_END
+  csv = true
 []

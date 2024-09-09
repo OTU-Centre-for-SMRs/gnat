@@ -22,7 +22,8 @@ Extensions:
                 Tutorials: tutorials/index.md
             Theory and Implementation:
                 Radiation Transport: about/radiation_transport.md
-                Mobile Depletion: about/mobile_depletion.md
+                Fluid Depletion: about/mobile_depletion.md
+                Implementation: about/implementation.md
             Documentation:
                 Gnat Source Pages: source/index.md
                 MOOSE Source Pages: https://mooseframework.inl.gov/source/index.html
