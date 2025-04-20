@@ -29,8 +29,8 @@ SASFAnalyticalFluxBC::SASFAnalyticalFluxBC(const InputParameters & parameters)
   : IntegratedBC(parameters),
     _group_index(getParam<unsigned int>("group_index")),
     _sigma_t_g(getParam<std::vector<Real>>("group_total")),
-    _source_location(getParam<Point>("source_location")),
     _group_source(getParam<std::vector<Real>>("group_source")),
+    _source_location(getParam<Point>("source_location")),
     _dim(_subproblem.mesh().dimension())
 {
 }

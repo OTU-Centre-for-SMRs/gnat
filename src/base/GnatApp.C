@@ -53,6 +53,8 @@ associateSyntaxInner(Syntax & syntax, ActionFactory & /*action_factory*/)
   syntax.registerActionSyntax("TransportAction", "TransportSystems/*");
   syntax.registerActionSyntax("UncollidedFluxAction", "UncollidedFlux/*");
 
+  syntax.registerActionSyntax("CardinalTransportMaterialAction", "CardinalMGXS");
+
   // Depletion library.
   syntax.registerActionSyntax("DepletionLibraryAction", "DepletionLibrary");
 

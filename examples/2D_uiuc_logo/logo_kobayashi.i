@@ -17,8 +17,8 @@
     order = FIRST
     family = LAGRANGE
 
-    n_azimuthal = 10
-    n_polar = 10
+    n_azimuthal = 3
+    n_polar = 3
 
     vacuum_boundaries = 'vacuum'
 

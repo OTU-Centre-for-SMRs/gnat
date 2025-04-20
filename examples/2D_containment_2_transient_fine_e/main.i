@@ -74,7 +74,6 @@
     from_multi_app = Neutronics
     from_flux_moment_names = Flux_Moment
     use_copy = false
-    #init_from_file = true
 
     flux_moment_names = 'Flux_Moment'
 
@@ -104,7 +103,7 @@
   type = Transient
   solve_type = NEWTON
   petsc_options_iname = '-pc_type -pc_factor_shift_type'
-  petsc_options_value = 'lu       NONZERO'
+  petsc_options_value = ' lu       NONZERO'
 
   [TimeStepper]
     type = ConstantDT

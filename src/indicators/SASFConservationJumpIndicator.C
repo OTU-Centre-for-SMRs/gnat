@@ -51,5 +51,5 @@ SASFConservationJumpIndicator::computeQpIntegral()
   auto err_n = omega * _grad_u_neighbor[_qp] + total_n * _u_neighbor[_qp];
 
   auto jump = err_c - err_n;
-  return jump * jump;
+  return jump * jump * mag * mag * mag * mag;
 }
