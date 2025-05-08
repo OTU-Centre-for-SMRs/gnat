@@ -6,7 +6,7 @@ documenting the class, which includes the typical automatic documentation associ
 MooseObject; however, what is contained is ultimately determined by what is necessary to make the
 documentation clear for users.
 
-!syntax description /AuxVariables/AuxKernel/MLEddyDiffusivity
+!syntax description /AuxKernels/MLEddyDiffusivity
 
 ## Overview
 
@@ -16,8 +16,8 @@ documentation clear for users.
 
 !! Describe and include an example of how to use the MLEddyDiffusivity object.
 
-!syntax parameters /AuxVariables/AuxKernel/MLEddyDiffusivity
+!syntax parameters /AuxKernels/MLEddyDiffusivity
 
-!syntax inputs /AuxVariables/AuxKernel/MLEddyDiffusivity
+!syntax inputs /AuxKernels/MLEddyDiffusivity
 
-!syntax children /AuxVariables/AuxKernel/MLEddyDiffusivity
+!syntax children /AuxKernels/MLEddyDiffusivity

@@ -6,7 +6,7 @@ documenting the class, which includes the typical automatic documentation associ
 MooseObject; however, what is contained is ultimately determined by what is necessary to make the
 documentation clear for users.
 
-!syntax description /AuxVariables/AuxKernel/ParticleFluxMoment
+!syntax description /AuxKernels/ParticleFluxMoment
 
 ## Overview
 
@@ -16,8 +16,8 @@ documentation clear for users.
 
 !! Describe and include an example of how to use the ParticleFluxMoment object.
 
-!syntax parameters /AuxVariables/AuxKernel/ParticleFluxMoment
+!syntax parameters /AuxKernels/ParticleFluxMoment
 
-!syntax inputs /AuxVariables/AuxKernel/ParticleFluxMoment
+!syntax inputs /AuxKernels/ParticleFluxMoment
 
-!syntax children /AuxVariables/AuxKernel/ParticleFluxMoment
+!syntax children /AuxKernels/ParticleFluxMoment

@@ -6,7 +6,7 @@ documenting the class, which includes the typical automatic documentation associ
 MooseObject; however, what is contained is ultimately determined by what is necessary to make the
 documentation clear for users.
 
-!syntax description /AuxVariables/AuxKernel/VariableScaleAux
+!syntax description /AuxKernels/VariableScaleAux
 
 ## Overview
 
@@ -16,8 +16,8 @@ documentation clear for users.
 
 !! Describe and include an example of how to use the VariableScaleAux object.
 
-!syntax parameters /AuxVariables/AuxKernel/VariableScaleAux
+!syntax parameters /AuxKernels/VariableScaleAux
 
-!syntax inputs /AuxVariables/AuxKernel/VariableScaleAux
+!syntax inputs /AuxKernels/VariableScaleAux
 
-!syntax children /AuxVariables/AuxKernel/VariableScaleAux
+!syntax children /AuxKernels/VariableScaleAux

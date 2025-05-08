@@ -6,7 +6,7 @@ documenting the class, which includes the typical automatic documentation associ
 MooseObject; however, what is contained is ultimately determined by what is necessary to make the
 documentation clear for users.
 
-!syntax description /UserObjects/TotalRRPostprocessor
+!syntax description /Postprocessors/TotalRRPostprocessor
 
 ## Overview
 
@@ -16,8 +16,8 @@ documentation clear for users.
 
 !! Describe and include an example of how to use the TotalRRPostprocessor object.
 
-!syntax parameters /UserObjects/TotalRRPostprocessor
+!syntax parameters /Postprocessors/TotalRRPostprocessor
 
-!syntax inputs /UserObjects/TotalRRPostprocessor
+!syntax inputs /Postprocessors/TotalRRPostprocessor
 
-!syntax children /UserObjects/TotalRRPostprocessor
+!syntax children /Postprocessors/TotalRRPostprocessor

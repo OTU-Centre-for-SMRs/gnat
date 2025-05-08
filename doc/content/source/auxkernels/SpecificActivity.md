@@ -6,7 +6,7 @@ documenting the class, which includes the typical automatic documentation associ
 MooseObject; however, what is contained is ultimately determined by what is necessary to make the
 documentation clear for users.
 
-!syntax description /AuxVariables/AuxKernel/SpecificActivity
+!syntax description /AuxKernels/SpecificActivity
 
 ## Overview
 
@@ -16,8 +16,8 @@ documentation clear for users.
 
 !! Describe and include an example of how to use the SpecificActivity object.
 
-!syntax parameters /AuxVariables/AuxKernel/SpecificActivity
+!syntax parameters /AuxKernels/SpecificActivity
 
-!syntax inputs /AuxVariables/AuxKernel/SpecificActivity
+!syntax inputs /AuxKernels/SpecificActivity
 
-!syntax children /AuxVariables/AuxKernel/SpecificActivity
+!syntax children /AuxKernels/SpecificActivity

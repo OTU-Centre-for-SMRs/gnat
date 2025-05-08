@@ -6,7 +6,7 @@ documenting the class, which includes the typical automatic documentation associ
 MooseObject; however, what is contained is ultimately determined by what is necessary to make the
 documentation clear for users.
 
-!syntax description /AuxVariables/AuxKernel/MassFractionConcentration
+!syntax description /AuxKernels/MassFractionConcentration
 
 ## Overview
 
@@ -16,8 +16,8 @@ documentation clear for users.
 
 !! Describe and include an example of how to use the MassFractionConcentration object.
 
-!syntax parameters /AuxVariables/AuxKernel/MassFractionConcentration
+!syntax parameters /AuxKernels/MassFractionConcentration
 
-!syntax inputs /AuxVariables/AuxKernel/MassFractionConcentration
+!syntax inputs /AuxKernels/MassFractionConcentration
 
-!syntax children /AuxVariables/AuxKernel/MassFractionConcentration
+!syntax children /AuxKernels/MassFractionConcentration

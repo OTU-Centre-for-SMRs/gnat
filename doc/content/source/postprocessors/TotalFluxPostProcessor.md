@@ -6,7 +6,7 @@ documenting the class, which includes the typical automatic documentation associ
 MooseObject; however, what is contained is ultimately determined by what is necessary to make the
 documentation clear for users.
 
-!syntax description /UserObjects/TotalFluxPostProcessor
+!syntax description /Postprocessors/TotalFluxPostProcessor
 
 ## Overview
 
@@ -16,8 +16,8 @@ documentation clear for users.
 
 !! Describe and include an example of how to use the TotalFluxPostProcessor object.
 
-!syntax parameters /UserObjects/TotalFluxPostProcessor
+!syntax parameters /Postprocessors/TotalFluxPostProcessor
 
-!syntax inputs /UserObjects/TotalFluxPostProcessor
+!syntax inputs /Postprocessors/TotalFluxPostProcessor
 
-!syntax children /UserObjects/TotalFluxPostProcessor
+!syntax children /Postprocessors/TotalFluxPostProcessor

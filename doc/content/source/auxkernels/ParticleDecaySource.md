@@ -6,7 +6,7 @@ documenting the class, which includes the typical automatic documentation associ
 MooseObject; however, what is contained is ultimately determined by what is necessary to make the
 documentation clear for users.
 
-!syntax description /AuxVariables/AuxKernel/ParticleDecaySource
+!syntax description /AuxKernels/ParticleDecaySource
 
 ## Overview
 
@@ -16,8 +16,8 @@ documentation clear for users.
 
 !! Describe and include an example of how to use the ParticleDecaySource object.
 
-!syntax parameters /AuxVariables/AuxKernel/ParticleDecaySource
+!syntax parameters /AuxKernels/ParticleDecaySource
 
-!syntax inputs /AuxVariables/AuxKernel/ParticleDecaySource
+!syntax inputs /AuxKernels/ParticleDecaySource
 
-!syntax children /AuxVariables/AuxKernel/ParticleDecaySource
+!syntax children /AuxKernels/ParticleDecaySource

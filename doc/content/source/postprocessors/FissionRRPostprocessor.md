@@ -6,7 +6,7 @@ documenting the class, which includes the typical automatic documentation associ
 MooseObject; however, what is contained is ultimately determined by what is necessary to make the
 documentation clear for users.
 
-!syntax description /UserObjects/FissionRRPostprocessor
+!syntax description /Postprocessors/FissionRRPostprocessor
 
 ## Overview
 
@@ -16,8 +16,8 @@ documentation clear for users.
 
 !! Describe and include an example of how to use the FissionRRPostprocessor object.
 
-!syntax parameters /UserObjects/FissionRRPostprocessor
+!syntax parameters /Postprocessors/FissionRRPostprocessor
 
-!syntax inputs /UserObjects/FissionRRPostprocessor
+!syntax inputs /Postprocessors/FissionRRPostprocessor
 
-!syntax children /UserObjects/FissionRRPostprocessor
+!syntax children /Postprocessors/FissionRRPostprocessor

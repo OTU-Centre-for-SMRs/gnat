@@ -6,7 +6,7 @@ documenting the class, which includes the typical automatic documentation associ
 MooseObject; however, what is contained is ultimately determined by what is necessary to make the
 documentation clear for users.
 
-!syntax description /UserObjects/VolumetricFlowRateQp
+!syntax description /Postprocessors/VolumetricFlowRateQp
 
 ## Overview
 
@@ -16,8 +16,8 @@ documentation clear for users.
 
 !! Describe and include an example of how to use the VolumetricFlowRateQp object.
 
-!syntax parameters /UserObjects/VolumetricFlowRateQp
+!syntax parameters /Postprocessors/VolumetricFlowRateQp
 
-!syntax inputs /UserObjects/VolumetricFlowRateQp
+!syntax inputs /Postprocessors/VolumetricFlowRateQp
 
-!syntax children /UserObjects/VolumetricFlowRateQp
+!syntax children /Postprocessors/VolumetricFlowRateQp
