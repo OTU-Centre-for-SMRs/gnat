@@ -32,7 +32,7 @@ and y. Finally, `ix = 100` and `iy = 100` indicate that the mesh should be
 subdivided into 100 elements along both the x and y axis. The result is shown
 in [!ref](example_1_mesh):
 
-!media media/example_1/example_1_mesh.png id=example_1_mesh caption=2D cartesian mesh for Example 1.
+!media media/2D_fixed_source/example_1_mesh.png id=example_1_mesh caption=2D cartesian mesh for Example 1.
   style=width:40%;margin-left:auto;margin-right:auto;halign:center
 
 The next step in solving radiation transport problems is to declare a `TransportSystem` block. These are custom Moose
@@ -132,5 +132,5 @@ The simulation can be executed with the following shell command:
 
 The results of this simple case can be seen below in [!ref](example_1_output):
 
-!media media/example_1/example_1_output.png id=example_1_output caption=Example 1 Results.
+!media media/2D_fixed_source/example_1_output.png id=example_1_output caption=Example 1 Results.
   style=width:40%;margin-left:auto;margin-right:auto;halign:center

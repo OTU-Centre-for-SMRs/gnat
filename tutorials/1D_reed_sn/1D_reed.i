@@ -6,7 +6,7 @@
     ix = '4 2 4 2 4'
     subdomain_id = '0 1 2 3 4'
   []
-  uniform_refine = 6
+  uniform_refine = 5
 []
 
 [TransportSystems]
@@ -19,7 +19,7 @@
     order = FIRST
     family = LAGRANGE
 
-    n_polar = 80
+    n_polar = 10
 
     vacuum_boundaries = 'right'
     reflective_boundaries = 'left'
@@ -74,14 +74,26 @@
   petsc_options_iname = '-ksp_gmres_restart'
   petsc_options_value = ' 100'
   l_max_its = 50
-  nl_rel_tol = 1e-12
+  nl_rel_tol = 1e-8
 
   automatic_scaling = true
   off_diagonals_in_auto_scaling = true
   compute_scaling_once = false
 []
 
+[VectorPostprocessors]
+  [scalar_flux]
+    type = LineValueSampler
+    sort_by = x
+    variable = 'flux_moment_1_0_0'
+    start_point = '0 0 0'
+    end_point = '8 0 0'
+    num_points = 1000
+  []
+[]
+
 [Outputs]
   exodus = true
+  csv = true
   execute_on = 'TIMESTEP_END'
 []
