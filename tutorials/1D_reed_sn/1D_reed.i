@@ -6,7 +6,6 @@
     ix = '4 2 4 2 4'
     subdomain_id = '0 1 2 3 4'
   []
-  uniform_refine = 5
 []
 
 [TransportSystems]
@@ -14,7 +13,6 @@
     num_groups = 1
     scheme = saaf_cfem
     particle_type = neutron
-    output_angular_fluxes = false
 
     order = FIRST
     family = LAGRANGE

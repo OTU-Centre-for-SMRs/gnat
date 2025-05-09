@@ -1,4 +1,6 @@
-# Neutral Particle Transport
+# Tutorials
+
+## Neutral Particle Transport
 
 1. [Modelling the 1D Reed problem.](1D_reed_benchmark.md)
 2. [Modelling 2D fixed source problems.](2D_fixed_source.md)
@@ -7,16 +9,16 @@
 5. [Performing criticality calculations on the 2D C5G7 problem.](2D_c5g7.md)
 6. [Simulating the proposed OTU subcritical assembly.](3D_subcritical.md)
 7. [Mitigating ray effects with an uncollided flux technique.](uncollided_flux.md)
-8. [Coupling Gnat to Cardinal for multi-group cross section generation](cardinal_mgxs.md)
+8. [Coupling Gnat to Cardinal for multi-group cross section generation.](cardinal_mgxs.md)
 
-# Scalar Species Transport
-
-TODO
-
-# Fluid Activation
+## Scalar Species Transport
 
 TODO
 
-# Coupling Dispersion with Photon Transport
+## Fluid Activation
+
+TODO
+
+## Coupling Dispersion with Particle Transport
 
 TODO
