@@ -8,7 +8,7 @@ In this tutorial, you will learn:
 To access this tutorial,
 
 ```bash
-cd /gnat/tutorials/1D_reed_sn
+cd gnat/tutorials/1D_reed_sn
 ```
 
 ## Geometry and Material Properties
@@ -78,6 +78,45 @@ the transport system we created earlier, and `block` specifies the subdomain tha
 applied over. `group_total` is equivalent to $\Sigma_{t,g}$ (the group-wise total cross section), and
 `group_scattering` is equivalent to $\Sigma_{s,g'\rightarrow g, l}$ (the group-wise scattering matrix).
 
-The final component of the Gnat input file is to specify
+The final components of a Gnat input file are the specification of the execution type (`Steady` vs `Transient` vs `Eigen`)
+and the execution settings. The Reed problem is a fixed source problem, so we select `type = Steady` in the
+`Executioner` block. We chose a PJFNK solver to avoid the need to form the full system Jacobian matrix which
+results in substantial memory savings. The remaining settings improve the convergence rate of the PJFNK solver.
+These execution settings can be found in the code block below.
+
+!listing /tutorials/1D_reed_sn/1D_reed.i
+  block=Executioner
+
+In addition to specifying execution settings, we also add a vector post-processor to plot the solution
+along the 1D mesh and specify that we want both Exodus and CSV output. This allows us to visualize our
+results.
+
+!listing /tutorials/1D_reed_sn/1D_reed.i
+  start=VectorPostprocessors
 
 ## Execution and Post-Processing
+
+To run the Reed benchmark problem,
+
+```bash
+gnat-opt -i 1D_reed.i
+```
+
+Congratulations, you've successfully run your first transport problem with Gnat! We can plot the output
+from the vector post-processor (`1D_reed_out_scalar_flux_0001.csv`) in Python, which results in [reed_coarse].
+
+!media media/1D_reed/coarse.png id=reed_coarse caption=Flux from the Reed benchmark with no mesh subdivisions.
+  style=width:80%;margin-left:auto;margin-right:auto;halign:center
+
+Our flux solution is quite coarse, indicating that added mesh refinement is required to resolve the spatial gradients.
+The mesh can be refined by adding the following command line arguement when running the input file:
+
+```bash
+gnat-opt -i 1D_reed.i Mesh/uniform_refine=5
+```
+
+We can see that this took slightly longer to run then the coarse calculations (not by much as 1D transport problems are
+quite fast); the results of which can be found in [reed_fine].
+
+!media media/1D_reed/fine.png id=reed_fine caption=Flux from the Reed benchmark with 5 uniform subdivisions.
+  style=width:80%;margin-left:auto;margin-right:auto;halign:center

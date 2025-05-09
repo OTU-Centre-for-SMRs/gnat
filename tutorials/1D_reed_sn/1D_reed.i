@@ -1,3 +1,5 @@
+# An input deck for modelling the 1D Reed transport benchmark problem.
+
 [Mesh]
   [domain]
     type = CartesianMeshGenerator
@@ -71,12 +73,6 @@
   solve_type = PJFNK
   petsc_options_iname = '-ksp_gmres_restart'
   petsc_options_value = ' 100'
-  l_max_its = 50
-  nl_rel_tol = 1e-8
-
-  automatic_scaling = true
-  off_diagonals_in_auto_scaling = true
-  compute_scaling_once = false
 []
 
 [VectorPostprocessors]

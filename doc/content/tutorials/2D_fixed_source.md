@@ -1,36 +1,40 @@
 # A Simple Neutron Transport Problem
 
+In this tutorial, you will learn:
+
+1. How to model 2D shielding problems in Gnat;
+2. How to provide multi-group material properties;
+2. How to specify point and surface sources.
+
+To access this tutorial,
+
+```bash
+cd gnat/tutorials/2D_fixed_source
+```
+
+## Geometry and Material Properties
+
 This problem is one where an isotropic neutron point source is placed in the
-middle of a 2D domain that both absorbs and scatters neutrons isotropically.
+middle of a $10\times 10$ 2D domain that both absorbs and scatters neutrons isotropically.
 The point source emits at a constant rate into a single energy group. Vacuum
 boundaries surround the domain on all four sides and the problem is at
-steady-state.
+steady-state. The material has $\Sigma_{t} = 2.0$ and $\Sigma_{s} = 1.0$.
+
+## The Neutronics Input File
 
 Like any problem which is solved with the finite element method, the first step
 in using Gnat for neutron transport is to declare a mesh. For a simple case
 like this one the built-in mesh generators in Moose can be used:
 
-```language=moose
-[Mesh]
-  [domain]
-    type = CartesianMeshGenerator
-    dim = 2
-    dx = 10
-    dy = 10
-    ix = 100
-    iy = 100
-  []
-[]
-```
+!listing /tutorials/2D_fixed_source/2D_point_source.i
+  block=Mesh
 
-[/examples/2D_scattering_cgfem/test.i]
-
-The `CartesianMeshGenerator` object generates simple cartesian meshes in 1D, 2D
-or 3D. `dim = 2` is set to let the mesh generator know that a 2D cartesian mesh
-is required. `dx = 10` and `dy = 10` set the size of the mesh to 10 cm in both x
-and y. Finally, `ix = 100` and `iy = 100` indicate that the mesh should be
-subdivided into 100 elements along both the x and y axis. The result is shown
-in [!ref](example_1_mesh):
+The [CartesianMeshGenerator](https://mooseframework.inl.gov/source/meshgenerators/CartesianMeshGenerator.html)
+object generates simple cartesian meshes in 1D, 2D or 3D. `dim = 2` is set to let
+the mesh generator know that a 2D cartesian mesh is required. `dx = 10` and
+`dy = 10` set the size of the mesh to 10 cm in both x and y. Finally, `ix = 100`
+and `iy = 100` indicate that the mesh should be subdivided into 100 elements
+along both the x and y axis. The result is shown in [!ref](example_1_mesh):
 
 !media media/2D_fixed_source/example_1_mesh.png id=example_1_mesh caption=2D cartesian mesh for Example 1.
   style=width:40%;margin-left:auto;margin-right:auto;halign:center

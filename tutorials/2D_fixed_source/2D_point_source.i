@@ -1,5 +1,5 @@
-# A simple test case with a purely absorbing medium and a point source in the
-# middle of the domain.
+# A simple test case with a single group scattering medium and a point source
+# in the middle of the domain.
 
 [Mesh]
   [domain]
