@@ -95,6 +95,49 @@ The results of this simple case can be seen below in [!ref](point_output):
 !media media/2D_fixed_source/1_group_point_source.png id=point_output caption=Scalar flux from the 2D point source problem.
   style=width:40%;margin-left:auto;margin-right:auto;halign:center
 
+We can see the signature disadvantage of the discrete ordiantes method: ray effects. These
+occur because of the limited angular resolution (four directions per quadrant of the 2D unit sphere)
+of the chosen discretization compared to the small size of the fixed source. We can attempt to mitigate
+these ray effects by adding extra directions by specifying `n_azimuthal = 10` and `n_polar = 10`, which
+results in [point_output_ref].
+
+!media media/2D_fixed_source/1_group_point_source_ref.png id=point_output_ref caption=Refined scalar flux from the 2D point source problem.
+  style=width:40%;margin-left:auto;margin-right:auto;halign:center
+
+However, the increased angular fidelity results in a large increase in runtime with diminishing returns.
+Instead of increasing the number of directions one could instead use an uncollided flux technique,
+which is discussed in the [uncollided flux tutorial](uncollided_flux.md).
+
 ## Adding a Second Energy Group
+
+In this section, we modify the problem to add a second energy group. The modifications
+made to the transport system can be found below.
+
+!listing /tutorials/2D_fixed_source/2D_point_source_2_grp.i
+  block=TransportSystems
+
+We specify that two energy groups should be added by setting `num_groups = 2`. We then add
+a second source moment for the point source with `point_source_moments = '1e3 1.0'`. The
+`TransportMaterials` block then needs to be modified with a new set of group properties.
+
+!listing /tutorials/2D_fixed_source/2D_point_source_2_grp.i
+  block=TransportMaterials
+
+Here, we modify the total cross section such that it's representative of two-group transport in
+a highly scattering material (such as water). The scattering cross section becomes a scattering matrix
+with zero thermal upscattering. This modified input deck can be run with:
+
+```language=bash
+mpiexec -np 2 gnat-opt -i ./2D_point_source_2_grp.i --n-threads=2
+```
+
+The results for group 1 (fast) can be found in [2g_point_g1], while the results for group 2 (thermal) can be
+found in [2g_point_g2].
+
+!media media/2D_fixed_source/2_group_point_source_g1.png id=2g_point_g1 caption=Group 1 scalar flux from the 2D point source problem.
+  style=width:40%;margin-left:auto;margin-right:auto;halign:center
+
+!media media/2D_fixed_source/2_group_point_source_g2.png id=2g_point_g2 caption=Group 2 scalar flux from the 2D point source problem.
+  style=width:40%;margin-left:auto;margin-right:auto;halign:center
 
 ## Swapping the Point Source for a Surface Source
