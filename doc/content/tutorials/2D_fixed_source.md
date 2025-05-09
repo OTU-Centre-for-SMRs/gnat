@@ -1,4 +1,4 @@
-# A Simple Neutron Transport Problem
+# Simple 2D Fixed-Source Problems
 
 In this tutorial, you will learn:
 
@@ -15,10 +15,10 @@ cd gnat/tutorials/2D_fixed_source
 ## Geometry and Material Properties
 
 This problem is one where an isotropic neutron point source is placed in the
-middle of a $10\times 10$ 2D domain that both absorbs and scatters neutrons isotropically.
-The point source emits at a constant rate into a single energy group. Vacuum
+middle of a $10\text{ cm }\times 10\text{ cm }$ 2D domain that both absorbs and scatters neutrons isotropically.
+The point source emits at a constant rate of $1\times 10^{3}\text{ s}^{-1}$ into a single energy group. Vacuum
 boundaries surround the domain on all four sides and the problem is at
-steady-state. The material has $\Sigma_{t} = 2.0$ and $\Sigma_{s} = 1.0$.
+steady-state. The material has $\Sigma_{t} = 2.0$ cm$^{-1}$ and $\Sigma_{s} = 1.0$ cm$^{-1}$.
 
 ## The Neutronics Input File
 
@@ -58,7 +58,7 @@ The number of angular directions are specified with `n_azimuthal = 2` and
 `n_polar = 2`, and vacuum boundaries are specified for all sides with
 `vacuum_boundaries = 'left right top bottom'`. Finally, the point source is
 specified with a location at (5.0, 5.0, 5.0) with an emission intensity of
-1000 n/s emitting into group 1.
+1000 n/s emitting into the single energy group.
 
 Next, the material properties of the domain must be specified. Gnat does this
 through a system implemented for transport problems known as 'TransportMaterials':
@@ -87,10 +87,14 @@ problems with the SAAF-CFEM scheme.
 The simulation can be executed with the following shell command:
 
 ```language=bash
-gnat-opt -i ./2D_point_source.i
+mpiexec -np 2 gnat-opt -i ./2D_point_source.i --n-threads=2
 ```
 
 The results of this simple case can be seen below in [!ref](point_output):
 
 !media media/2D_fixed_source/1_group_point_source.png id=point_output caption=Scalar flux from the 2D point source problem.
   style=width:40%;margin-left:auto;margin-right:auto;halign:center
+
+## Adding a Second Energy Group
+
+## Swapping the Point Source for a Surface Source

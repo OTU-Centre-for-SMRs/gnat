@@ -1,9 +1,9 @@
 Gnat
 =====
 
-Gnat is an open-source radiation transport and nuclide activation / depletion developed by the Center for 
+Gnat is an open-source radiation transport and nuclide activation / depletion developed by the Center for
 Small Modular Reactors at Ontario Tech University (OTU), which is built on top of the MOOSE finite element
-framework. Gnat has been designed for the simulation of neutron activation of gases and aerosols, acting as 
+framework. Gnat has been designed to simulate neutron activation in gases and aerosols, acting as
 the source-term solver for the next-generation health physics and environmental impact code Caribou.
 
 ## Installation
@@ -39,6 +39,6 @@ using and developing a MOOSE-based application.
 
 ## Acknowledgements
 
-We would like to acknowledge the support of the University Network of Excellence in Nuclear Engineering (UNENE) and the Natural Sciences and Engineering Research Council of Canada (NSERC) through the Industrial Research Chairs program [funding reference number IRCPJ 549979-19]. 
+We would like to acknowledge the support of the University Network of Excellence in Nuclear Engineering (UNENE) and the Natural Sciences and Engineering Research Council of Canada (NSERC) through the Industrial Research Chairs program [funding reference number IRCPJ 549979-19].
 
 ![NSERC Logo](https://github.com/OTU-Center-for-Small-Modular-Reactors/gnat/blob/master/doc/content/media/nserc_symbol.png)
