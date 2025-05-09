@@ -34,40 +34,17 @@ object generates simple cartesian meshes in 1D, 2D or 3D. `dim = 2` is set to le
 the mesh generator know that a 2D cartesian mesh is required. `dx = 10` and
 `dy = 10` set the size of the mesh to 10 cm in both x and y. Finally, `ix = 100`
 and `iy = 100` indicate that the mesh should be subdivided into 100 elements
-along both the x and y axis. The result is shown in [!ref](example_1_mesh):
+along both the x and y axis. The result is shown in [!ref](2D_problem_mesh):
 
-!media media/2D_fixed_source/example_1_mesh.png id=example_1_mesh caption=2D cartesian mesh for Example 1.
+!media media/2D_fixed_source/mesh.png id=2D_problem_mesh caption=2D cartesian mesh for the 2D point source problem.
   style=width:40%;margin-left:auto;margin-right:auto;halign:center
 
-The next step in solving radiation transport problems is to declare a `TransportSystem` block. These are custom Moose
-objects added by Gnat to make setting up radiation transport simulations as
-pain-free as possible.
+The next step in solving radiation transport problems is to declare a `TransportSystem` block. This is short-cut
+syntax that sets up all of the kernels and variables necessary for transport calculations along many directions
+for many energy groups, which minimizes the length of your Gnat input file.
 
-```language=moose
-[TransportSystems]
-  [Neutron]
-    num_groups = 1
-    max_anisotropy = 0
-    scheme = saaf_cfem
-    particle_type = neutron
-
-    order = FIRST
-    family = LAGRANGE
-
-    n_azimuthal = 2
-    n_polar = 2
-
-    vacuum_boundaries = 'left right top bottom'
-
-    point_source_locations = '5.0 5.0 0.0'
-    point_source_moments = '1e3'
-    point_source_anisotropies = '0'
-    scale_sources = true
-  []
-[]
-```
-
-[/examples/2D_scattering_cgfem/test.i]
+!listing /tutorials/2D_fixed_source/2D_point_source.i
+  block=TransportSystems
 
 To start, `num_groups = 1` specifies that the transport simulation should
 only consider a single neutron group although more can be specified at the cost
@@ -86,19 +63,8 @@ specified with a location at (5.0, 5.0, 5.0) with an emission intensity of
 Next, the material properties of the domain must be specified. Gnat does this
 through a system implemented for transport problems known as 'TransportMaterials':
 
-```language=moose
-[TransportMaterials]
-  [Domain]
-    type = ConstantTransportMaterial
-    transport_system = Neutron
-    anisotropy = 0
-    group_total = 2.0
-    group_scattering = 1.0
-  []
-[]
-```
-
-[/examples/2D_scattering_cgfem/test.i]
+!listing /tutorials/2D_fixed_source/2D_point_source.i
+  block=TransportMaterials
 
 This declares a constant material which provides enough parameters for a single
 neutron group (`num_groups = 1`). The material provides an isotropic scattering
@@ -109,32 +75,22 @@ the `Neutron` transport system previously declared.
 
 The remainder of the input file describes how the problem should be solved:
 
-```language=moose
-[Executioner]
-  type = Steady
-  solve_type = PJFNK
-  petsc_options_iname = '-pc_type -pc_hypre_type -ksp_gmres_restart'
-  petsc_options_value = 'hypre boomeramg 10'
-  l_max_its = 50
-  nl_rel_tol = 1e-12
-[]
-```
-
-[/examples/2D_scattering_cgfem/test.i]
+!listing /tutorials/2D_fixed_source/2D_point_source.i
+  block=Executioner
 
 The `Executioner` block declares the solver parameters and solve type. In this case,
 `type = Steady` and the Preconditioned Jacobian-Free Newton Krylov
 (`solve_type = PJFNK`) is used. It is recommended that the user employ the PJFNK
 solver for continuous finite element methods when solving radiation transport
-problems dominated by large scattering ratios.
+problems with the SAAF-CFEM scheme.
 
 The simulation can be executed with the following shell command:
 
 ```language=bash
-./gnat-opt -i ./examples/2D_scattering_cgfem/test.i
+gnat-opt -i ./2D_point_source.i
 ```
 
-The results of this simple case can be seen below in [!ref](example_1_output):
+The results of this simple case can be seen below in [!ref](point_output):
 
-!media media/2D_fixed_source/example_1_output.png id=example_1_output caption=Example 1 Results.
+!media media/2D_fixed_source/1_group_point_source.png id=point_output caption=Scalar flux from the 2D point source problem.
   style=width:40%;margin-left:auto;margin-right:auto;halign:center
