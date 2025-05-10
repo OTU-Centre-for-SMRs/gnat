@@ -27,6 +27,8 @@ Extensions:
             Documentation:
                 Gnat Source Pages: source/index.md
                 MOOSE Source Pages: https://mooseframework.inl.gov/source/index.html
+            Publications: publications.md
+            Contact: contact.md
     MooseDocs.extensions.appsyntax:
         executable: ${ROOT_DIR}
         remove: !include ${MOOSE_DIR}/framework/doc/remove.yml

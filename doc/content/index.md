@@ -9,7 +9,7 @@
 
 # An open-source neutral particle transport and fluid depletion solver built on MOOSE
   class=center
-  style=font-weight:200;font-size:200%
+  style=font-size:200%
 
 Gnat provides an S@N@ radiation transport solver which is geared towards fluid depletion and field-based
 radiation sources. This capability has been primarily designed with source-driven problems in mind
@@ -50,7 +50,7 @@ Review the [radiation transport](about/radiation_transport.md) and
 
 # Sample Uses
   class=center
-  style=font-weight:200;font-size:200%
+  style=font-size:200%
 
 
 !gallery! large=4
@@ -71,3 +71,32 @@ Simulation of short length and time scale plume release from nuclear facilities 
 !card media/landing_page/plume_flux_log.png title=External Photon Dosimetry
 Simulation of skyshine from the decay of Ba-137m in a plume release using the coupled tracer transport and photon transport solvers. Figure shows the monochromatic 662 keV photon flux.
 !gallery-end!
+
+# Acknowledgements
+  class=center
+  style=font-size:200%
+
+The development of Gnat was supported by an Industrial Research Chair (IRC) program. We would
+like to acknowledge the University Network of Excellence in Nuclear Engineering
+(UNENE) and the Natural Sciences and Engineering Research Council of Canada (NSERC) for funding
+this IRC position \[funding reference number IRCPJ 549979-19\].
+
+!row! style=display:inline-flex;
+!col! small=12 medium=4 large=3
+
+!media otu_logo.png style=height:100%;display:block;halign:center;
+
+!col-end!
+
+!col! small=12 medium=4 large=3
+
+!media nserc_symbol.png style=height:100%;padding:0px 0px;display:block;halign:center;
+
+!col-end!
+
+!col! small=12 medium=4 large=3
+
+!media UNENE.png style=width:100%;display:block;halign:center;
+
+!col-end!
+!row-end!
