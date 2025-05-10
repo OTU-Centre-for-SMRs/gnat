@@ -15,7 +15,7 @@ cd gnat/tutorials/2D_fixed_source
 ## Geometry and Material Properties
 
 This problem is one where an isotropic neutron point source is placed in the
-middle of a $10\text{ cm }\times 10\text{ cm }$ 2D domain that both absorbs and scatters neutrons isotropically.
+middle of a $10\text{ cm }\times 10\text{ cm }$ 2D domain that scatters neutrons isotropically and absorbs neutrons.
 The point source emits at a constant rate of $1\times 10^{3}\text{ s}^{-1}$ into a single energy group. Vacuum
 boundaries surround the domain on all four sides and the problem is at
 steady-state. The material has $\Sigma_{t} = 2.0$ cm$^{-1}$ and $\Sigma_{s} = 1.0$ cm$^{-1}$.
@@ -58,7 +58,11 @@ The number of angular directions are specified with `n_azimuthal = 2` and
 `n_polar = 2`, and vacuum boundaries are specified for all sides with
 `vacuum_boundaries = 'left right top bottom'`. Finally, the point source is
 specified with a location at (5.0, 5.0, 5.0) with an emission intensity of
-1000 n/s emitting into the single energy group.
+1000 n/s emitting into the single energy group. In addition to specifying the
+point source, we also set `scale_sources = true` which divides all source moments
+by the largest moment value. This rescales the fixed source problem such that
+the largest source moment is unity, improving the stability of the finite element
+solve.
 
 Next, the material properties of the domain must be specified. Gnat does this
 through a system implemented for transport problems known as 'TransportMaterials':
@@ -67,7 +71,7 @@ through a system implemented for transport problems known as 'TransportMaterials
   block=TransportMaterials
 
 This declares a constant material which provides enough parameters for a single
-neutron group (`num_groups = 1`). The material provides an isotropic scattering
+neutron group. The material provides an isotropic scattering
 cross section (`anisotropy = 0`). The material has an total cross section
 of 2 (`group_total = 2.0`) and a scattering cross section of 1
 (`group_scattering = 1.0`). `transport_system = Neutron` links this material to
@@ -140,4 +144,32 @@ found in [2g_point_g2].
 !media media/2D_fixed_source/2_group_point_source_g2.png id=2g_point_g2 caption=Group 2 scalar flux from the 2D point source problem.
   style=width:40%;margin-left:auto;margin-right:auto;halign:center
 
+Similar to [point_output], we can see ray effects in the fast energy group due to the low within-group scattering
+cross section relative to the total cross section. The effect of fast-to-thermal scattering and the large
+within-group thermal scattering cross section can be seen in [2g_point_g2], where there are no ray effect
+even though the point source emits into group two.
+
 ## Swapping the Point Source for a Surface Source
+
+In this section, we remove the point source and add an isotropic surface source on the top boundary of the domain.
+This requires a few minor modifications to the `TransportSystem`.
+
+!listing /tutorials/2D_fixed_source/2D_surface_source_2_grp.i
+  block=TransportSystems
+
+`point_source_locations` is replaced with `source_boundaries`, which contains the side sets on which we wish to apply the
+surface source. `point_source_moments` and `point_source_anisotropies` are then replaced with their surface source equivalents:
+`boundary_source_moments` and `boundary_source_anisotropy`. This modified input deck can be run with:
+
+```language=bash
+mpiexec -np 2 gnat-opt -i ./2D_surface_source_2_grp.i --n-threads=2
+```
+
+The results for group 1 (fast) can be found in [2g_surf_g1], while the results for group 2 (thermal) can be
+found in [2g_surf_g2].
+
+!media media/2D_fixed_source/2_group_surface_source_g1.png id=2g_surf_g1 caption=Group 1 scalar flux from the 2D surface source problem.
+  style=width:40%;margin-left:auto;margin-right:auto;halign:center
+
+!media media/2D_fixed_source/2_group_surface_source_g2.png id=2g_surf_g2 caption=Group 2 scalar flux from the 2D surface source problem.
+  style=width:40%;margin-left:auto;margin-right:auto;halign:center

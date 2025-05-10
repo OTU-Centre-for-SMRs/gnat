@@ -29,7 +29,7 @@
     vacuum_boundaries = 'bottom'
     source_boundaries = 'top left right'
 
-    boundary_source_anisotropy = '0 0 0 '
+    boundary_source_anisotropy = '0 0 0'
     boundary_source_moments = '1e3 0.0; 1e3 0.0; 1e3 0.0'
     scale_sources = true
   []
