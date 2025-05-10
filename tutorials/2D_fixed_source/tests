@@ -1,0 +1,23 @@
+[Tests]
+  [2D_point_source_tutorial]
+    type = Exodiff
+    input = 2D_point_source.i
+    exodiff = 2D_point_source_out.e
+    cli_args = 'Mesh/domain/ix=11 Mesh/domain/iy=11'
+    requirement = "The system shall be able to simulate 2D fixed source problems with a point source."
+  []
+  [2D_2G_point_source_tutorial]
+    type = Exodiff
+    input = 2D_point_source_2_grp.i
+    exodiff = 2D_point_source_2_grp_out.e
+    cli_args = 'Mesh/domain/ix=11 Mesh/domain/iy=11'
+    requirement = "The system shall be able to simulate 2D multi-group fixed source problems with a point source."
+  []
+  [2D_2G_surface_source_tutorial]
+    type = Exodiff
+    input = 2D_surface_source_2_grp.i
+    exodiff = 2D_surface_source_2_grp_out.e
+    cli_args = 'Mesh/domain/ix=11 Mesh/domain/iy=11'
+    requirement = "The system shall be able to simulate 2D multi-group fixed source problems with a surface source."
+  []
+[]
