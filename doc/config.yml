@@ -18,7 +18,7 @@ Extensions:
         repo: https://github.com/OTU-Center-for-Small-Modular-Reactors/gnat
         menu:
             Getting Started:
-                Installation: getting_started/installation.md
+                Installation: installation/index.md
                 Tutorials: tutorials/index.md
             Theory and Implementation:
                 Radiation Transport: about/radiation_transport.md
