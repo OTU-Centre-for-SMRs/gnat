@@ -108,8 +108,8 @@
   [Line_C]
     type = LineValueSampler
     variable = flux_moment_1_0_0
-    start_point = '5.0  55.0 35.0'
-    end_point   = '55.0 55.0 35.0'
+    start_point = '5.0  95.0 35.0'
+    end_point   = '55.0 95.0 35.0'
     num_points = 6
     sort_by = x
   []

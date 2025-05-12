@@ -13,12 +13,12 @@ cd gnat/tutorials/1D_reed_sn
 
 ## Geometry and Material Properties
 
-The Reed problem is a classic benchmark which is used to test the accuracy of space-angle discretization schemes, and serves as the
-"hello world" in the radiation transport community. It consists of a  1D slab with five distinct material regions, which
-can be found below in [table1].
+The Reed problem is a classic benchmark proposed in [!cite](reed) which is used to test the accuracy of space-angle
+discretization schemes, and serves as the "hello world" in the radiation transport community. It consists of a
+1D slab with five distinct material regions, which can be found below in [table1].
 
 !table id=table1 caption=Material properties for the 1D Reed problem.
-| ID | Region | $\Sigma_{t}$ ($cm^{-1}$) | $\Sigma_{s}$ ($cm^{-1}$) | $q$ ($s^{-1}$) |
+| ID | Region | $\Sigma_{t}$ ($\text{cm}^{-1}$) | $\Sigma_{s}$ ($\text{cm}^{-1}$) | $q$ ($\text{s}^{-1}$) |
 | :- | - | - | - | - |
 | 1 | $0\leq x < 2.0$ | 50.0 | 0.0 | 50.0 |
 | 2 | $2\leq x < 3.0$ | 5.0 | 0.0 | 50.0 |

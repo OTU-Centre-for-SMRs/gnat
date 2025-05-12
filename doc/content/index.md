@@ -25,7 +25,7 @@ As Gnat is built on MOOSE, it is capable of coupling with other MOOSE-based appl
 ### Getting Started class=center style=font-weight:200
 
 !style halign=center
-Gnat is open-source and the repository is available on [GitHub](https://github.com/OTU-Center-for-Small-Modular-Reactors/gnat) -
+Gnat is open-source and the repository is available on [GitHub](https://github.com/OTU-Center-for-SMRs/gnat) -
 learn how to [get started](installation/index.md).
 !col-end!
 
@@ -90,13 +90,14 @@ this IRC position \[funding reference number IRCPJ 549979-19\].
 
 !col! small=12 medium=4 large=3
 
-!media nserc_symbol.png style=height:100%;halign:center;display:block;
+!media UNENE.png style=width:100%;halign:center;padding:6px 0px;display:block;
 
 !col-end!
 
 !col! small=12 medium=4 large=3
 
-!media UNENE.png style=width:100%;halign:center;padding:7px 0px;display:block;
+!media nserc_symbol.png style=height:100%;halign:center;display:block;
 
 !col-end!
+
 !row-end!

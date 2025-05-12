@@ -20,6 +20,6 @@
     input = kobayashi_3.i
     csvdiff = kobayashi_3_out_Line_A_0001.csv
     cli_args = 'Mesh/uniform_refine=0 TransportSystems/Neutron/n_azimuthal=1 TransportSystems/Neutron/n_polar=1'
-    requirement = "The system shall solve the second Kobayashi benchmark problem."
+    requirement = "The system shall solve the third Kobayashi benchmark problem."
   []
 []

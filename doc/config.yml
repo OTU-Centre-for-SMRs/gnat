@@ -15,7 +15,7 @@ Renderer:
 Extensions:
     MooseDocs.extensions.navigation:
         name: Gnat
-        repo: https://github.com/OTU-Center-for-Small-Modular-Reactors/gnat
+        repo: https://github.com/OTU-Center-for-SMRs/gnat
         menu:
             Getting Started:
                 Installation: installation/index.md

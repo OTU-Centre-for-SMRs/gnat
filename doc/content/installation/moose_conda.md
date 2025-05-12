@@ -76,7 +76,7 @@ can be done by following all of the detailed instructions on the MOOSE
 For users who only wish to use Gnat:
 
 ```language=bash
-git clone https://github.com/OTU-Center-for-Small-Modular-Reactors/gnat.git
+git clone https://github.com/OTU-Center-for-SMRs/gnat.git
 cd gnat
 git submodule update --init
 ```
@@ -84,7 +84,7 @@ git submodule update --init
 For users who want to develop/use other MOOSE applications:
 
 ```language=bash
-git clone https://github.com/OTU-Center-for-Small-Modular-Reactors/gnat.git
+git clone https://github.com/OTU-Center-for-SMRs/gnat.git
 ```
 
 Once the repository has been cloned, proceed to the next step.

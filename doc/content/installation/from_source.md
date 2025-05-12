@@ -6,7 +6,7 @@ All that you need to compile Gnat is:
 
 ```
 cd $HOME
-git clone https://github.com/OTU-Center-for-Small-Modular-Reactors/gnat.git
+git clone https://github.com/OTU-Center-for-SMRs/gnat.git
 cd gnat
 git submodule update --init
 ./moose/scripts/update_and_rebuild_petsc.sh
@@ -27,7 +27,7 @@ use the MOOSE submodule included with Gnat to minimize the possibility for build
 Gnat and it's MOOSE submodule can be obtained with the following:
 
 ```language=bash
-git clone https://github.com/OTU-Center-for-Small-Modular-Reactors/gnat.git
+git clone https://github.com/OTU-Center-for-SMRs/gnat.git
 cd gnat
 git submodule update --init
 ```

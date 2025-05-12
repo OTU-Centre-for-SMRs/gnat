@@ -1,4 +1,4 @@
-# Simple 2D Fixed-Source Problems
+# Simple Fixed-Source Problems
 
 In this tutorial, you will learn:
 
@@ -65,7 +65,7 @@ the largest source moment is unity, improving the stability of the finite elemen
 solve.
 
 Next, the material properties of the domain must be specified. Gnat does this
-through a system implemented for transport problems known as 'TransportMaterials':
+through a system implemented for transport problems known as `TransportMaterials`:
 
 !listing /tutorials/2D_fixed_source/2D_point_source.i
   block=TransportMaterials
@@ -138,11 +138,22 @@ mpiexec -np 2 gnat-opt -i ./2D_point_source_2_grp.i --n-threads=2
 The results for group 1 (fast) can be found in [2g_point_g1], while the results for group 2 (thermal) can be
 found in [2g_point_g2].
 
+!row! style=display:inline-flex;
+!col!
+
 !media media/2D_fixed_source/2_group_point_source_g1.png id=2g_point_g1 caption=Group 1 scalar flux from the 2D point source problem.
-  style=width:40%;margin-left:auto;margin-right:auto;halign:center
+  style=width:100%;margin-left:auto;margin-right:auto;halign:center
+
+!col-end!
+
+!col!
 
 !media media/2D_fixed_source/2_group_point_source_g2.png id=2g_point_g2 caption=Group 2 scalar flux from the 2D point source problem.
-  style=width:40%;margin-left:auto;margin-right:auto;halign:center
+  style=width:100%;margin-left:auto;margin-right:auto;halign:center
+
+!col-end!
+
+!row-end!
 
 Similar to [point_output], we can see ray effects in the fast energy group due to the low within-group scattering
 cross section relative to the total cross section. The effect of fast-to-thermal scattering and the large
@@ -168,8 +179,19 @@ mpiexec -np 2 gnat-opt -i ./2D_surface_source_2_grp.i --n-threads=2
 The results for group 1 (fast) can be found in [2g_surf_g1], while the results for group 2 (thermal) can be
 found in [2g_surf_g2].
 
+!row! style=display:inline-flex;
+!col!
+
 !media media/2D_fixed_source/2_group_surface_source_g1.png id=2g_surf_g1 caption=Group 1 scalar flux from the 2D surface source problem.
-  style=width:40%;margin-left:auto;margin-right:auto;halign:center
+  style=width:100%;margin-left:auto;margin-right:auto;halign:center
+
+!col-end!
+
+!col!
 
 !media media/2D_fixed_source/2_group_surface_source_g2.png id=2g_surf_g2 caption=Group 2 scalar flux from the 2D surface source problem.
-  style=width:40%;margin-left:auto;margin-right:auto;halign:center
+  style=width:100%;margin-left:auto;margin-right:auto;halign:center
+
+!col-end!
+
+!row-end!
