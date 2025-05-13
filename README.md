@@ -13,23 +13,7 @@ Installation instructions can be found
 
 ## Documentation
 
-Documentation of Gnat is still a work in progress. The current iteration of the docs
-can be obtained by building the documentation website using the following series
-of terminal commands (assuming the installation instructions have been followed):
-
-```language=bash
-mamba activate moose
-cd gnat/doc
-./moosedocs.py build --serve
-```
-
-Afterwards, navigate to [here](http://127.0.0.1:8000/source/index.html) with your browser of
-choice to view the source file documentation. To view a breakdown of the governing
-equations, visit [this page](http://127.0.0.1:8000/about/equations.html). The tutorials (when
-written) can be found [here](http://127.0.0.1:8000/getting_started/tutorials.html).
-
-The documentation website can be closed by entering `Ctrl + c` in the
-terminal which built the documentation.
+Documentation of Gnat is still a work in progress. User's can visit the documentation webstite [here](https://otu-centre-for-smrs.github.io/gnat_docs/).
 
 New users of Gnat and/or Caribou are encourages to visit the
 [MOOSE website](https://mooseframework.inl.gov/) and the
