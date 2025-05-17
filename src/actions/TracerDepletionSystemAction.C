@@ -98,7 +98,8 @@ TracerDepletionSystemAction::validParams()
                              MooseEnum("none mixing-length"),
                              "What type of turbulent diffusion to use.");
   params.addParam<MooseFunctorName>("density", "The density of the bulk fluid ($g/cm^{3}$");
-  params.addParam<MooseFunctorName>("temperature", "The temperature of the bulk fluid ($K$).");
+  params.addRequiredParam<MooseFunctorName>("temperature",
+                                            "The temperature of the bulk fluid ($K$).");
   params.addParam<MooseFunctorName>("dynamic_viscosity",
                                     "The dynamic viscosity of the bulk fluid ($g/(cm s)$).");
 
@@ -236,11 +237,6 @@ TracerDepletionSystemAction::TracerDepletionSystemAction(const InputParameters &
     if (!isParamValid("density"))
       paramError("density",
                  "The material density must be specified if you are not using the MOOSE "
-                 "Navier-Stokes finite volume system.");
-
-    if (!isParamValid("temperature"))
-      paramError("temperature",
-                 "The material temperature must be specified if you are not using the MOOSE "
                  "Navier-Stokes finite volume system.");
 
     if (!isParamValid("dynamic_viscosity"))
@@ -514,7 +510,7 @@ TracerDepletionSystemAction::addMaterials(const std::string & nuclide_var_name)
 
     if (_coupled_ns_fv)
     {
-      params.set<MooseFunctorName>("temperature") = _coupled_ns_fv->getFluidTemperatureName();
+      params.set<MooseFunctorName>("temperature") = getParam<MooseFunctorName>("temperature");
 
       params.set<MooseFunctorName>("dynamic_viscosity") =
           _coupled_ns_fv->getParam<MooseFunctorName>("dynamic_viscosity");
