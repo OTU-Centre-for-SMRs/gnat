@@ -1,5 +1,7 @@
 #include "ADFVMassFractionFunctorAdvection.h"
 
+#include "FEProblemBase.h"
+
 #include "NSFVUtils.h"
 
 registerMooseObject("GnatApp", ADFVMassFractionFunctorAdvection);
@@ -48,8 +50,6 @@ ADFVMassFractionFunctorAdvection::ADFVMassFractionFunctorAdvection(
       Moose::FV::setInterpolationMethods(*this, _advected_interp_method, _velocity_interp_method);
   if (need_more_ghosting && _tid == 0)
   {
-    adjustRMGhostLayers(std::max((unsigned short)(3), _pars.get<unsigned short>("ghost_layers")));
-
     // If we need more ghosting, then we are a second-order nonlinear limiting scheme whose stencil
     // is liable to change upon wind-direction change. Consequently we need to tell our problem that
     // it's ok to have new nonzeros which may crop-up after PETSc has shrunk the matrix memory

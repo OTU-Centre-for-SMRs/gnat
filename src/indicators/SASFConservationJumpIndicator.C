@@ -1,5 +1,7 @@
 #include "SASFConservationJumpIndicator.h"
 
+#include "FEProblemBase.h"
+
 registerMooseObject("MooseApp", SASFConservationJumpIndicator);
 
 InputParameters

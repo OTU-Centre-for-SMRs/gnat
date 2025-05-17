@@ -31,5 +31,5 @@ ADFVNuclideDiffusion::computeQpResidual()
   // TODO: skewness correction.
   auto face = makeCDFace(*_face_info);
 
-  return -1 * _mat_diff(face, 0u) * gradUDotNormal(0u);
+  return -1 * _mat_diff(face, 0u) * gradUDotNormal(0u, false);
 }
