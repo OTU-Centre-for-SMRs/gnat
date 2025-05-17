@@ -8,7 +8,7 @@
 #include "TransportAction.h"
 #include "InputParameterWarehouse.h"
 
-#include "NSFVAction.h"
+#include "WCNSFVFlowPhysics.h"
 
 #include "DepletionLibraryAction.h"
 
@@ -98,7 +98,8 @@ TracerDepletionSystemAction::validParams()
                              MooseEnum("none mixing-length"),
                              "What type of turbulent diffusion to use.");
   params.addParam<MooseFunctorName>("density", "The density of the bulk fluid ($g/cm^{3}$");
-  params.addParam<MooseFunctorName>("temperature", "The temperature of the bulk fluid ($K$).");
+  params.addRequiredParam<MooseFunctorName>("temperature",
+                                            "The temperature of the bulk fluid ($K$).");
   params.addParam<MooseFunctorName>("dynamic_viscosity",
                                     "The dynamic viscosity of the bulk fluid ($g/(cm s)$).");
 
@@ -236,11 +237,6 @@ TracerDepletionSystemAction::TracerDepletionSystemAction(const InputParameters &
     if (!isParamValid("density"))
       paramError("density",
                  "The material density must be specified if you are not using the MOOSE "
-                 "Navier-Stokes finite volume system.");
-
-    if (!isParamValid("temperature"))
-      paramError("temperature",
-                 "The material temperature must be specified if you are not using the MOOSE "
                  "Navier-Stokes finite volume system.");
 
     if (!isParamValid("dynamic_viscosity"))
@@ -452,11 +448,12 @@ TracerDepletionSystemAction::applyIsotopeParameters(InputParameters & params)
 {
   if (_coupled_ns_fv)
   {
-    params.set<MooseFunctorName>("u") = "vel_x";
+    const auto & vel_names = _coupled_ns_fv->getVelocityNames();
+    params.set<MooseFunctorName>("u") = vel_names[0];
     if (_mesh_dims >= 2u)
-      params.set<MooseFunctorName>("v") = "vel_y";
+      params.set<MooseFunctorName>("v") = vel_names[1];
     if (_mesh_dims >= 3u)
-      params.set<MooseFunctorName>("w") = "vel_z";
+      params.set<MooseFunctorName>("w") = vel_names[2];
   }
   else
   {
@@ -513,11 +510,7 @@ TracerDepletionSystemAction::addMaterials(const std::string & nuclide_var_name)
 
     if (_coupled_ns_fv)
     {
-      if (_coupled_ns_fv->getParam<bool>("add_energy_equation"))
-        params.set<MooseFunctorName>("temperature") = "temperature";
-      else
-        params.set<MooseFunctorName>("temperature") =
-            _coupled_ns_fv->getParam<FunctionName>("initial_temperature");
+      params.set<MooseFunctorName>("temperature") = getParam<MooseFunctorName>("temperature");
 
       params.set<MooseFunctorName>("dynamic_viscosity") =
           _coupled_ns_fv->getParam<MooseFunctorName>("dynamic_viscosity");
@@ -967,7 +960,7 @@ TracerDepletionSystemAction::addFVKernels(const std::string & nuclide_var_name)
       params.set<NonlinearVariableName>("variable") = nuclide_var_name + pfx;
       params.set<MooseEnum>("advected_interp_method") = getParam<MooseEnum>("fv_adv_interpolation");
       params.set<MooseEnum>("velocity_interp_method") =
-          _coupled_ns_fv->getParam<MooseEnum>("velocity_interpolation");
+          _coupled_ns_fv->getParam<MooseEnum>("velocity_interp_method");
 
       if (isParamValid("block"))
       {
@@ -975,10 +968,7 @@ TracerDepletionSystemAction::addFVKernels(const std::string & nuclide_var_name)
             getParam<std::vector<SubdomainName>>("block");
       }
 
-      if (_coupled_ns_fv->getParam<bool>("porous_medium_treatment"))
-        params.set<UserObjectName>("rhie_chow_user_object") = "pins_rhie_chow_interpolator";
-      else
-        params.set<UserObjectName>("rhie_chow_user_object") = "ins_rhie_chow_interpolator";
+      params.set<UserObjectName>("rhie_chow_user_object") = _coupled_ns_fv->rhieChowUOName();
 
       _problem->addFVKernel("INSFVScalarFieldAdvection",
                             "INSFVScalarFieldAdvection" + nuclide_var_name + pfx,
@@ -1517,14 +1507,14 @@ TracerDepletionSystemAction::act()
       _coupled_depletion_lib = depletion_lib_actions[0u];
     }
 
-    // Fetch the coupled Navier-Stokes finite volume action.
+    // Fetch the coupled Navier-Stokes finite volume physics.
     if (_using_moose_ns)
     {
-      const auto ns_fv_actions = _awh.getActions<NSFVAction>();
-      if (ns_fv_actions.size() != 1u)
+      const auto ns_fv_physics = _awh.getActions<WCNSFVFlowPhysics>();
+      if (ns_fv_physics.size() != 1u)
         mooseError("The input file must have a single Navier-Stokes system. There are currently " +
-                   Moose::stringify(ns_fv_actions.size() + " NSFVActions."));
-      _coupled_ns_fv = ns_fv_actions[0u];
+                   Moose::stringify(ns_fv_physics.size() + " WCNSFVFlowPhysics."));
+      _coupled_ns_fv = ns_fv_physics[0u];
     }
 
     // Fetch the properties from the transport system.

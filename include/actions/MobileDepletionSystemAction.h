@@ -3,7 +3,7 @@
 #include "GnatBase.h"
 #include "GnatBaseAction.h"
 
-class NSFVAction;
+class WCNSFVFlowPhysics;
 class DepletionLibraryAction;
 
 // A class which sets up depletion problems using a mass/number fraction based approach. More
@@ -59,8 +59,8 @@ protected:
     FV = 1u
   } _scheme;
 
-  // The coupled Navier-Stokes finite volume action.
-  const NSFVAction * _coupled_ns_fv;
+  // The coupled Navier-Stokes finite volume physics.
+  const WCNSFVFlowPhysics * _coupled_ns_fv;
 
   // The coupled Depletion Library.
   const DepletionLibraryAction * _coupled_depletion_lib;

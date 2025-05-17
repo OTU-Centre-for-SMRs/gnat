@@ -50,9 +50,8 @@ mamba init
 and create+install the MOOSE environment:
 
 ```language=bash
-mamba create --name moose -q -y
-mamba activate moose
-mamba install moose-tools moose-libmesh
+conda create -n moose moose-dev=2025.05.13=mpich
+conda activate moose
 ```
 
 This will take some time, so feel free to walk away and get yourself a coffee (or

@@ -36,10 +36,7 @@ ADFVMassFractionNuclideDiffusion::computeQpResidual()
   // TODO: skewness correction.
   auto face = makeCDFace(*_face_info);
 
-  ///*
   return -1 * _mat_diff(face, 0u) *
-         (_density(face, 0u) * gradUDotNormal(0u) +
+         (_density(face, 0u) * gradUDotNormal(0u, false) +
           _var(face, 0u) * _density.gradient(face, 0u) * _face_info->normal());
-  //*/
-  // return -1 * _mat_diff(face) * _density(face) * gradUDotNormal();
 }
