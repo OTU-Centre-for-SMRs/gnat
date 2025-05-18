@@ -1,0 +1,132 @@
+<?xml version='1.0' encoding='utf-8'?>
+<model>
+  <materials>
+    <material id="5" name="Air">
+      <density units="g/cc" value="0.0012"/>
+      <nuclide ao="0.8037993283295654" name="N14"/>
+      <nuclide ao="0.00295514162343785" name="N15"/>
+      <nuclide ao="0.18967168829429587" name="O16"/>
+      <nuclide ao="7.19128248241465e-05" name="O17"/>
+      <nuclide ao="1.1287455002228676e-05" name="Ar36"/>
+      <nuclide ao="2.1282401667871215e-06" name="Ar38"/>
+      <nuclide ao="0.003370113981758045" name="Ar40"/>
+      <nuclide ao="0.0001183992509498635" name="C0"/>
+    </material>
+    <material depletable="true" id="6" name="Fuel">
+      <density units="g/cc" value="19.1"/>
+      <nuclide ao="6.517179349049676e-05" name="U234"/>
+      <nuclide ao="0.007291426164608076" name="U235"/>
+      <nuclide ao="0.9926100038078789" name="U238"/>
+      <nuclide ao="3.3398234022575015e-05" name="U236"/>
+    </material>
+    <material id="7" name="Cladding">
+      <density units="g/cc" value="2.699"/>
+      <nuclide ao="1.0" name="Al27"/>
+    </material>
+    <material id="8" name="Graphite 1 (Internal)">
+      <density units="g/cc" value="1.91"/>
+      <nuclide ao="1.0" name="C0"/>
+      <sab name="c_Graphite"/>
+    </material>
+    <material id="9" name="Graphite 2 (Reflector)">
+      <density units="g/cc" value="1.91"/>
+      <nuclide ao="1.0" name="C0"/>
+      <sab name="c_Graphite"/>
+    </material>
+    <material id="10" name="Control">
+      <density units="g/cm3" value="8.0"/>
+      <nuclide name="C0" wo="0.08"/>
+      <nuclide name="Si28" wo="0.9187351728283676"/>
+      <nuclide name="Si29" wo="0.04831750292786396"/>
+      <nuclide name="Si30" wo="0.03294732424376842"/>
+      <nuclide name="Mn55" wo="2.0"/>
+      <nuclide name="P31" wo="0.045"/>
+      <nuclide name="S32" wo="0.028430583242482755"/>
+      <nuclide name="S33" wo="0.0002309645813262106"/>
+      <nuclide name="S34" wo="0.0013335457202628069"/>
+      <nuclide name="S36" wo="4.90645592822611e-06"/>
+      <nuclide name="Cr50" wo="0.8347373245436627"/>
+      <nuclide name="Cr52" wo="16.73987247026918"/>
+      <nuclide name="Cr53" wo="1.9347173637350368"/>
+      <nuclide name="Cr54" wo="0.4906728414521228"/>
+      <nuclide name="Ni58" wo="7.391747582624888"/>
+      <nuclide name="Ni60" wo="2.9453559189152516"/>
+      <nuclide name="Ni61" wo="0.1301694993826381"/>
+      <nuclide name="Ni62" wo="0.42183045338358865"/>
+      <nuclide name="Ni64" wo="0.11089654569363369"/>
+      <nuclide name="Fe54" wo="3.717317811741329"/>
+      <nuclide name="Fe56" wo="60.5125616249029"/>
+      <nuclide name="Fe57" wo="1.4224947136740644"/>
+      <nuclide name="Fe58" wo="0.19262584968171192"/>
+    </material>
+  </materials>
+  <geometry>
+    <cell id="1" material="6" name="Fuel Element" region="-1" universe="1"/>
+    <cell id="2" material="7" name="Fuel Cladding" region="1 -2" universe="1"/>
+    <cell id="3" material="5" name="Fuel Air Gap" region="2 -4" universe="1"/>
+    <cell id="4" material="8" name="Graphite Plug 1 (Interior)" region="-9" universe="2"/>
+    <cell id="5" material="9" name="Graphite Plug 2 (Reflector)" region="-9" universe="5"/>
+    <cell id="6" material="5" name="Plug Air Gap 1" region="9 -4" universe="2"/>
+    <cell id="7" material="5" name="Plug Air Gap 2" region="9 -4" universe="5"/>
+    <cell id="8" material="10" name="Control Rod" region="-3" universe="3"/>
+    <cell id="9" material="5" name="Control Rod Gap" region="-4 3" universe="3"/>
+    <cell id="10" material="5" name="Empty Block Hole" region="-4" universe="4"/>
+    <cell id="11" material="8" name="Graphite Block 1" region="5 -6 7 -8 4" universe="1"/>
+    <cell id="12" material="8" name="Graphite Block 2" region="5 -6 7 -8 4" universe="2"/>
+    <cell id="13" material="8" name="Graphite Block 3" region="5 -6 7 -8 4" universe="3"/>
+    <cell id="14" material="5" name="Removed Block" region="5 -6 7 -8 4" universe="4"/>
+    <cell id="15" material="9" name="Graphite Block 5" region="5 -6 7 -8 4" universe="5"/>
+    <cell fill="6" id="16" name="Assembly Cell" region="10 -11 12 -13 14 -15" universe="7"/>
+    <lattice id="6" name="Subcritical Assembly">
+      <pitch>10.16 10.16 76.2</pitch>
+      <dimension>19 19 1</dimension>
+      <lower_left>-96.52 -96.52 0.0</lower_left>
+      <universes>
+5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 
+5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 
+5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 
+5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 
+5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 
+5 5 5 5 5 1 2 1 2 1 2 1 2 1 5 5 5 5 5 
+5 5 5 5 5 2 1 2 1 2 1 2 1 2 5 5 5 5 5 
+5 5 5 5 5 1 2 1 2 1 2 1 2 1 5 5 5 5 5 
+5 5 5 5 5 2 1 2 2 3 2 2 1 2 5 5 5 5 5 
+5 5 5 5 5 1 2 1 3 4 3 1 2 1 5 5 5 5 5 
+5 5 5 5 5 2 1 2 2 3 2 2 1 2 5 5 5 5 5 
+5 5 5 5 5 1 2 1 2 1 2 1 2 1 5 5 5 5 5 
+5 5 5 5 5 2 1 2 1 2 1 2 1 2 5 5 5 5 5 
+5 5 5 5 5 1 2 1 2 1 2 1 2 1 5 5 5 5 5 
+5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 
+5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 
+5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 
+5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 
+5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 </universes>
+    </lattice>
+    <surface coeffs="0.0 0.0 1.6383" id="1" type="z-cylinder"/>
+    <surface coeffs="0.0 0.0 1.8415" id="2" type="z-cylinder"/>
+    <surface coeffs="0.0 0.0 1.905" id="3" type="z-cylinder"/>
+    <surface coeffs="0.0 0.0 1.98374" id="4" type="z-cylinder"/>
+    <surface coeffs="-5.08" id="5" name="minimum x" type="x-plane"/>
+    <surface coeffs="5.08" id="6" name="maximum x" type="x-plane"/>
+    <surface coeffs="-5.08" id="7" name="minimum y" type="y-plane"/>
+    <surface coeffs="5.08" id="8" name="maximum y" type="y-plane"/>
+    <surface coeffs="0.0 0.0 1.905" id="9" type="z-cylinder"/>
+    <surface boundary="reflective" coeffs="0.0" id="10" type="x-plane"/>
+    <surface boundary="vacuum" coeffs="96.52" id="11" type="x-plane"/>
+    <surface boundary="reflective" coeffs="0.0" id="12" type="y-plane"/>
+    <surface boundary="vacuum" coeffs="96.52" id="13" type="y-plane"/>
+    <surface boundary="reflective" coeffs="0.0" id="14" type="z-plane"/>
+    <surface boundary="vacuum" coeffs="76.2" id="15" type="z-plane"/>
+  </geometry>
+  <settings>
+    <run_mode>eigenvalue</run_mode>
+    <particles>1000</particles>
+    <batches>100</batches>
+    <inactive>10</inactive>
+    <source particle="neutron" strength="1.0" type="independent">
+      <space type="box">
+        <parameters>0.0 0.0 0.0 96.52 96.52 76.2</parameters>
+      </space>
+    </source>
+  </settings>
+  </model>
