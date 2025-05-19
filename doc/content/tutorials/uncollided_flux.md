@@ -1,0 +1,3 @@
+# Ray Effect Mitigation
+
+TODO

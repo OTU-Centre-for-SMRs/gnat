@@ -17,9 +17,14 @@ protected:
 
   void addMaterials();
 
+  void addTransfers();
+  void addMaterialTransfer(const std::string & name);
+
   void copyOnRestart();
 
   const MooseEnum _xs_source;
+
+  const MultiAppName _xs_multi_app;
 
   std::string _parent_transport_system;
   unsigned int _num_groups;

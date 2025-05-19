@@ -35,7 +35,9 @@
 []
 
 [CardinalMGXS]
-  xs_source = 'mesh'
+  xs_source = 'subapp'
+  from_multi_app = 'cardinal_xs'
+
   transport_system = 'Neutron'
   scatter_anisotropy = 0
   add_fission_heating = true
@@ -90,8 +92,17 @@
   compute_scaling_once = false
 []
 
+[MultiApps]
+  [cardinal_xs]
+    type = FullSolveMultiApp
+    app_type = 'CardinalApp'
+    execute_on = INITIAL
+    input_files = 'openmc.i'
+  []
+[]
+
 [Outputs]
   csv = true
   exodus = true
-  #execute_on = 'TIMESTEP_END'
+  execute_on = TIMESTEP_END
 []

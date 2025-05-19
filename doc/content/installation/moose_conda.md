@@ -77,7 +77,7 @@ For users who only wish to use Gnat:
 ```language=bash
 git clone https://github.com/OTU-Center-for-SMRs/gnat.git
 cd gnat
-git submodule update --init
+git submodule update --init moose
 ```
 
 For users who want to develop/use other MOOSE applications:
@@ -86,18 +86,56 @@ For users who want to develop/use other MOOSE applications:
 git clone https://github.com/OTU-Center-for-SMRs/gnat.git
 ```
 
-Once the repository has been cloned, proceed to the next step.
-
-## 3. Compile Gnat
-
 Before continuing with the compilation process, ensure that the MOOSE environment
-has been activated in your shell. This can be done with the following command:
+has been activated:
 
 ```language=bash
 mamba activate moose
 ```
 
-You can then compile the application using the `make` buildsystem:
+Once you're in the Gnat directory and have activated your MOOSE environment, proceed to the next step.
+
+## 3. Getting Cardinal
+
+Gnat allows for neutronics coupling with the continuous-energy Monte Carlo
+code [OpenMC](https://github.com/openmc-dev/openmc) through
+[Cardinal](https://github.com/neams-th-coe/cardinal). If you don't want to build with Cardinal,
+you can skip this step. If you want to build Gnat with Cardinal, you need to update the Cardinal
+submodule and fetch it's dependencies:
+
+```language=bash
+git submodule update --init cardinal
+./cardinal/scripts/get-dependencies.sh
+```
+
+In addition to fetching Cardinal's dependencies, you'll need to export the following environment
+variables:
+
+```language=bash
+# [REQUIRED] for builds with Cardinal
+export ENABLE_CARDINAL=yes
+
+# [REQUIRED WHEN USING THE MOOSE CONDA ENVIRONMENT] you must set the location of the
+# root HDF5 directory provided by MOOSE for OpenMC to find
+export HDF5_ROOT=$CONDA_PREFIX
+
+# [REQUIRED ON SOME SYSTEMS] for some systems, libraries won't be linked properly unless
+# you explicitly point this variable. We're working on a more elegant fix.
+export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
+
+# [OPTIONAL] it's a good idea to explicitly note that you are using MPI compiler wrappers
+export CC=mpicc
+export CXX=mpicxx
+export FC=mpif90
+
+# [REQUIRED WHEN RUNNING OPENMC] you will need cross section data at runtime;
+# ythis variable must be set to point to a 'cross_sections.xml' file.
+export OPENMC_CROSS_SECTIONS=${HOME}/cross_sections/endfb-vii.1-hdf5/cross_sections.xml
+```
+
+## 4. Building and Testing Gnat
+
+To build Gnat, you can use the `make` buildsystem:
 
 ```language=bash
 make -j{NUM_PROCESSES}
@@ -116,7 +154,7 @@ Finally, run all tests to ensure that Gnat has been built successfully:
 
 Where `{NUM_THREADS}` is the number of threads you want running tests.
 
-## 4. Run Simulations
+## 5. Run Simulations
 
 Gnat simulations use the hierarchical input text (HIT) input deck specification
 designed by INL for MOOSE-based applications. More information about HIT syntax

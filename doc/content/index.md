@@ -20,6 +20,10 @@ volume discretization schemes geared towards medium-fidelity simulations of disp
 As Gnat is built on MOOSE, it is capable of coupling with other MOOSE-based applications (such as
 [Cardinal](https://cardinal.cels.anl.gov/index.html)) for higher-resolution simulations.
 
+!alert construction title=WIP
+At present the documentation for Gnat is a work in progress. If there are any documentation errors or requests
+for features that should be documented next, please contact a member of the [Gnat development team](contact.md).
+
 !col! small=12 medium=4 large=4 icon=get_app
 
 ### Getting Started class=center style=font-weight:200

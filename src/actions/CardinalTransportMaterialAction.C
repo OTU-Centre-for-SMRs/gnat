@@ -11,7 +11,7 @@ registerMooseAction("GnatApp", CardinalTransportMaterialAction, "add_material");
 registerMooseAction("GnatApp", CardinalTransportMaterialAction, "check_copy_nodal_vars");
 registerMooseAction("GnatApp", CardinalTransportMaterialAction, "copy_nodal_vars");
 
-// TODO: add transfers to pull from a Cardinal sub-app.
+registerMooseAction("GnatApp", CardinalTransportMaterialAction, "add_transfer");
 
 InputParameters
 CardinalTransportMaterialAction::validParams()
@@ -24,6 +24,9 @@ CardinalTransportMaterialAction::validParams()
       MooseEnum("mesh subapp", "mesh"),
       "The source of the cross sections. These can either be the mesh (through an exodus restart) "
       "or a Cardinal sub-application.");
+
+  params.addParam<MultiAppName>(
+      "from_multi_app", "The name of the Cardinal sub-app containing multi-group cross sections.");
 
   params.addParam<std::string>(
       "transport_system",
@@ -45,6 +48,7 @@ CardinalTransportMaterialAction::validParams()
 CardinalTransportMaterialAction::CardinalTransportMaterialAction(const InputParameters & parameters)
   : GnatBaseAction(parameters),
     _xs_source(getParam<MooseEnum>("xs_source")),
+    _xs_multi_app(isParamValid("from_multi_app") ? getParam<MultiAppName>("from_multi_app") : ""),
     _parent_transport_system(getParam<std::string>("transport_system")),
     _particle(MooseEnum("neutron photon", "neutron")),
     _scheme(MooseEnum("saaf_cfem diffusion_cfem flux_moment_transfer")),
@@ -52,6 +56,10 @@ CardinalTransportMaterialAction::CardinalTransportMaterialAction(const InputPara
     _is_init(false),
     _add_kappa_fission(getParam<bool>("add_fission_heating"))
 {
+  if (_xs_source == "subapp" && !isParamValid("from_multi_app"))
+    paramError(
+        "from_multi_app",
+        "When pulling multi-group cross sections from a sub-app, 'from_multi_app' must be set!");
 }
 
 void
@@ -168,6 +176,9 @@ CardinalTransportMaterialAction::act()
   if (_current_task == "add_material")
     addMaterials();
 
+  if (_current_task == "add_transfer" && _xs_source == "subapp")
+    addTransfers();
+
   if (_current_task == "check_copy_nodal_vars" && _xs_source == "mesh")
     _app.setExodusFileRestart(true);
 
@@ -258,6 +269,46 @@ CardinalTransportMaterialAction::addMaterials()
 
   _problem->addMaterial(
       "PropsFromVarTransportMaterial", "CardinalXS_" + _parent_transport_system, params);
+}
+
+void
+CardinalTransportMaterialAction::addTransfers()
+{
+  for (const auto & n : _total_var_names)
+    addMaterialTransfer(n);
+
+  for (const auto & n : _scattering_var_names)
+    addMaterialTransfer(n);
+
+  for (const auto & n : _nu_fission_var_names)
+    addMaterialTransfer(n);
+
+  for (const auto & n : _chi_var_names)
+    addMaterialTransfer(n);
+
+  for (const auto & n : _kf_var_names)
+    addMaterialTransfer(n);
+
+  for (const auto & n : _inv_v_var_names)
+    addMaterialTransfer(n);
+
+  for (const auto & n : _diff_var_names)
+    addMaterialTransfer(n);
+
+  for (const auto & n : _abs_var_names)
+    addMaterialTransfer(n);
+}
+
+void
+CardinalTransportMaterialAction::addMaterialTransfer(const std::string & name)
+{
+  auto params = _factory.getValidParams("MultiAppGeneralFieldShapeEvaluationTransfer");
+  params.set<MultiAppName>("from_multi_app") = _xs_multi_app;
+  params.set<std::vector<AuxVariableName>>("variable").emplace_back(name);
+  params.set<std::vector<VariableName>>("source_variable").emplace_back(name);
+
+  _problem->addTransfer(
+      "MultiAppGeneralFieldShapeEvaluationTransfer", "CardinalXS_Transfer_" + name, params);
 }
 
 void

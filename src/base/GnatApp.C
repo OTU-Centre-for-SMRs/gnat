@@ -4,6 +4,10 @@
 #include "ModulesApp.h"
 #include "MooseSyntax.h"
 
+#ifdef ENABLE_CARDINAL
+#include "CardinalApp.h"
+#endif
+
 InputParameters
 GnatApp::validParams()
 {
@@ -70,6 +74,10 @@ GnatApp::registerAll(Factory & f, ActionFactory & af, Syntax & syntax)
   Registry::registerObjectsTo(f, {"GnatApp"});
   Registry::registerActionsTo(af, {"GnatApp"});
 
+#ifdef ENABLE_CARDINAL
+  CardinalApp::registerAll(f, af, syntax);
+#endif
+
   /* register custom execute flags, action syntax, etc. here */
   associateSyntaxInner(syntax, af);
 }
@@ -78,6 +86,11 @@ void
 GnatApp::registerApps()
 {
   registerApp(GnatApp);
+  ModulesApp::registerApps();
+
+#ifdef ENABLE_CARDINAL
+  CardinalApp::registerApps();
+#endif
 }
 
 /***************************************************************************************************
