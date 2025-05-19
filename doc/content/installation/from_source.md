@@ -29,12 +29,41 @@ Gnat and it's MOOSE submodule can be obtained with the following:
 ```language=bash
 git clone https://github.com/OTU-Center-for-SMRs/gnat.git
 cd gnat
-git submodule update --init
+git submodule update --init moose
 ```
 
 Once the repository has been cloned, proceed to the next step.
 
-## 2. Building MOOSE's Dependencies
+## 2. Getting Cardinal
+
+Gnat allows for neutronics coupling with the continuous-energy Monte Carlo
+code [OpenMC](https://github.com/openmc-dev/openmc) through
+[Cardinal](https://github.com/neams-th-coe/cardinal). If you don't want to build with Cardinal,
+you can skip this step. If you want to build Gnat with Cardinal, you need to update the Cardinal
+submodule and fetch it's dependencies:
+
+```language=bash
+git submodule update --init cardinal
+./cardinal/scripts/get-dependencies.sh
+```
+
+In addition to fetching Cardinal's dependencies, you'll need to export a few environment variables:
+
+```language=bash
+# [REQUIRED] for builds with Cardinal
+export ENABLE_CARDINAL=yes
+
+# [OPTIONAL] it's a good idea to explicitly note that you are using MPI compiler wrappers
+export CC=mpicc
+export CXX=mpicxx
+export FC=mpif90
+
+# [REQUIRED WHEN RUNNING OPENMC] you will need cross section data at runtime;
+# ythis variable must be set to point to a 'cross_sections.xml' file.
+export OPENMC_CROSS_SECTIONS=${HOME}/cross_sections/endfb-vii.1-hdf5/cross_sections.xml
+```
+
+## 3. Building MOOSE's Dependencies
 
 From here, you need to build all of MOOSE's dependencies. Before proceeding, please
 ensure that your system meets [MOOSE's minimum requirements ](https://mooseframework.inl.gov/getting_started/installation/index.html).
@@ -75,10 +104,10 @@ where `{NUM_PROCESSES}` is the number of processes you wish to use when building
 
 !alert-end!
 
-## 3. Compile Gnat
+## 4. Compile Gnat
 
 At this point all of MOOSE's dependencies have been compiled, and you're ready to
-build Gnat and MOOSE using the `make` buildsystem:
+build Gnat (with or without Cardinal) and MOOSE using the `make` buildsystem:
 
 
 ```language=bash
@@ -98,7 +127,7 @@ Finally, run all tests to ensure that Gnat has been built successfully:
 
 Where `{NUM_THREADS}` is the number of threads you want running tests.
 
-## 4. Run Simulations id=running
+## 5. Run Simulations id=running
 
 Gnat simulations use the hierarchical input text (HIT) input deck specification
 designed by INL for MOOSE-based applications. More information about HIT syntax
