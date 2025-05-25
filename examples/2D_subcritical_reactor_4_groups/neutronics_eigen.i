@@ -33,7 +33,7 @@
   [Air]
     type = FileTransportMaterial
     transport_system = Neutron
-    file_name = 'macro_xs.xml'
+    file_name = '../../data/mgxs/sc_4g_xs_macro.xml'
     source_material_id = '5' #
     block = 'air_gap src_air'
   []
@@ -41,7 +41,7 @@
   [Cladding]
     type = FileTransportMaterial
     transport_system = Neutron
-    file_name = 'macro_xs.xml'
+    file_name = '../../data/mgxs/sc_4g_xs_macro.xml'
     source_material_id = '7' #
     block = 'cladding'
   []
@@ -49,7 +49,7 @@
   [Fuel]
     type = FileTransportMaterial
     transport_system = Neutron
-    file_name = 'macro_xs.xml'
+    file_name = '../../data/mgxs/sc_4g_xs_macro.xml'
     source_material_id = '6' #
     block = 'fuel'
   []
@@ -57,7 +57,7 @@
   [Graphite]
     type = FileTransportMaterial
     transport_system = Neutron
-    file_name = 'macro_xs.xml'
+    file_name = '../../data/mgxs/sc_4g_xs_macro.xml'
     source_material_id = '8' #
     block = 'core_graphite reflector_graphite'
   []
@@ -65,7 +65,7 @@
   [Control]
     type = FileTransportMaterial
     transport_system = Neutron
-    file_name = 'macro_xs.xml'
+    file_name = '../../data/mgxs/sc_4g_xs_macro.xml'
     source_material_id = '8' #
     block = 'control_or_graphite'
   []

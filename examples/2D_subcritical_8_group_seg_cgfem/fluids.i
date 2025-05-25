@@ -6,31 +6,40 @@
   []
 []
 
-[Modules]
-  [NavierStokesFV]
-    compressibility = 'incompressible'
-    momentum_advection_interpolation = 'upwind'
+[Physics]
+  [NavierStokes]
+    [Flow/flow]
+      compressibility = 'incompressible'
 
-    # Rho and nu for air at 20C and atmospheric pressure.
-    density = 0.001276 # g cm^{-3}
-    initial_temperature = 300.0
-    dynamic_viscosity = 0.0001722 # g cm^{-1} s^{-2}
+      mass_advection_interpolation = 'average'
+      momentum_advection_interpolation = 'upwind'
 
-    inlet_boundaries = 'front_door back_door'
-    momentum_inlet_types = 'fixed-velocity fixed-velocity'
-    momentum_inlet_function = '-10.0 0.0; 10.0 0.0'
+      # Rho and nu for air at 20C and atmospheric pressure.
+      density = 0.001276 # g cm^{-3}
+      dynamic_viscosity = 0.0001722 # g cm^{-1} s^{-2}
 
-    wall_boundaries = 'walls'
-    momentum_wall_types = 'noslip'
+      initial_velocity = '1e-12 1e-12 0'
+      initial_pressure = 0.0
 
-    outlet_boundaries = 'hvac'
-    momentum_outlet_types = 'fixed-pressure-zero-gradient'
-    pressure_function = '0.0'
+      inlet_boundaries = 'front_door back_door'
+      momentum_inlet_types = 'fixed-velocity fixed-velocity'
+      momentum_inlet_functors = '-10.0 0.0; 10.0 0.0'
 
-    turbulence_handling = mixing-length
-    mixing_length_walls = 'walls'
+      wall_boundaries = 'walls'
+      momentum_wall_types = 'noslip'
 
-    block = air
+      outlet_boundaries = 'hvac'
+      momentum_outlet_types = 'fixed-pressure-zero-gradient'
+      pressure_functors = '0.0'
+
+      block = air
+    []
+    [Turbulence/ml]
+      turbulence_handling = 'mixing-length'
+      coupled_flow_physics = flow
+      mixing_length_walls = 'walls'
+      mixing_length_aux_execute_on = 'initial'
+    []
   []
 []
 

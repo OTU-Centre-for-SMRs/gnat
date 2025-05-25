@@ -1,5 +1,5 @@
 [GlobalParams]
-  file_name = 'data/rodded/group_3_L_0.xml'
+  file_name = '../../data/mgxs/full_sc/rodded/group_3_L_0.xml'
 []
 
 [Mesh]

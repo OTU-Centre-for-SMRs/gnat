@@ -28,7 +28,7 @@
     vacuum_boundaries = 'left right top bottom'
 
     point_source_locations = '5.0 5.0 0.0'
-    point_source_moments = '1e3 0.0'
+    point_source_moments = '1e1 0.0'
     point_source_anisotropies = '0'
   []
 []
@@ -37,7 +37,7 @@
   [Water]
     type = FileTransportMaterial
     transport_system = Neutron
-    file_name = 'macro_xs.xml'
+    file_name = '../../data/mgxs/water_2g_xs_macro.xml'
     source_material_id = '1'
     block = '1 2'
   []

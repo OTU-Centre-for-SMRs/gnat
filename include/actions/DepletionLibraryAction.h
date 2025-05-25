@@ -57,6 +57,7 @@ protected:
 
   const std::string _depletion_file_name;
   const std::string _mico_xs_file_name;
+  const int _xs_domain_id;
 
   const bool _warnings;
 

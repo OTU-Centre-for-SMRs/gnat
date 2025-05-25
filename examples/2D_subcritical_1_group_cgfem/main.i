@@ -1,8 +1,9 @@
 # Mesh is in cm, need to convert all units to cm.
 
 [DepletionLibrary]
-  depletion_file = 'data/chain_endfb71_pwr_air.xml'
-  cross_section_file = 'data/air_micro_xs.xml'
+  depletion_file = '../../data/depl/chain_endfb71_pwr_air.xml'
+  cross_section_file = '../../data/mgxs/sc_st_1g_xs_micro.xml'
+  xs_domain_id = 5
   depletion_file_source = openmc
   show_warnings = false
 []
@@ -14,31 +15,40 @@
   []
 []
 
-[Modules]
-  [NavierStokesFV]
-    compressibility = 'incompressible'
-    momentum_advection_interpolation = 'upwind'
+[Physics]
+  [NavierStokes]
+    [Flow/flow]
+      compressibility = 'incompressible'
 
-    # Rho and nu for air at 20C and atmospheric pressure.
-    density = 0.001276 # g cm^{-3}
-    initial_temperature = 300.0
-    dynamic_viscosity = 0.0001722 # g cm^{-1} s^{-2}
+      mass_advection_interpolation = 'average'
+      momentum_advection_interpolation = 'upwind'
 
-    inlet_boundaries = 'front_door back_door'
-    momentum_inlet_types = 'fixed-velocity fixed-velocity'
-    momentum_inlet_function = '-10.0 0.0; 10.0 0.0'
+      # Rho and nu for air at 20C and atmospheric pressure.
+      density = 0.001276 # g cm^{-3}
+      dynamic_viscosity = 0.0001722 # g cm^{-1} s^{-2}
 
-    wall_boundaries = 'walls'
-    momentum_wall_types = 'noslip'
+      initial_velocity = '1e-12 1e-12 0'
+      initial_pressure = 0.0
 
-    outlet_boundaries = 'hvac'
-    momentum_outlet_types = 'fixed-pressure-zero-gradient'
-    pressure_function = '0.0'
+      inlet_boundaries = 'front_door back_door'
+      momentum_inlet_types = 'fixed-velocity fixed-velocity'
+      momentum_inlet_functors = '-10.0 0.0; 10.0 0.0'
 
-    turbulence_handling = mixing-length
-    mixing_length_walls = 'walls'
+      wall_boundaries = 'walls'
+      momentum_wall_types = 'noslip'
 
-    block = air
+      outlet_boundaries = 'hvac'
+      momentum_outlet_types = 'fixed-pressure-zero-gradient'
+      pressure_functors = '0.0'
+
+      block = air
+    []
+    [Turbulence/ml]
+      turbulence_handling = 'mixing-length'
+      coupled_flow_physics = flow
+      mixing_length_walls = 'walls'
+      mixing_length_aux_execute_on = 'initial'
+    []
   []
 []
 
@@ -67,6 +77,7 @@
   fv_face_interpolation = skewness-corrected
   turbulence_handling = mixing-length
   schmidt_number = 1.4
+  temperature = 300.0
 
   elements = 'N O Ar C'
   element_atom_fractions = '0.78084 0.210294 0.00934 0.000417'

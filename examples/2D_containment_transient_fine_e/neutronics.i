@@ -38,21 +38,21 @@
   [RPV]
     type = FileTransportMaterial
     transport_system = Neutron
-    file_name = 'data/xs_macro.xml'
+    file_name = '../../data/mgxs/containment_xs_macro.xml'
     source_material_id = '6'
     block = rpv
   []
   [Air]
     type = FileTransportMaterial
     transport_system = Neutron
-    file_name = 'data/xs_macro.xml'
+    file_name = '../../data/mgxs/containment_xs_macro.xml'
     source_material_id = '5'
     block = air
   []
   [Walls]
     type = FileTransportMaterial
     transport_system = Neutron
-    file_name = 'data/xs_macro.xml'
+    file_name = '../../data/mgxs/containment_xs_macro.xml'
     source_material_id = '7'
     block = walls
   []

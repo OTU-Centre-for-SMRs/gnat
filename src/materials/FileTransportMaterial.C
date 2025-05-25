@@ -6,8 +6,6 @@
 
 registerMooseObject("GnatApp", FileTransportMaterial);
 
-// #define DEBUG_CROSS_SECTIONS
-
 InputParameters
 FileTransportMaterial::validParams()
 {
@@ -72,8 +70,6 @@ FileTransportMaterial::FileTransportMaterial(const InputParameters & parameters)
   }
   if (_sigma_t_g.size() != _num_groups)
     mooseError("The total cross-section data failed to parse properly.");
-  if (_sigma_a_g.size() != _num_groups)
-    mooseError("The absorption cross-section data failed to parse properly.");
   if (_sigma_s_g_prime_g_l.size() != _max_moments)
     mooseError("The scattering matrix cross-section data failed to parse properly.");
 
@@ -207,29 +203,6 @@ FileTransportMaterial::FileTransportMaterial(const InputParameters & parameters)
           "provided cross-section(s). Using a diffusion coefficient of 1 / "
           "10.0 * libMesh::TOLERANCE for those values.");
   }
-
-#ifdef DEBUG_CROSS_SECTIONS
-  // Output material properties for verification.
-  for (unsigned int g = 0u; g < _num_groups; ++g)
-  {
-    _console << COLOR_GREEN << "Group " << g << " cross-sections for " << _name << ":\n"
-             << COLOR_DEFAULT;
-    _console << "_sigma_t_g              = " << _sigma_t_g[g] << "\n";
-    _console << "_sigma_a_g              = " << _sigma_a_g[g] << "\n";
-    _console << "_sigma_s_g              = " << _sigma_s_g[g] << "\n";
-    _console << "_sigma_s_g + _sigma_a_g = " << _sigma_s_g[g] + _sigma_a_g[g] << "\n";
-    _console << "_sigma_s_g_g            = " << _sigma_s_g_g[g] << "\n";
-    _console << "IsConservative:           " << std::boolalpha
-             << ((_sigma_s_g[g] + _sigma_a_g[g]) <= _sigma_t_g[g]);
-
-    if (_has_fission)
-    {
-      _console << "\n_nu_sigma_f_g       = " << _nu_sigma_f_g[g] << "\n";
-      _console << "_chi_f_g              = " << _chi_f_g[g];
-    }
-    _console << std::endl;
-  }
-#endif
 }
 
 void
@@ -299,9 +272,6 @@ FileTransportMaterial::parseXMLMacroXS()
       {
         if (std::string(xs_node.attribute("type").as_string()) == "total")
           parseToVector(std::string(xs_node.attribute("mgxs").as_string()), _sigma_t_g);
-
-        if (std::string(xs_node.attribute("type").as_string()) == "absorption")
-          parseToVector(std::string(xs_node.attribute("mgxs").as_string()), _sigma_a_g);
 
         if (std::string(xs_node.attribute("type").as_string()) == "scatter")
           parseToVector(std::string(xs_node.attribute("mgxs").as_string()), _sigma_s_g_prime_g_l);
