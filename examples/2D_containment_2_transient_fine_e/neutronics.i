@@ -38,28 +38,28 @@
   [Stainless]
     type = FileTransportMaterial
     transport_system = Neutron
-    file_name = 'data/xs_macro.xml'
+    file_name = '../../data/mgxs/containment_xs_macro.xml'
     source_material_id = '6'
     block = stainless
   []
   [Air]
     type = FileTransportMaterial
     transport_system = Neutron
-    file_name = 'data/xs_macro.xml'
+    file_name = '../../data/mgxs/containment_xs_macro.xml'
     source_material_id = '5'
     block = air
   []
   [Concrete]
     type = FileTransportMaterial
     transport_system = Neutron
-    file_name = 'data/xs_macro.xml'
+    file_name = '../../data/mgxs/containment_xs_macro.xml'
     source_material_id = '7'
     block = concrete
   []
   [Water]
     type = FileTransportMaterial
     transport_system = Neutron
-    file_name = 'data/water_macro_xs.xml'
+    file_name = '../../data/mgxs/containment_xs_macro.xml'
     source_material_id = '1'
     block = light_water
   []

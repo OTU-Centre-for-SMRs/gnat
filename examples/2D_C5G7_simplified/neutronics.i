@@ -32,7 +32,7 @@
   [FuelClad]
     type = FileTransportMaterial
     transport_system = Neutron
-    file_name = 'C5G7_XS.xml'
+    file_name = '../../data/mgxs/C5G7_XS.xml'
     source_material_id = '0'
     block = 'fuel'
   []
@@ -40,7 +40,7 @@
   [Moderator]
     type = FileTransportMaterial
     transport_system = Neutron
-    file_name = 'C5G7_XS.xml'
+    file_name = '../../data/mgxs/C5G7_XS.xml'
     source_material_id = '6'
     block = 'moderator'
   []
@@ -48,7 +48,7 @@
   [Void]
     type = FileTransportMaterial
     transport_system = Neutron
-    file_name = 'C5G7_XS.xml'
+    file_name = '../../data/mgxs/C5G7_XS.xml'
     source_material_id = '7'
     block = 'air'
   []

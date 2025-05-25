@@ -31,7 +31,7 @@
   [Air]
     type = FileTransportMaterial
     transport_system = Neutron
-    file_name = 'macro_xs.xml'
+    file_name = '../../data/mgxs/sc_1g_xs_macro.xml'
     source_material_id = '5'
     block = '2 7 8 9 ' #
   []
@@ -39,7 +39,7 @@
   [Cladding]
     type = FileTransportMaterial
     transport_system = Neutron
-    file_name = 'macro_xs.xml'
+    file_name = '../../data/mgxs/sc_1g_xs_macro.xml'
     source_material_id = '7' #
     block = 4
   []
@@ -47,7 +47,7 @@
   [Fuel]
     type = FileTransportMaterial
     transport_system = Neutron
-    file_name = 'macro_xs.xml'
+    file_name = '../../data/mgxs/sc_1g_xs_macro.xml'
     source_material_id = '6' #
     block = 3
   []
@@ -55,7 +55,7 @@
   [Graphite]
     type = FileTransportMaterial
     transport_system = Neutron
-    file_name = 'macro_xs.xml'
+    file_name = '../../data/mgxs/sc_1g_xs_macro.xml'
     source_material_id = '8' #
     block = '10 11'
   []
@@ -63,7 +63,7 @@
   [Control]
     type = FileTransportMaterial
     transport_system = Neutron
-    file_name = 'macro_xs.xml'
+    file_name = '../../data/mgxs/sc_1g_xs_macro.xml'
     source_material_id = '9' #
     block = 6
   []

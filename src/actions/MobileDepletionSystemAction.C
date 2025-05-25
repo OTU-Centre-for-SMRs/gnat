@@ -1014,7 +1014,7 @@ MobileDepletionSystemAction::addFVKernels(const std::string & nuclide_var_name)
       params.set<NonlinearVariableName>("variable") = frac_var_name;
       params.set<MooseEnum>("advected_interp_method") = getParam<MooseEnum>("fv_adv_interpolation");
       params.set<MooseEnum>("velocity_interp_method") =
-          _coupled_ns_fv->getParam<MooseEnum>("velocity_interp_method");
+          _coupled_ns_fv->getParam<MooseEnum>("velocity_interpolation");
       params.set<MooseFunctorName>("density") = _coupled_ns_fv->densityName();
 
       if (isParamValid("block"))

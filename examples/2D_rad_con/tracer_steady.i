@@ -1,5 +1,5 @@
 [DepletionLibrary]
-  depletion_file = 'chain_endfb71_pwr.xml'
+  depletion_file = '../../data/depl/chain_endfb71_pwr.xml'
   depletion_file_source = openmc
   show_warnings = false
   add_data_userobject = true

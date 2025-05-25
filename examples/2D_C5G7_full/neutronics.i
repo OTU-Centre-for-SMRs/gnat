@@ -35,7 +35,7 @@
   [UO2]
     type = FileTransportMaterial
     transport_system = Neutron
-    file_name = 'C5G7_XS.xml'
+    file_name = '../../data/mgxs/C5G7_XS.xml'
     source_material_id = '0'
     block = 'uo2'
   []
@@ -43,7 +43,7 @@
   [MOX_43]
     type = FileTransportMaterial
     transport_system = Neutron
-    file_name = 'C5G7_XS.xml'
+    file_name = '../../data/mgxs/C5G7_XS.xml'
     source_material_id = '1'
     block = 'mox43'
   []
@@ -51,7 +51,7 @@
   [MOX_70]
     type = FileTransportMaterial
     transport_system = Neutron
-    file_name = 'C5G7_XS.xml'
+    file_name = '../../data/mgxs/C5G7_XS.xml'
     source_material_id = '2'
     block = 'mox70'
   []
@@ -59,7 +59,7 @@
   [MOX_87]
     type = FileTransportMaterial
     transport_system = Neutron
-    file_name = 'C5G7_XS.xml'
+    file_name = '../../data/mgxs/C5G7_XS.xml'
     source_material_id = '3'
     block = 'mox87'
   []
@@ -67,7 +67,7 @@
   [Fission_Chambers]
     type = FileTransportMaterial
     transport_system = Neutron
-    file_name = 'C5G7_XS.xml'
+    file_name = '../../data/mgxs/C5G7_XS.xml'
     source_material_id = '4'
     block = 'fission_chambers'
   []
@@ -75,7 +75,7 @@
   [Guide_Tubes]
     type = FileTransportMaterial
     transport_system = Neutron
-    file_name = 'C5G7_XS.xml'
+    file_name = '../../data/mgxs/C5G7_XS.xml'
     source_material_id = '5'
     block = 'guide_tubes'
   []
@@ -83,7 +83,7 @@
   [Moderator_Reflector]
     type = FileTransportMaterial
     transport_system = Neutron
-    file_name = 'C5G7_XS.xml'
+    file_name = '../../data/mgxs/C5G7_XS.xml'
     source_material_id = '6'
     block = 'moderator reflector'
   []

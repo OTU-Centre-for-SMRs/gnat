@@ -960,7 +960,7 @@ TracerDepletionSystemAction::addFVKernels(const std::string & nuclide_var_name)
       params.set<NonlinearVariableName>("variable") = nuclide_var_name + pfx;
       params.set<MooseEnum>("advected_interp_method") = getParam<MooseEnum>("fv_adv_interpolation");
       params.set<MooseEnum>("velocity_interp_method") =
-          _coupled_ns_fv->getParam<MooseEnum>("velocity_interp_method");
+          _coupled_ns_fv->getParam<MooseEnum>("velocity_interpolation");
 
       if (isParamValid("block"))
       {

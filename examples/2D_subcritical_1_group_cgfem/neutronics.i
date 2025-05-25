@@ -32,29 +32,29 @@
 [TransportMaterials]
   [Air]
     type = FileTransportMaterial
-    transport_system = Neutron
-    file_name = 'data/macro_xs.xml'
+    transport_system = 'Neutron'
+    file_name = '../../data/mgxs/sc_st_1g_xs_macro.xml'
     source_material_id = '5'
     block = air
   []
   [Cladding]
     type = FileTransportMaterial
-    transport_system = Neutron
-    file_name = 'data/macro_xs.xml'
+    transport_system = 'Neutron'
+    file_name = '../../data/mgxs/sc_st_1g_xs_macro.xml'
     source_material_id = '6'
     block = cladding
   []
   [Fuel]
     type = FileTransportMaterial
-    transport_system = Neutron
-    file_name = 'data/macro_xs.xml'
+    transport_system = 'Neutron'
+    file_name = '../../data/mgxs/sc_st_1g_xs_macro.xml'
     source_material_id = '7'
     block = fuel
   []
   [Wood]
     type = FileTransportMaterial
-    transport_system = Neutron
-    file_name = 'data/macro_xs.xml'
+    transport_system = 'Neutron'
+    file_name = '../../data/mgxs/sc_st_1g_xs_macro.xml'
     source_material_id = '8'
     block = wood
   []
