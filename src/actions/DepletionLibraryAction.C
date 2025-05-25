@@ -20,6 +20,7 @@ DepletionLibraryAction::validParams()
   params.addRequiredParam<std::string>("depletion_file", "The name of the depletion file.");
   params.addParam<std::string>(
       "cross_section_file", "", "The name of the microscopic depletion cross-section file.");
+  params.addParam<unsigned int>("xs_domain_id", "The ID of the domain that should be used to pair cross sections with nuclides.");
   params.addParam<MooseEnum>("depletion_file_source",
                              MooseEnum("openmc", "openmc"),
                              "The depletion file generator. More depletion file sources will be "
@@ -49,6 +50,7 @@ DepletionLibraryAction::DepletionLibraryAction(const InputParameters & parameter
                               std::filesystem::path(getParam<std::string>("cross_section_file")))
                                  .string()
                            : ""),
+    _xs_domain_id(isParamValid("xs_domain_id") ? getParam<unsigned int>("xs_domain_id") : -1),
     _warnings(getParam<bool>("show_warnings")),
     _xs_units(XSUnits::Barns),
     _convert_to_eV(1.0),
@@ -67,6 +69,9 @@ DepletionLibraryAction::DepletionLibraryAction(const InputParameters & parameter
       _console << "Finished parsing depletion library." << std::endl;
       if (_mico_xs_file_name != "")
       {
+        if (_xs_domain_id < 0)
+          paramError("xs_domain_id", "A domain ID must be provided if using microscopic cross sections!");
+
         _console << "Parsing microscopic cross-section library..." << std::endl;
         loadOpenMCMicoXSXML();
         _console << "Finished microscopic cross-section library." << std::endl;
@@ -440,114 +445,120 @@ DepletionLibraryAction::loadOpenMCMicoXSXML()
 
   // Traverse through the document and fetch the nuclides.
   std::vector<Real> storage;
-  for (auto & nuclide_node : doc.child("depletion_chain"))
+  for (auto & domain_node : doc.child("depletion_chain"))
   {
-    // Nuclide name.
-    const std::string name(nuclide_node.attribute("name").as_string());
-
-    if (_nuclide_list.count(name) == 0u)
-    {
-      if (_warnings)
-        _console
-            << COLOR_YELLOW << "Nuclide " << name
-            << " does not exist in the depletion chain file. This nuclide will be skipped when "
-               "parsing cross-sections.\n"
-            << COLOR_DEFAULT;
+    if (domain_node.attribute("id").as_int(-1) != _xs_domain_id)
       continue;
-    }
 
-    for (auto & data_node : nuclide_node)
+    for (auto & nuclide_node : domain_node)
     {
-      // Parsing reaction data.
-      if (std::string(data_node.name()) == "reaction")
+      // Nuclide name.
+      const std::string name(nuclide_node.attribute("name").as_string());
+
+      if (_nuclide_list.count(name) == 0u)
       {
-        if (std::string(data_node.attribute("type").as_string()) == "(n,gamma)")
-        {
-          parseToVector(std::string(data_node.attribute("mgxs").as_string()), storage);
-          if (_xs_units == XSUnits::Barns)
-            for (auto & xs : storage)
-              xs *= 1e-24;
+        if (_warnings)
+          _console
+              << COLOR_YELLOW << "Nuclide " << name
+              << " does not exist in the depletion chain file. This nuclide will be skipped when "
+                 "parsing cross-sections.\n"
+              << COLOR_DEFAULT;
+        continue;
+      }
 
-          if (!_nuclide_list.at(name).addReactionCrossSections(Reaction::Mode::NGamma, storage) &&
-              _warnings)
-            _console << COLOR_YELLOW << "Failed to add cross-sections to " << name
-                     << " for the reaction " << std::string(data_node.attribute("type").as_string())
-                     << COLOR_DEFAULT << "\n";
-          storage.clear();
-        }
-        else if (std::string(data_node.attribute("type").as_string()) == "(n,p)")
+      for (auto & data_node : nuclide_node)
+      {
+        // Parsing reaction data.
+        if (std::string(data_node.name()) == "reaction")
         {
-          parseToVector(std::string(data_node.attribute("mgxs").as_string()), storage);
-          if (_xs_units == XSUnits::Barns)
-            for (auto & xs : storage)
-              xs *= 1e-24;
+          if (std::string(data_node.attribute("type").as_string()) == "(n,gamma)")
+          {
+            parseToVector(std::string(data_node.attribute("mgxs").as_string()), storage);
+            if (_xs_units == XSUnits::Barns)
+              for (auto & xs : storage)
+                xs *= 1e-24;
 
-          if (!_nuclide_list.at(name).addReactionCrossSections(Reaction::Mode::NProton, storage) &&
-              _warnings)
-            _console << COLOR_YELLOW << "Failed to add cross-sections to " << name
-                     << " for the reaction " << std::string(data_node.attribute("type").as_string())
-                     << COLOR_DEFAULT << "\n";
-          storage.clear();
-        }
-        else if (std::string(data_node.attribute("type").as_string()) == "(n,a)")
-        {
-          parseToVector(std::string(data_node.attribute("mgxs").as_string()), storage);
-          if (_xs_units == XSUnits::Barns)
-            for (auto & xs : storage)
-              xs *= 1e-24;
+            if (!_nuclide_list.at(name).addReactionCrossSections(Reaction::Mode::NGamma, storage) &&
+                _warnings)
+              _console << COLOR_YELLOW << "Failed to add cross-sections to " << name
+                       << " for the reaction " << std::string(data_node.attribute("type").as_string())
+                       << COLOR_DEFAULT << "\n";
+            storage.clear();
+          }
+          else if (std::string(data_node.attribute("type").as_string()) == "(n,p)")
+          {
+            parseToVector(std::string(data_node.attribute("mgxs").as_string()), storage);
+            if (_xs_units == XSUnits::Barns)
+              for (auto & xs : storage)
+                xs *= 1e-24;
 
-          if (!_nuclide_list.at(name).addReactionCrossSections(Reaction::Mode::NAlpha, storage) &&
-              _warnings)
-            _console << COLOR_YELLOW << "Failed to add cross-sections to " << name
-                     << " for the reaction " << std::string(data_node.attribute("type").as_string())
-                     << COLOR_DEFAULT << "\n";
-          storage.clear();
-        }
-        else if (std::string(data_node.attribute("type").as_string()) == "(n,2n)")
-        {
-          parseToVector(std::string(data_node.attribute("mgxs").as_string()), storage);
-          if (_xs_units == XSUnits::Barns)
-            for (auto & xs : storage)
-              xs *= 1e-24;
+            if (!_nuclide_list.at(name).addReactionCrossSections(Reaction::Mode::NProton, storage) &&
+                _warnings)
+              _console << COLOR_YELLOW << "Failed to add cross-sections to " << name
+                       << " for the reaction " << std::string(data_node.attribute("type").as_string())
+                       << COLOR_DEFAULT << "\n";
+            storage.clear();
+          }
+          else if (std::string(data_node.attribute("type").as_string()) == "(n,a)")
+          {
+            parseToVector(std::string(data_node.attribute("mgxs").as_string()), storage);
+            if (_xs_units == XSUnits::Barns)
+              for (auto & xs : storage)
+                xs *= 1e-24;
 
-          if (!_nuclide_list.at(name).addReactionCrossSections(Reaction::Mode::N2N, storage) &&
-              _warnings)
-            _console << COLOR_YELLOW << "Failed to add cross-sections to " << name
-                     << " for the reaction " << std::string(data_node.attribute("type").as_string())
-                     << COLOR_DEFAULT << "\n";
-          storage.clear();
-        }
-        else if (std::string(data_node.attribute("type").as_string()) == "(n,3n)")
-        {
-          parseToVector(std::string(data_node.attribute("mgxs").as_string()), storage);
-          if (_xs_units == XSUnits::Barns)
-            for (auto & xs : storage)
-              xs *= 1e-24;
+            if (!_nuclide_list.at(name).addReactionCrossSections(Reaction::Mode::NAlpha, storage) &&
+                _warnings)
+              _console << COLOR_YELLOW << "Failed to add cross-sections to " << name
+                       << " for the reaction " << std::string(data_node.attribute("type").as_string())
+                       << COLOR_DEFAULT << "\n";
+            storage.clear();
+          }
+          else if (std::string(data_node.attribute("type").as_string()) == "(n,2n)")
+          {
+            parseToVector(std::string(data_node.attribute("mgxs").as_string()), storage);
+            if (_xs_units == XSUnits::Barns)
+              for (auto & xs : storage)
+                xs *= 1e-24;
 
-          if (!_nuclide_list.at(name).addReactionCrossSections(Reaction::Mode::N3N, storage) &&
-              _warnings)
-            _console << COLOR_YELLOW << "Failed to add cross-sections to " << name
-                     << " for the reaction " << std::string(data_node.attribute("type").as_string())
-                     << COLOR_DEFAULT << "\n";
-          storage.clear();
-        }
-        else if (std::string(data_node.attribute("type").as_string()) == "(n,4n)")
-        {
-          parseToVector(std::string(data_node.attribute("mgxs").as_string()), storage);
-          if (_xs_units == XSUnits::Barns)
-            for (auto & xs : storage)
-              xs *= 1e-24;
+            if (!_nuclide_list.at(name).addReactionCrossSections(Reaction::Mode::N2N, storage) &&
+                _warnings)
+              _console << COLOR_YELLOW << "Failed to add cross-sections to " << name
+                       << " for the reaction " << std::string(data_node.attribute("type").as_string())
+                       << COLOR_DEFAULT << "\n";
+            storage.clear();
+          }
+          else if (std::string(data_node.attribute("type").as_string()) == "(n,3n)")
+          {
+            parseToVector(std::string(data_node.attribute("mgxs").as_string()), storage);
+            if (_xs_units == XSUnits::Barns)
+              for (auto & xs : storage)
+                xs *= 1e-24;
 
-          if (!_nuclide_list.at(name).addReactionCrossSections(Reaction::Mode::N4N, storage) &&
-              _warnings)
-            _console << COLOR_YELLOW << "Failed to add cross-sections to " << name
-                     << " for the reaction " << std::string(data_node.attribute("type").as_string())
-                     << COLOR_DEFAULT << "\n";
-          storage.clear();
+            if (!_nuclide_list.at(name).addReactionCrossSections(Reaction::Mode::N3N, storage) &&
+                _warnings)
+              _console << COLOR_YELLOW << "Failed to add cross-sections to " << name
+                       << " for the reaction " << std::string(data_node.attribute("type").as_string())
+                       << COLOR_DEFAULT << "\n";
+            storage.clear();
+          }
+          else if (std::string(data_node.attribute("type").as_string()) == "(n,4n)")
+          {
+            parseToVector(std::string(data_node.attribute("mgxs").as_string()), storage);
+            if (_xs_units == XSUnits::Barns)
+              for (auto & xs : storage)
+                xs *= 1e-24;
+
+            if (!_nuclide_list.at(name).addReactionCrossSections(Reaction::Mode::N4N, storage) &&
+                _warnings)
+              _console << COLOR_YELLOW << "Failed to add cross-sections to " << name
+                       << " for the reaction " << std::string(data_node.attribute("type").as_string())
+                       << COLOR_DEFAULT << "\n";
+            storage.clear();
+          }
+          else
+            _console << "Unsupported reaction for " << name << ": '"
+                     << data_node.attribute("type").as_string() << "'.\n";
         }
-        else
-          _console << "Unsupported reaction for " << name << ": '"
-                   << data_node.attribute("type").as_string() << "'.\n";
       }
     }
   }

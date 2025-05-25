@@ -72,7 +72,7 @@ FileTransportMaterial::FileTransportMaterial(const InputParameters & parameters)
   }
   if (_sigma_t_g.size() != _num_groups)
     mooseError("The total cross-section data failed to parse properly.");
-  if (_sigma_a_g.size() != _num_groups)
+  if (_sigma_a_g.size() != _num_groups && _is_diffusion)
     mooseError("The absorption cross-section data failed to parse properly.");
   if (_sigma_s_g_prime_g_l.size() != _max_moments)
     mooseError("The scattering matrix cross-section data failed to parse properly.");

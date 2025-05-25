@@ -64,6 +64,11 @@ class GnatOpenMCMGXS:
                                                           domain_type=self._domain_type,\
                                                           energy_groups=self._groups,\
                                                           name=self._name)
+        if mgxs == 'absorption':
+          self._macro_xs_objs[mgxs] = openmc.mgxs.AbsorptionXS(domain=self._domain,\
+                                                               domain_type=self._domain_type,\
+                                                               energy_groups=self._groups,\
+                                                               name=self._name)
         if mgxs == 'inverse-vel':
           self._macro_xs_objs[mgxs] = openmc.mgxs.InverseVelocity(domain=self._domain,\
                                                                   domain_type=self._domain_type,\
