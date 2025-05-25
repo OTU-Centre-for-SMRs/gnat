@@ -42,7 +42,7 @@
   [Water]
     type = FileTransportMaterial
     transport_system = Neutron
-    file_name = '../../data/mgxs/water_3g_xs_macro.xml'
+    file_name = '../../data/mgxs/water_2g_xs_macro.xml'
     source_material_id = '1'
   []
 []
