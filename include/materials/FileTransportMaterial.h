@@ -35,7 +35,6 @@ protected:
   // solver.
   std::vector<Real> _inv_v_g;
   std::vector<Real> _sigma_t_g;
-  std::vector<Real> _sigma_a_g;
   std::vector<Real> _sigma_s_g_matrix;
   std::vector<Real> _sigma_s_g_g;
   std::vector<Real> _diffusion_g;
