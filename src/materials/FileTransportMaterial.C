@@ -63,7 +63,7 @@ FileTransportMaterial::FileTransportMaterial(const InputParameters & parameters)
   if (_inv_v_g.size() != _num_groups && _is_transient)
   {
     mooseWarning("The inverse velocity data failed to parse properly.");
-    if (_particle == Particletype::Neutron)
+    if (_particle == NuclearData::Particletype::Neutron)
       _inv_v_g.resize(_num_groups, 0.0);
     else
       _inv_v_g.resize(_num_groups, 0.0);

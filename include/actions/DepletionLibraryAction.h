@@ -3,7 +3,6 @@
 #include "Action.h"
 
 #include "NuclearData.h"
-#include "Nuclide.h"
 
 class DepletionLibraryAction : public Action
 {

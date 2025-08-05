@@ -50,7 +50,7 @@ EmptyTransportMaterial::EmptyTransportMaterial(const InputParameters & parameter
   : Material(parameters),
     _scaling(1.0),
     _num_groups(getParam<unsigned int>("num_groups")),
-    _particle(getParam<MooseEnum>("particle_type").getEnum<Particletype>()),
+    _particle(getParam<MooseEnum>("particle_type").getEnum<NuclearData::Particletype>()),
     _is_saaf(getParam<bool>("is_saaf")),
     _is_diffusion(getParam<bool>("is_diffusion")),
     _has_fission(getParam<bool>("has_fission")),

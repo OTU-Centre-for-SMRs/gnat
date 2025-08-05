@@ -1,6 +1,6 @@
 #include "MassFractionConcentration.h"
 
-#include "Nuclide.h"
+#include "NuclearData.h"
 
 registerMooseObject("GnatApp", MassFractionConcentration);
 

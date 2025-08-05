@@ -1,5 +1,7 @@
 #pragma once
 
+#include "NuclearData.h"
+
 // Major axis for quadrature sets.
 enum class MajorAxis
 {
@@ -17,14 +19,6 @@ enum class ProblemType
   Cartesian2D = 1u,
   Cartesian3D = 2u
 }; // enum class ProblemType
-
-// An enum for particle types. Either neutron or photon.
-enum class Particletype
-{
-  Neutron = 0u,
-  GammaPhoton = 1u
-};
-// enum class Particletype
 
 // An enum for radiation transport schemes.
 enum class TransportScheme

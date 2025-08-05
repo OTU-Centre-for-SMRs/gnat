@@ -67,7 +67,7 @@ protected:
   void addSourceConservativePP(const std::string & source_var_name);
 
   const TransportScheme _transport_scheme;
-  const Particletype _particle;
+  const NuclearData::Particletype _particle;
   const bool _is_eigen;
 
   // Number of discrete ordinates, flux moments, and quadrature parameters.

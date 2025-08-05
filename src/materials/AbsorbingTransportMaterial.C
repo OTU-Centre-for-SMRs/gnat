@@ -27,7 +27,7 @@ AbsorbingTransportMaterial::AbsorbingTransportMaterial(const InputParameters & p
 {
   if (_is_transient)
   {
-    if (_particle == Particletype::Neutron)
+    if (_particle == NuclearData::Particletype::Neutron)
     {
       if (!isParamSetByUser("group_speeds"))
         paramError("group_speeds",
