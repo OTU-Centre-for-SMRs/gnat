@@ -15,7 +15,7 @@ public:
 protected:
   virtual Real computeValue() override;
 
-  const Particletype _particle;
+  const NuclearData::Particletype _particle;
 
   const std::vector<Real> & _group_bounds;
   const unsigned int _num_groups;

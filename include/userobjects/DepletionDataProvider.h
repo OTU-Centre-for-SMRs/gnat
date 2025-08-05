@@ -3,7 +3,6 @@
 #include "ThreadedGeneralUserObject.h"
 
 #include "NuclearData.h"
-#include "Nuclide.h"
 
 // TODO: Radionuclide sources. Branching factor for a photon emission = prob / sum(prob).
 

@@ -4,3 +4,6 @@
 [submodule "cardinal"]
 	path = cardinal
 	url = https://github.com/neams-th-coe/cardinal.git
+[submodule "include/nuclear_data"]
+	path = include/utils/nuclear_data
+	url = https://github.com/OTU-Centre-for-SMRs/nuclear_data.git

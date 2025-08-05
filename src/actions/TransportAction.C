@@ -371,7 +371,7 @@ TransportAction::validParams()
 TransportAction::TransportAction(const InputParameters & params)
   : GnatBaseAction(params),
     _transport_scheme(getParam<MooseEnum>("scheme").getEnum<TransportScheme>()),
-    _particle(getParam<MooseEnum>("particle_type").getEnum<Particletype>()),
+    _particle(getParam<MooseEnum>("particle_type").getEnum<NuclearData::Particletype>()),
     _is_eigen(getParam<bool>("eigen")),
     _n_l(getParam<unsigned int>("n_polar")),
     _n_c(getParam<unsigned int>("n_azimuthal")),
@@ -509,7 +509,7 @@ TransportAction::actCommon()
   // Fission warnings.
   if (_problem && !_var_init)
   {
-    if (!getParam<bool>("debug_disable_fission") && _particle == Particletype::Neutron)
+    if (!getParam<bool>("debug_disable_fission") && _particle == NuclearData::Particletype::Neutron)
     {
       std::string message(
           "Gnat is not designed for the analysis of fissile systems. Calculations including "
@@ -523,7 +523,7 @@ TransportAction::actCommon()
             "to run a steady-state simulation?");
     }
 
-    if (_is_eigen && getParam<bool>("debug_disable_fission") && _particle == Particletype::Neutron)
+    if (_is_eigen && getParam<bool>("debug_disable_fission") && _particle == NuclearData::Particletype::Neutron)
       mooseError("Fission cannot be disabled in eigenvalue simulations.");
   }
 
@@ -1853,7 +1853,7 @@ TransportAction::addSAAFKernels(const std::string & var_name, unsigned int g, un
 
   // Only add fission kernels if debug doesn't disable them AND this transport system represents a
   // neutron field.
-  if (!getParam<bool>("debug_disable_fission") && _particle == Particletype::Neutron)
+  if (!getParam<bool>("debug_disable_fission") && _particle == NuclearData::Particletype::Neutron)
   {
     // Add SAAFMomentFission.
     {
@@ -2204,7 +2204,7 @@ TransportAction::addDiffusionKernels(const std::string & var_name, unsigned int 
 
   // Only add fission kernels if debug doesn't disable them AND this transport system represents a
   // neutron field.
-  if (!getParam<bool>("debug_disable_fission") && _particle == Particletype::Neutron)
+  if (!getParam<bool>("debug_disable_fission") && _particle == NuclearData::Particletype::Neutron)
   {
     // Add DiffusionFission.
     {

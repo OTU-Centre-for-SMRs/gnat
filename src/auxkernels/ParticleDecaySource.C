@@ -36,7 +36,7 @@ ParticleDecaySource::validParams()
 
 ParticleDecaySource::ParticleDecaySource(const InputParameters & parameters)
   : AuxKernel(parameters),
-    _particle(getParam<MooseEnum>("particle_type").getEnum<Particletype>()),
+    _particle(getParam<MooseEnum>("particle_type").getEnum<NuclearData::Particletype>()),
     _group_bounds(getParam<std::vector<Real>>("group_boundaries")),
     _num_groups(_group_bounds.size() - 1u),
     _group_index(getParam<unsigned int>("group_index")),

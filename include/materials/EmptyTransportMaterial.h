@@ -26,7 +26,7 @@ protected:
   const Real _scaling;
 
   const unsigned int _num_groups;
-  const Particletype _particle;
+  const NuclearData::Particletype _particle;
 
   const bool _is_saaf;
   const bool _is_diffusion;

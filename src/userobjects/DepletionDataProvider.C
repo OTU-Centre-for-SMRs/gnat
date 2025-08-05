@@ -113,14 +113,14 @@ DepletionDataProvider::loadOpenMCXML()
           {
             parseToVector(std::string(data_node.child("parameters").child_value()), storage);
             if (storage.size() > 0u)
-              _nuclide_list.at(name).addSource(Particletype::GammaPhoton, storage);
+              _nuclide_list.at(name).addSource(NuclearData::Particletype::GammaPhoton, storage);
             storage.clear();
           }
           else if (std::string(data_node.attribute("particle").as_string()) == "neutron")
           {
             parseToVector(std::string(data_node.child("parameters").child_value()), storage);
             if (storage.size() > 0u)
-              _nuclide_list.at(name).addSource(Particletype::Neutron, storage);
+              _nuclide_list.at(name).addSource(NuclearData::Particletype::Neutron, storage);
             storage.clear();
           }
           else if (_warnings)
