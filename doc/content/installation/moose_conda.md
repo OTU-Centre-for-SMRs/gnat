@@ -78,12 +78,14 @@ For users who only wish to use Gnat:
 git clone https://github.com/OTU-Center-for-SMRs/gnat.git
 cd gnat
 git submodule update --init moose
+git submodule update --init include/utils/nuclear_data
 ```
 
 For users who want to develop/use other MOOSE applications:
 
 ```language=bash
 git clone https://github.com/OTU-Center-for-SMRs/gnat.git
+git submodule update --init include/utils/nuclear_data
 ```
 
 Before continuing with the compilation process, ensure that the MOOSE environment

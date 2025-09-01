@@ -30,6 +30,7 @@ Gnat and it's MOOSE submodule can be obtained with the following:
 git clone https://github.com/OTU-Center-for-SMRs/gnat.git
 cd gnat
 git submodule update --init moose
+git submodule update --init include/utils/nuclear_data
 ```
 
 Once the repository has been cloned, proceed to the next step.
