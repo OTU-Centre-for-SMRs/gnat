@@ -42,6 +42,17 @@ CardinalTransportMaterialAction::validParams()
       false,
       "Whether or not per-group fission heating (kappa-fission) values should be generated.");
 
+  // Whether the scattering ratio should be clamped, and to what value.
+  params.addParam<bool>(
+    "clamp_scatter_ratio",
+    false,
+    "Whether or not the scattering ratio should be clamped to a maximum value to ensure convergence.");
+  params.addRangeCheckedParam<Real>(
+    "max_scatter_Ratio",
+    0.9999,
+    "0.0 < max_scatter_Ratio <= 1.0",
+    "The maximum value of the scattering ratio.");
+
   return params;
 }
 
@@ -49,6 +60,8 @@ CardinalTransportMaterialAction::CardinalTransportMaterialAction(const InputPara
   : GnatBaseAction(parameters),
     _xs_source(getParam<MooseEnum>("xs_source")),
     _xs_multi_app(isParamValid("from_multi_app") ? getParam<MultiAppName>("from_multi_app") : ""),
+    _clamp_scatter_ratio(getParam<bool>("clamp_scatter_ratio")),
+    _scattering_ratio_clamp_factor(getParam<Real>("max_scatter_Ratio")),
     _parent_transport_system(getParam<std::string>("transport_system")),
     _particle(MooseEnum("neutron photon", "neutron")),
     _scheme(MooseEnum("saaf_cfem diffusion_cfem flux_moment_transfer")),
@@ -239,6 +252,10 @@ CardinalTransportMaterialAction::addMaterials()
   params.set<bool>("has_fission") = _particle == "neutron" && !_disable_fission;
   params.set<std::string>("transport_system") = _parent_transport_system;
   params.set<bool>("add_heating") = _add_kappa_fission;
+
+  // For clamping the scattering ratios if requested.
+  params.set<bool>("clamp_scatter_ratio") = _clamp_scatter_ratio;
+  params.set<Real>("max_scatter_Ratio") = _scattering_ratio_clamp_factor;
 
   for (const auto & n : _total_var_names)
     params.set<std::vector<VariableName>>("total_xs").emplace_back(n);

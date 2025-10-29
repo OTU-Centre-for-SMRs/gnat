@@ -26,6 +26,11 @@ protected:
 
   const MultiAppName _xs_multi_app;
 
+  // Whether or not the scattering ratio should be clamped to a maximum value.
+  const bool _clamp_scatter_ratio;
+  // The value of the scattering ratio to clamp to. Should be less then 1.0.
+  const Real _scattering_ratio_clamp_factor;
+
   std::string _parent_transport_system;
   unsigned int _num_groups;
   MooseEnum _particle;
