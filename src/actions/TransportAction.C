@@ -122,9 +122,11 @@ TransportAction::validParams()
       "init_from_file", false, "If the simulation should be initialized from a file or not.");
   params.addParam<bool>(
       "use_scattering_jacobians", false, "Whether or not to use hand-coded scattering Jacobians.");
+  params.addParam<bool>(
+      "use_fission_jacobians", false, "Whether or not to use hand-coded fission Jacobians.");
 
-  params.addParamNamesToGroup("eigen max_anisotropy block use_scattering_jacobians init_from_file",
-                              "Simulation");
+  params.addParamNamesToGroup("eigen max_anisotropy block use_scattering_jacobians use_fission_jacobians "
+                              "init_from_file", "Simulation");
 
   //----------------------------------------------------------------------------
   // Quadrature parameters.
@@ -1855,8 +1857,50 @@ TransportAction::addSAAFKernels(const std::string & var_name, unsigned int g, un
   // neutron field.
   if (!getParam<bool>("debug_disable_fission") && _particle == NuclearData::Particletype::Neutron)
   {
-    // Add SAAFMomentFission.
+    // Add SAAFFission.
+    if (getParam<bool>("use_fission_jacobians"))
     {
+      auto params = _factory.getValidParams("SAAFFission");
+      params.set<NonlinearVariableName>("variable") = var_name;
+      // Set the name of the TransportAction so it can fetch the appropriate material
+      // properties.
+      params.set<std::string>("transport_system") = name();
+      // Group index and the number of groups are required to fetch the
+      // scattering cross-section moments.
+      params.set<unsigned int>("group_index") = g;
+      params.set<unsigned int>("num_groups") = _num_groups;
+      // Ordinate index is required to fetch the particle direction.
+      params.set<unsigned int>("ordinate_index") = n;
+
+      // Apply the parameters for the quadrature rule.
+      applyQuadratureParameters(params);
+
+      // Copy all of the group flux ordinate names into the variable
+      // parameter.
+      auto & ordinate_names = params.set<std::vector<VariableName>>("group_flux_ordinates");
+      for (unsigned int g_prime = 0; g_prime < _num_groups; ++g_prime)
+      {
+        std::copy(_group_angular_fluxes[g_prime].begin(),
+                  _group_angular_fluxes[g_prime].end(),
+                  std::back_inserter(ordinate_names));
+      }
+
+      if (isParamValid("block"))
+      {
+        params.set<std::vector<SubdomainName>>("block") =
+            getParam<std::vector<SubdomainName>>("block");
+      }
+
+      // For eigenvalues.
+      if (_is_eigen)
+        params.set<std::vector<TagName>>("extra_vector_tags").emplace_back("eigen");
+
+      _problem->addKernel("SAAFFission", "SAAFFission_" + var_name, params);
+      debugOutput("      - Adding kernel SAAFFission for the variable " + var_name + ".");
+    } // SAAFFission
+    else
+    {
+      // Add SAAFMomentFission.
       auto params = _factory.getValidParams("SAAFMomentFission");
       params.set<NonlinearVariableName>("variable") = var_name;
       // Set the name of the TransportAction so it can fetch the appropriate material
@@ -1897,11 +1941,8 @@ TransportAction::addSAAFKernels(const std::string & var_name, unsigned int g, un
   {
     // Debug option to disable the source iteration solver.
     if (!getParam<bool>("debug_disable_source_iteration"))
-    {
-      // Compute the scattering evaluation with source iteration.
       mooseError("Scattering iteration is not supported and is a work in "
                  "progress.");
-    }
     else
     {
       if (getParam<bool>("use_scattering_jacobians"))
