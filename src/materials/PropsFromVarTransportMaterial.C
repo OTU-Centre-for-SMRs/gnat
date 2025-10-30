@@ -21,11 +21,24 @@ PropsFromVarTransportMaterial::validParams()
   params.addCoupledVar("absorption_xs", "The group-wise absorption cross section.");
   params.addCoupledVar("diffusion", "The group-wise particle diffusion coefficient.");
 
+  // Whether the scattering ratio should be clamped, and to what value.
+  params.addParam<bool>(
+    "clamp_scatter_ratio",
+    false,
+    "Whether or not the scattering ratio should be clamped to a maximum value to ensure convergence.");
+  params.addRangeCheckedParam<Real>(
+    "max_scatter_Ratio",
+    0.99,
+    "0.0 < max_scatter_Ratio <= 1.0",
+    "The maximum value of the scattering ratio.");
+
   return params;
 }
 
 PropsFromVarTransportMaterial::PropsFromVarTransportMaterial(const InputParameters & parameters)
   : EmptyTransportMaterial(parameters),
+    _clamp_scatter_ratio(getParam<bool>("clamp_scatter_ratio")),
+    _scattering_ratio_clamp_factor(getParam<Real>("max_scatter_Ratio")),
     _anisotropy(getParam<unsigned int>("anisotropy")),
     _max_moments((_anisotropy + 1u) * _num_groups * _num_groups)
 {
@@ -172,6 +185,16 @@ PropsFromVarTransportMaterial::computeQpProperties()
   _mat_sigma_s_g_prime_g_l[_qp].resize(_max_moments, 0.0);
   for (unsigned int i = 0u; i < _max_moments; ++i)
     _mat_sigma_s_g_prime_g_l[_qp][i] = (*(_sigma_s_g_prime_g_l[i]))[_qp];
+
+  if (_clamp_scatter_ratio && _anisotropy == 0u && _max_moments > 0u)
+  {
+    for (unsigned int g = 0; g < _num_groups; ++g)
+    {
+      const Real sr_g = (*(_sigma_s_g_prime_g_l[g * _num_groups + g]))[_qp] / (*(_sigma_t_g[g]))[_qp];
+      if (sr_g >= _scattering_ratio_clamp_factor)
+        _mat_sigma_s_g_prime_g_l[_qp][g * _num_groups + g] = _scattering_ratio_clamp_factor * (*(_sigma_t_g[g]))[_qp];
+    }
+  }
 
   // Fission production cross-sections and spectra.
   if (_has_fission)

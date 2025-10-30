@@ -12,6 +12,11 @@ public:
 protected:
   virtual void computeQpProperties() override;
 
+  // Whether or not the scattering ratio should be clamped to a maximum value.
+  const bool _clamp_scatter_ratio;
+  // The value of the scattering ratio to clamp to. Should be less then 1.0.
+  const Real _scattering_ratio_clamp_factor;
+
   // Total cross section variables for each group.
   std::vector<const VariableValue *> _sigma_t_g;
 
