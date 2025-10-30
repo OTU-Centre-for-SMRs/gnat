@@ -246,6 +246,7 @@ CardinalTransportMaterialAction::addMaterials()
   auto params = _factory.getValidParams("PropsFromVarTransportMaterial");
 
   params.set<unsigned int>("num_groups") = _num_groups;
+  params.set<unsigned int>("anisotropy") = _anisotropy;
   params.set<MooseEnum>("particle_type") = _particle;
   params.set<bool>("is_saaf") = _scheme == "saaf_cfem";
   params.set<bool>("is_diffusion") = _scheme == "diffusion_cfem";
