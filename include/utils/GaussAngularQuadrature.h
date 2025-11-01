@@ -27,9 +27,6 @@ public:
   const std::vector<RealVectorValue> & getDirections() const override;
   const std::vector<Real> & getWeights() const override;
 
-  const Real & getPolarRoot(unsigned int n) const override;
-  const Real & getAzimuthalAngularRoot(unsigned int n) const override;
-
   unsigned int legendreOrder() const { return _n_l; }
   LegendrePolynomial getPolarLegendre() const { return _polar_quadrature; }
 

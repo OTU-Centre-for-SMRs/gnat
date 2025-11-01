@@ -20,9 +20,6 @@ public:
   virtual const std::vector<RealVectorValue> & getDirections() const = 0;
   virtual const std::vector<Real> & getWeights() const = 0;
 
-  virtual const Real & getPolarRoot(unsigned int n) const = 0;
-  virtual const Real & getAzimuthalAngularRoot(unsigned int n) const = 0;
-
   MajorAxis getAxis() const { return _axis; }
   ProblemType getProblemType() const { return _type; }
 
