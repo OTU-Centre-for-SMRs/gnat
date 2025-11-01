@@ -273,10 +273,6 @@ UncollidedFluxRayStudy::computeSHSource(unsigned int source,
 
   unsigned int moment_index = group_index * num_moments;
 
-  Real mu = 0.0;
-  Real omega = 0.0;
-  cartesianToSpherical(direction, mu, omega);
-
   Real src_l = 0.0;
   Real src_m = 0.0;
   if (_dim == 2u)
@@ -285,7 +281,7 @@ UncollidedFluxRayStudy::computeSHSource(unsigned int source,
     {
       for (int m = 0; m <= static_cast<int>(l); ++m)
       {
-        src_m += moments[source][moment_index] * RealSphericalHarmonics::evaluate(l, m, mu, omega);
+        src_m += moments[source][moment_index] * RealSphericalHarmonics::evaluate(l, m, direction(0), direction(1), direction(2));
         moment_index++;
       }
 
@@ -299,7 +295,7 @@ UncollidedFluxRayStudy::computeSHSource(unsigned int source,
     {
       for (int m = -1 * static_cast<int>(l); m <= static_cast<int>(l); ++m)
       {
-        src_m += moments[source][moment_index] * RealSphericalHarmonics::evaluate(l, m, mu, omega);
+        src_m += moments[source][moment_index] * RealSphericalHarmonics::evaluate(l, m, direction(0), direction(1), direction(2));
         moment_index++;
       }
 

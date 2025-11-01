@@ -52,6 +52,9 @@ SNSourceBC::SNSourceBC(const InputParameters & parameters)
   if (_ordinate_index >= _aq.totalOrder())
     mooseError("The ordinates index exceeds the number of quadrature points.");
 
+  if (_source_anisotropy > 3)
+    mooseError("Maximum degree of anisotropy supported is at most order 3 at present!");
+
   switch (_mesh.dimension())
   {
     case 1u:
@@ -89,10 +92,8 @@ Real
 SNSourceBC::computeQpResidual()
 {
   Real res = 0.0;
-  Real src_l = 0.0;
 
-  const Real & mu = _aq.getPolarRoot(_ordinate_index);
-  const Real & omega = _aq.getAzimuthalAngularRoot(_ordinate_index);
+  const auto & dir = _aq.direction(_ordinate_index);
 
   const unsigned int num_group_moments = _source_moments.size() / _num_groups;
   unsigned int moment_index = _group_index * num_group_moments;
@@ -104,13 +105,15 @@ SNSourceBC::computeQpResidual()
   {
     for (unsigned int l = 0u; l <= _source_anisotropy; ++l)
     {
+      Real src_l = 0.0;
+
       // Handle different levels of dimensionality.
       switch (_aq.getProblemType())
       {
         // Legendre moments in 1D, looping over m is unecessary.
         case ProblemType::Cartesian1D:
           src_l +=
-              _source_moments[moment_index] * RealSphericalHarmonics::evaluate(l, 0, mu, omega);
+              _source_moments[moment_index] * RealSphericalHarmonics::evaluate(l, 0, dir(0), dir(1), dir(2));
           moment_index++;
           break;
 
@@ -119,7 +122,7 @@ SNSourceBC::computeQpResidual()
           for (int m = 0; m <= static_cast<int>(l); ++m)
           {
             src_l +=
-                _source_moments[moment_index] * RealSphericalHarmonics::evaluate(l, m, mu, omega);
+                _source_moments[moment_index] * RealSphericalHarmonics::evaluate(l, m, dir(0), dir(1), dir(2));
             moment_index++;
           }
           break;
@@ -129,7 +132,7 @@ SNSourceBC::computeQpResidual()
           for (int m = -1 * static_cast<int>(l); m <= static_cast<int>(l); ++m)
           {
             src_l +=
-                _source_moments[moment_index] * RealSphericalHarmonics::evaluate(l, m, mu, omega);
+                _source_moments[moment_index] * RealSphericalHarmonics::evaluate(l, m, dir(0), dir(1), dir(2));
             moment_index++;
           }
           break;
@@ -139,7 +142,6 @@ SNSourceBC::computeQpResidual()
       }
 
       res += src_l * (2.0 * static_cast<Real>(l) + 1.0) / (4.0 * libMesh::pi) * _symmetry_factor;
-      src_l = 0.0;
     }
   }
 

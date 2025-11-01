@@ -52,6 +52,9 @@ ParticleFluxMoment::ParticleFluxMoment(const InputParameters & parameters)
 
   if (isCoupled("uncollided_flux_moment"))
     _uncollided_flux_moment = &coupledValue("uncollided_flux_moment");
+
+  if (_degree > 3)
+    mooseError("Maximum degree of anisotropy (l) supported is at most order 3 at present!");
 }
 
 Real
@@ -62,8 +65,9 @@ ParticleFluxMoment::computeValue()
   // The collided component.
   for (unsigned int i = 0; i < _aq.totalOrder(); ++i)
   {
+    const auto & dir = _aq.direction(i);
     moment += RealSphericalHarmonics::evaluate(
-                  _degree, _order, _aq.getPolarRoot(i), _aq.getAzimuthalAngularRoot(i)) *
+                  _degree, _order, dir(0), dir(1), dir(2)) *
               MetaPhysicL::raw_value((*_flux_ordinates[i])[_qp]) * _aq.weight(i);
   }
 

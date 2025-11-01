@@ -52,9 +52,5 @@ protected:
   // Degree of anisotropy (Legendre polynomial order L) for the material source.
   const unsigned int _anisotropy;
 
-  // Storage for the pre-computed spherical harmonics coefficients (Y_{l,m,n}).
-  // They are stored in the following order: l -> m.
-  std::vector<Real> _y_l_m;
-
   const Real _scale_factor;
 }; // class SAAFFieldSource

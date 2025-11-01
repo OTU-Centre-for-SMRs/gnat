@@ -459,6 +459,9 @@ TransportAction::TransportAction(const InputParameters & params)
   if (_using_uncollided && _transport_scheme != TransportScheme::SAAFCFEM)
     mooseWarning("Uncollided flux corrections only work for discrete ordinates transport schemes. "
                  "The uncollided flux moments will not be used.");
+
+  if (_max_eval_anisotropy > 3)
+    mooseError("Maximum degree of anisotropy supported is at most order 3 at present!");
 }
 
 void

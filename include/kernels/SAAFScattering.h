@@ -14,7 +14,7 @@ protected:
   virtual Real computeQpJacobian() override;
   virtual Real computeQpOffDiagJacobian(unsigned int jvar) override;
 
-  Real computeFluxMoment(unsigned int g_prime, unsigned int sh_offset);
+  Real computeFluxMoment(unsigned int g_prime, unsigned int degree, int order);
 
   const unsigned int _num_groups;     // G
   const unsigned int _max_anisotropy; // L
@@ -61,8 +61,4 @@ protected:
   const ADMaterialProperty<std::vector<Real>> & _sigma_s_g_prime_g_l;
   // Degree of anisotropy (Legendre polynomial order L) for the medium.
   const MaterialProperty<unsigned int> & _anisotropy;
-
-  // Storage for the pre-computed spherical harmonics coefficients (Y_{l,m,n}).
-  // They are stored in the following order: n -> l -> m.
-  std::vector<Real> _y_l_m_n;
 }; // class SAAFScattering

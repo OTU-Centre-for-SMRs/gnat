@@ -49,6 +49,9 @@ SNNormalCurrentBC::SNNormalCurrentBC(const InputParameters & parameters)
 
   if (_ordinate_index >= _aq.totalOrder())
     mooseError("The ordinates index exceeds the number of quadrature points.");
+
+  if (_current_anisotropy > 3)
+    mooseError("Maximum degree of anisotropy supported is at most order 3 at present!");
 }
 
 // Use the sifting property of the Dirac delta function to get rid of the integral and evaluate it
@@ -57,37 +60,31 @@ Real
 SNNormalCurrentBC::computeQpResidual()
 {
   Real res = 0.0;
-  Real src_l = 0.0;
+  const auto & dir = _aq.direction(_ordinate_index);
+  const Real n_dot_omega = dir * _normals[_qp];
 
-  const Real & mu = _aq.getPolarRoot(_ordinate_index);
-  const Real & omega = _aq.getAzimuthalAngularRoot(_ordinate_index);
-
-  Real n_mu = 0.0;
-  Real n_omega = 0.0;
-  cartesianToSpherical(-1.0 * MetaPhysicL::raw_value(_normals[_qp]), n_mu, n_omega);
-
-  Real n_dot_omega = _aq.direction(_ordinate_index) * _normals[_qp];
   if (n_dot_omega >= 0.0)
     res += _u[_qp];
   else
   {
     for (unsigned int l = 0u; l <= _current_anisotropy; ++l)
     {
+      Real src_l = 0.0;
       // Handle different levels of dimensionality.
       switch (_aq.getProblemType())
       {
         // Legendre moments in 1D, looping over m is unecessary.
         case ProblemType::Cartesian1D:
-          src_l += RealSphericalHarmonics::evaluate(l, 0, mu, omega) * _current *
-                   RealSphericalHarmonics::evaluate(l, 0, n_mu, n_omega);
+          src_l += RealSphericalHarmonics::evaluate(l, 0, dir(0), dir(1), dir(2)) * _current *
+                   RealSphericalHarmonics::evaluate(l, 0, _normals[_qp](0), _normals[_qp](1), _normals[_qp](2));
           break;
 
         // Need moments with m >= 0 for 2D.
         case ProblemType::Cartesian2D:
           for (int m = 0; m <= static_cast<int>(l); ++m)
           {
-            src_l += RealSphericalHarmonics::evaluate(l, m, mu, omega) * _current *
-                     RealSphericalHarmonics::evaluate(l, m, n_mu, n_omega);
+            src_l += RealSphericalHarmonics::evaluate(l, m, dir(0), dir(1), dir(2)) * _current *
+                     RealSphericalHarmonics::evaluate(l, m, _normals[_qp](0), _normals[_qp](1), _normals[_qp](2));
           }
           break;
 
@@ -95,8 +92,8 @@ SNNormalCurrentBC::computeQpResidual()
         case ProblemType::Cartesian3D:
           for (int m = -1 * static_cast<int>(l); m <= static_cast<int>(l); ++m)
           {
-            src_l += RealSphericalHarmonics::evaluate(l, m, mu, omega) * _current *
-                     RealSphericalHarmonics::evaluate(l, m, n_mu, n_omega);
+            src_l += RealSphericalHarmonics::evaluate(l, m, dir(0), dir(1), dir(2)) * _current *
+                     RealSphericalHarmonics::evaluate(l, m, _normals[_qp](0), _normals[_qp](1), _normals[_qp](2));
           }
           break;
 
@@ -105,7 +102,6 @@ SNNormalCurrentBC::computeQpResidual()
       }
 
       res += src_l * (2.0 * static_cast<Real>(l) + 1.0) / (4.0 * libMesh::pi) * _symmetry_factor;
-      src_l = 0.0;
     }
   }
 

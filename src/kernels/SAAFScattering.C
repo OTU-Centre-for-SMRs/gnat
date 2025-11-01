@@ -64,67 +64,18 @@ SAAFScattering::SAAFScattering(const InputParameters & parameters)
     _group_flux_ordinates.emplace_back(&coupledValue("group_flux_ordinates", i));
   }
 
-  // Pre-compute the spherical harmonics coefficients.
-  // Handle different levels of dimensionality.
-  switch (_aq.getProblemType())
-  {
-    // Legendre moments in 1D, looping over m is unecessary.
-    case ProblemType::Cartesian1D:
-      _num_dir_sh = _max_anisotropy + 1u;
-      _y_l_m_n.reserve(_aq.totalOrder() * _num_dir_sh);
-
-      for (unsigned int n = 0u; n < _aq.totalOrder(); ++n)
-      {
-        for (unsigned int l = 0u; l <= _max_anisotropy; ++l)
-          _y_l_m_n.emplace_back(RealSphericalHarmonics::evaluate(
-              l, 0, _aq.getPolarRoot(n), _aq.getAzimuthalAngularRoot(n)));
-      }
-      break;
-
-    // Need moments with m >= 0 for 2D.
-    case ProblemType::Cartesian2D:
-      _num_dir_sh = (_max_anisotropy + 1u) * (_max_anisotropy + 2u) / 2u;
-      _y_l_m_n.reserve(_aq.totalOrder() * _num_dir_sh);
-
-      for (unsigned int n = 0u; n < _aq.totalOrder(); ++n)
-      {
-        for (unsigned int l = 0u; l <= _max_anisotropy; ++l)
-        {
-          for (int m = 0; m <= static_cast<int>(l); ++m)
-            _y_l_m_n.emplace_back(RealSphericalHarmonics::evaluate(
-                l, m, _aq.getPolarRoot(n), _aq.getAzimuthalAngularRoot(n)));
-        }
-      }
-      break;
-
-    // Need all moments in 3D.
-    case ProblemType::Cartesian3D:
-      _num_dir_sh = (_max_anisotropy + 1u) * (_max_anisotropy + 1u);
-      _y_l_m_n.reserve(_aq.totalOrder() * _num_dir_sh);
-
-      for (unsigned int n = 0u; n < _aq.totalOrder(); ++n)
-      {
-        for (unsigned int l = 0u; l <= _max_anisotropy; ++l)
-        {
-          for (int m = -1 * static_cast<int>(l); m <= static_cast<int>(l); ++m)
-            _y_l_m_n.emplace_back(RealSphericalHarmonics::evaluate(
-                l, m, _aq.getPolarRoot(n), _aq.getAzimuthalAngularRoot(n)));
-        }
-      }
-      break;
-
-    default: // Defaults to doing nothing for now.
-      break;
-  }
+  if (_max_anisotropy > 3)
+    mooseError("Maximum degree of anisotropy supported is at most order 3 at present!");
 }
 
 Real
-SAAFScattering::computeFluxMoment(unsigned int g_prime, unsigned int sh_offset)
+SAAFScattering::computeFluxMoment(unsigned int g_prime, unsigned int degree, int order)
 {
   Real moment = 0.0;
   for (unsigned int n = 0; n < _aq.totalOrder(); ++n)
   {
-    moment += _y_l_m_n[n * _num_dir_sh + sh_offset] *
+    const auto & dir = _aq.direction(n);
+    moment += RealSphericalHarmonics::evaluate(degree, order, dir(0), dir(1), dir(2)) *
               (*_group_flux_ordinates[g_prime * _aq.totalOrder() + n])[_qp] * _aq.weight(n);
   }
 
@@ -142,16 +93,15 @@ SAAFScattering::computeQpResidual()
 
   // The maximum degree of anisotropy we can handle.
   const unsigned int max_anisotropy = std::min(_anisotropy[_qp], _max_anisotropy);
-  // The current index into the scattering matrix.
-  unsigned int scattering_index = 0u;
-  // The current index into the pre-computed SH functions.
-  unsigned int sh_offset = 0u;
+
+  // The current quadrature direction.
+  const auto & dir = _aq.direction(_ordinate_index);
 
   Real res = 0.0;
   Real moment_l = 0.0;
   for (unsigned int g_prime = 0; g_prime < _num_groups; ++g_prime)
   {
-    scattering_index =
+    unsigned int scattering_index =
         g_prime * _num_groups * (_anisotropy[_qp] + 1u) + _group_index * (_anisotropy[_qp] + 1u);
 
     for (unsigned int l = 0; l <= max_anisotropy; ++l)
@@ -161,29 +111,19 @@ SAAFScattering::computeQpResidual()
       {
         // Legendre moments in 1D, looping over m is unecessary.
         case ProblemType::Cartesian1D:
-          moment_l += computeFluxMoment(g_prime, sh_offset) *
-                      _y_l_m_n[_ordinate_index * _num_dir_sh + sh_offset];
-          sh_offset++;
+          moment_l += computeFluxMoment(g_prime, l, 0) * RealSphericalHarmonics::evaluate(l, 0, dir(0), dir(1), dir(2));
           break;
 
         // Need moments with m >= 0 for 2D.
         case ProblemType::Cartesian2D:
           for (int m = 0; m <= static_cast<int>(l); ++m)
-          {
-            moment_l += computeFluxMoment(g_prime, sh_offset) *
-                        _y_l_m_n[_ordinate_index * _num_dir_sh + sh_offset];
-            sh_offset++;
-          }
+            moment_l += computeFluxMoment(g_prime, l, m) * RealSphericalHarmonics::evaluate(l, m, dir(0), dir(1), dir(2));
           break;
 
         // Need all moments in 3D.
         case ProblemType::Cartesian3D:
           for (int m = -1 * static_cast<int>(l); m <= static_cast<int>(l); ++m)
-          {
-            moment_l += computeFluxMoment(g_prime, sh_offset) *
-                        _y_l_m_n[_ordinate_index * _num_dir_sh + sh_offset];
-            sh_offset++;
-          }
+            moment_l += computeFluxMoment(g_prime, l, m) * RealSphericalHarmonics::evaluate(l, m, dir(0), dir(1), dir(2));
           break;
 
         default: // Defaults to doing nothing for now.
@@ -196,8 +136,6 @@ SAAFScattering::computeQpResidual()
 
       moment_l = 0.0;
     }
-
-    sh_offset = 0u;
   }
 
   return -1.0 * computeQpTests() * res;
@@ -213,10 +151,13 @@ SAAFScattering::computeQpJacobian()
   // The maximum degree of anisotropy we can handle.
   const unsigned int max_anisotropy = std::min(_anisotropy[_qp], _max_anisotropy);
   // The current index into the scattering matrix.
-  unsigned int scattering_index =
+  const unsigned int scattering_index =
       _group_index * _num_groups * (_anisotropy[_qp] + 1u) + _group_index * (_anisotropy[_qp] + 1u);
-  // The current index into the pre-computed SH functions.
-  unsigned int sh_offset = 0u;
+
+  // The current quadrature direction.
+  const auto & dir = _aq.direction(_ordinate_index);
+  // The current quadrature weight.
+  const auto & aq_w = _aq.weight(_ordinate_index);
 
   Real jac = 0.0;
   Real d_moment_d_u = 0.0;
@@ -227,16 +168,15 @@ SAAFScattering::computeQpJacobian()
     case ProblemType::Cartesian1D:
       for (unsigned int l = 0u; l <= max_anisotropy; ++l)
       {
-        d_moment_d_u += _y_l_m_n[_ordinate_index * _num_dir_sh + sh_offset] *
-                        _y_l_m_n[_ordinate_index * _num_dir_sh + sh_offset] *
-                        _aq.weight(_ordinate_index) * _phi[_j][_qp];
+        d_moment_d_u += RealSphericalHarmonics::evaluate(l, 0, dir(0), dir(1), dir(2)) *
+                        RealSphericalHarmonics::evaluate(l, 0, dir(0), dir(1), dir(2)) *
+                        aq_w * _phi[_j][_qp];
 
         jac += (2.0 * static_cast<Real>(l) + 1.0) / (4.0 * libMesh::pi) *
                MetaPhysicL::raw_value(_sigma_s_g_prime_g_l[_qp][scattering_index + l]) *
                d_moment_d_u * _symmetry_factor;
 
         d_moment_d_u = 0.0;
-        sh_offset++;
       }
       break;
 
@@ -245,11 +185,9 @@ SAAFScattering::computeQpJacobian()
       {
         for (int m = 0; m <= static_cast<int>(l); ++m)
         {
-          d_moment_d_u += _y_l_m_n[_ordinate_index * _num_dir_sh + sh_offset] *
-                          _y_l_m_n[_ordinate_index * _num_dir_sh + sh_offset] *
-                          _aq.weight(_ordinate_index) * _phi[_j][_qp];
-
-          sh_offset++;
+          d_moment_d_u += RealSphericalHarmonics::evaluate(l, m, dir(0), dir(1), dir(2)) *
+                          RealSphericalHarmonics::evaluate(l, m, dir(0), dir(1), dir(2)) *
+                          aq_w * _phi[_j][_qp];
         }
         jac += (2.0 * static_cast<Real>(l) + 1.0) / (4.0 * libMesh::pi) *
                MetaPhysicL::raw_value(_sigma_s_g_prime_g_l[_qp][scattering_index + l]) *
@@ -264,11 +202,9 @@ SAAFScattering::computeQpJacobian()
       {
         for (int m = -1 * static_cast<int>(l); m <= static_cast<int>(l); ++m)
         {
-          d_moment_d_u += _y_l_m_n[_ordinate_index * _num_dir_sh + sh_offset] *
-                          _y_l_m_n[_ordinate_index * _num_dir_sh + sh_offset] *
-                          _aq.weight(_ordinate_index) * _phi[_j][_qp];
-
-          sh_offset++;
+          d_moment_d_u += RealSphericalHarmonics::evaluate(l, m, dir(0), dir(1), dir(2)) *
+                          RealSphericalHarmonics::evaluate(l, m, dir(0), dir(1), dir(2)) *
+                          aq_w * _phi[_j][_qp];
         }
         jac += (2.0 * static_cast<Real>(l) + 1.0) / (4.0 * libMesh::pi) *
                MetaPhysicL::raw_value(_sigma_s_g_prime_g_l[_qp][scattering_index + l]) *
@@ -300,10 +236,15 @@ SAAFScattering::computeQpOffDiagJacobian(unsigned int jvar)
   // The maximum degree of anisotropy we can handle.
   const unsigned int max_anisotropy = std::min(_anisotropy[_qp], _max_anisotropy);
   // The current index into the scattering matrix.
-  unsigned int scattering_index =
+  const unsigned int scattering_index =
       g_prime * _num_groups * (_anisotropy[_qp] + 1u) + _group_index * (_anisotropy[_qp] + 1u);
-  // The current index into the pre-computed SH functions.
-  unsigned int sh_offset = 0u;
+
+  // The outgoing quadrature direction.
+  const auto & o_dir = _aq.direction(_ordinate_index);
+  // The incoming quadrature direction.
+  const auto & i_dir = _aq.direction(n_prime);
+  // The incoming quadrature weight.
+  const auto & i_aq_w = _aq.weight(n_prime);
 
   Real jac = 0.0;
   Real d_moment_d_u = 0.0;
@@ -314,16 +255,15 @@ SAAFScattering::computeQpOffDiagJacobian(unsigned int jvar)
     case ProblemType::Cartesian1D:
       for (unsigned int l = 0u; l <= max_anisotropy; ++l)
       {
-        d_moment_d_u += _y_l_m_n[_ordinate_index * _num_dir_sh + sh_offset] *
-                        _y_l_m_n[n_prime * _num_dir_sh + sh_offset] * _aq.weight(n_prime) *
-                        _phi[_j][_qp];
+        d_moment_d_u += RealSphericalHarmonics::evaluate(l, 0, o_dir(0), o_dir(1), o_dir(2)) *
+                        RealSphericalHarmonics::evaluate(l, 0, i_dir(0), i_dir(1), i_dir(2)) *
+                        i_aq_w * _phi[_j][_qp];
 
         jac += (2.0 * static_cast<Real>(l) + 1.0) / (4.0 * libMesh::pi) *
                MetaPhysicL::raw_value(_sigma_s_g_prime_g_l[_qp][scattering_index + l]) *
                d_moment_d_u * _symmetry_factor;
 
         d_moment_d_u = 0.0;
-        sh_offset++;
       }
       break;
 
@@ -332,11 +272,9 @@ SAAFScattering::computeQpOffDiagJacobian(unsigned int jvar)
       {
         for (int m = 0; m <= static_cast<int>(l); ++m)
         {
-          d_moment_d_u += _y_l_m_n[_ordinate_index * _num_dir_sh + sh_offset] *
-                          _y_l_m_n[n_prime * _num_dir_sh + sh_offset] * _aq.weight(n_prime) *
-                          _phi[_j][_qp];
-
-          sh_offset++;
+          d_moment_d_u += RealSphericalHarmonics::evaluate(l, m, o_dir(0), o_dir(1), o_dir(2)) *
+                          RealSphericalHarmonics::evaluate(l, m, i_dir(0), i_dir(1), i_dir(2)) *
+                          i_aq_w * _phi[_j][_qp];
         }
         jac += (2.0 * static_cast<Real>(l) + 1.0) / (4.0 * libMesh::pi) *
                MetaPhysicL::raw_value(_sigma_s_g_prime_g_l[_qp][scattering_index + l]) *
@@ -351,11 +289,9 @@ SAAFScattering::computeQpOffDiagJacobian(unsigned int jvar)
       {
         for (int m = -1 * static_cast<int>(l); m <= static_cast<int>(l); ++m)
         {
-          d_moment_d_u += _y_l_m_n[_ordinate_index * _num_dir_sh + sh_offset] *
-                          _y_l_m_n[n_prime * _num_dir_sh + sh_offset] * _aq.weight(n_prime) *
-                          _phi[_j][_qp];
-
-          sh_offset++;
+          d_moment_d_u += RealSphericalHarmonics::evaluate(l, m, o_dir(0), o_dir(1), o_dir(2)) *
+                          RealSphericalHarmonics::evaluate(l, m, i_dir(0), i_dir(1), i_dir(2)) *
+                          i_aq_w * _phi[_j][_qp];
         }
         jac += (2.0 * static_cast<Real>(l) + 1.0) / (4.0 * libMesh::pi) *
                MetaPhysicL::raw_value(_sigma_s_g_prime_g_l[_qp][scattering_index + l]) *
