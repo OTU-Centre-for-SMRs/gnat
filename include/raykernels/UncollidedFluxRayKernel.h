@@ -38,8 +38,6 @@ public:
   void onSegment() override final;
 
 protected:
-  static void cartesianToSpherical(const RealVectorValue & direction, Real & mu, Real & omega);
-
   // Function to compute the segment contribution to the optical depth.
   void computeSegmentOpticalDepth();
 

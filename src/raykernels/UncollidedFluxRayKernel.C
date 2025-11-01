@@ -119,41 +119,6 @@ UncollidedFluxRayKernel::onSegment()
   }
 }
 
-void
-UncollidedFluxRayKernel::cartesianToSpherical(const RealVectorValue & direction,
-                                              Real & mu,
-                                              Real & omega)
-{
-  mu = 0.0;
-  omega = 0.0;
-
-  mu = direction(0);
-
-  if (direction(1) > 0.0)
-  {
-    if (direction(2) > 0.0)
-      omega += std::atan(std::abs(direction(2)) / std::abs(direction(1)));
-    else if (direction(2) < 0.0)
-      omega += std::atan(std::abs(direction(2)) / std::abs(direction(1))) + libMesh::pi;
-  }
-  else if (direction(1) < 0.0)
-  {
-    if (direction(2) > 0.0)
-      omega += std::atan(std::abs(direction(2)) / std::abs(direction(1))) + 3.0 * libMesh::pi / 2.0;
-    else if (direction(2) < 0.0)
-      omega += std::atan(std::abs(direction(2)) / std::abs(direction(1))) + libMesh::pi / 2.0;
-    else
-      omega += libMesh::pi;
-  }
-  else
-  {
-    if (direction(2) > 0.0)
-      omega += libMesh::pi / 2.0;
-    else if (direction(2) < 0.0)
-      omega += 3.0 * libMesh::pi / 2.0;
-  }
-}
-
 // Function to compute the segment contribution to the optical depth.
 void
 UncollidedFluxRayKernel::computeSegmentOpticalDepth()
@@ -212,8 +177,8 @@ UncollidedFluxRayKernel::computeUncollidedFluxSourceIsTarget()
           val[index] *= ray->data(_source_spatial_weights[g]);
 
           // Spherical harmonics basis functions go here.
-          cartesianToSpherical(ray->direction().unit(), mu, omega);
-          val[index] *= RealSphericalHarmonics::evaluate(l, m, mu, omega);
+          const auto dir = ray->direction().unit();
+          val[index] *= RealSphericalHarmonics::evaluate(l, m, dir(0), dir(1), dir(2));
 
           index++;
         }
@@ -239,8 +204,8 @@ UncollidedFluxRayKernel::computeUncollidedFluxSourceIsTarget()
           val[index] *= ray->data(_source_spatial_weights[g]);
 
           // Spherical harmonics basis functions go here.
-          cartesianToSpherical(ray->direction().unit(), mu, omega);
-          val[index] *= RealSphericalHarmonics::evaluate(l, m, mu, omega);
+          const auto dir = ray->direction().unit();
+          val[index] *= RealSphericalHarmonics::evaluate(l, m, dir(0), dir(1), dir(2));
 
           index++;
         }
@@ -284,8 +249,8 @@ UncollidedFluxRayKernel::computeUncollidedFluxSourceNotTarget()
           val[index] *= ray->data(_source_spatial_weights[g]);
 
           // Spherical harmonics basis functions go here.
-          cartesianToSpherical(ray->direction().unit(), mu, omega);
-          val[index] *= RealSphericalHarmonics::evaluate(l, m, mu, omega);
+          const auto dir = ray->direction().unit();
+          val[index] *= RealSphericalHarmonics::evaluate(l, m, dir(0), dir(1), dir(2));
 
           index++;
         }
@@ -308,8 +273,8 @@ UncollidedFluxRayKernel::computeUncollidedFluxSourceNotTarget()
           val[index] *= ray->data(_source_spatial_weights[g]);
 
           // Spherical harmonics basis functions go here.
-          cartesianToSpherical(ray->direction().unit(), mu, omega);
-          val[index] *= RealSphericalHarmonics::evaluate(l, m, mu, omega);
+          const auto dir = ray->direction().unit();
+          val[index] *= RealSphericalHarmonics::evaluate(l, m, dir(0), dir(1), dir(2));
 
           index++;
         }

@@ -13,7 +13,6 @@ public:
 
 protected:
   virtual Real computeValue() override;
-  void cartesianToSpherical(const RealVectorValue & direction, Real & mu, Real & omega);
 
   // The source location.
   const Point _source_location;

@@ -50,8 +50,4 @@ protected:
   const ADMaterialProperty<std::vector<Real>> & _sigma_s_g_prime_g_l;
   // Degree of anisotropy (Legendre polynomial order L) for the medium.
   const MaterialProperty<unsigned int> & _anisotropy;
-
-  // Storage for the pre-computed spherical harmonics coefficients in the current particle energy
-  // group (Y_{l,m}). They are stored in the following order: l -> m.
-  std::vector<Real> _y_l_m;
 }; // class SAAFMomentScattering

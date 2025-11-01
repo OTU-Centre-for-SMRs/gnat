@@ -2,6 +2,8 @@
 
 #include <cmath>
 
+namespace RealSphericalHarmonics
+{
 int
 factorial(int n)
 {
@@ -19,75 +21,72 @@ normalizationConstant(unsigned int degree, unsigned int order)
                    static_cast<Real>(factorial(degree + order)));
 }
 
+/**
+ * This hand-coded implementation of the first three degrees of real spherical harmonics
+ * is based on the work done by Dr. Park in Moltres:
+ * https://github.com/arfc/moltres/blob/devel/src/utils/MoltresUtils.C#L246
+ */
 Real
-RealSphericalHarmonics::evaluateCoefficient(unsigned int degree, int order)
+evaluate(unsigned int degree, int order, const Real & mu, const Real & eta, const Real & xi)
 {
-  if (0 < order && order <= static_cast<int>(degree))
-    return std::sqrt(2.0) * normalizationConstant(degree, order);
+  const Real sqrt_2 = 1.4142135623730951;
+  const unsigned int abs_m = static_cast<unsigned int>(std::abs(order));
+  const Real C = normalizationConstant(degree, abs_m);
 
-  if (order == 0)
-    return normalizationConstant(degree, 0);
-
-  if (-1 * static_cast<int>(degree) <= order && order < 0)
-    return std::sqrt(2.0) * normalizationConstant(degree, order);
-
-  return 0.0;
-}
-
-Real
-RealSphericalHarmonics::evaluate(unsigned int degree,
-                                 int order,
-                                 const Real & mu,
-                                 const Real & omega)
-{
-  if (order > 0)
-    if (order <= static_cast<int>(degree))
-      return std::sqrt(2.0) *
-             normalizationConstant(degree, static_cast<unsigned int>(std::abs(order))) *
-             std::assoc_legendre(degree, static_cast<unsigned int>(std::abs(order)), mu) *
-             std::cos(static_cast<Real>(std::abs(order)) * omega);
-
-  if (order == 0)
-    return normalizationConstant(degree, 0) * std::assoc_legendre(degree, 0u, mu);
-
-  if (order < 0)
-    if (-1 * static_cast<int>(degree) <= order)
-      return std::sqrt(2.0) *
-             normalizationConstant(degree, static_cast<unsigned int>(std::abs(order))) *
-             std::assoc_legendre(degree, static_cast<unsigned int>(std::abs(order)), mu) *
-             std::sin(static_cast<Real>(std::abs(order)) * omega);
-
-  return 0.0;
-}
-
-RealSphericalHarmonics::RealSphericalHarmonics(unsigned int degree) : _degree(degree)
-{
-  for (unsigned int l = 0; l <= degree; ++l)
+  switch (degree)
   {
-    for (int m = -1 * static_cast<int>(l); m <= static_cast<int>(l); ++m)
-      _coefficients.emplace_back(evaluateCoefficient(l, m));
+    case 0u:
+      return 1.0;
+    case 1u:
+      switch (order)
+      {
+        case 1:
+          return -sqrt_2 * C * eta;
+        case 0:
+          return C * mu;
+        case -1:
+          return -sqrt_2 * C * xi;
+        default:
+          mooseError("Invalid order.");
+      }
+    case 2:
+      switch (order)
+      {
+        case 2:
+          return sqrt_2 * C * 3 * (eta * eta - xi * xi);
+        case 1:
+          return -sqrt_2 * C * 3 * mu * eta;
+        case 0:
+          return C * 0.5 * (3 * mu * mu - 1);
+        case -1:
+          return -sqrt_2 * C * 3 * mu * xi;
+        case -2:
+          return sqrt_2 * C * 6 * eta * xi;
+        default:
+          mooseError("Invalid order.");
+      }
+    case 3:
+      switch (order)
+      {
+        case 3:
+          return -sqrt_2 * C * 15 * (4 * eta * eta * eta - 3 * eta * (1 - mu * mu));
+        case 2:
+          return sqrt_2 * C * 15 * mu * (eta * eta - xi * xi);
+        case 1:
+          return sqrt_2 * C * 1.5 * (1 - 5 * mu * mu) * eta;
+        case 0:
+          return C * 0.5 * (5 * mu * mu * mu - 3 * mu);
+        case -1:
+          return sqrt_2 * C * 1.5 * (1 - 5 * mu * mu) * xi;
+        case -2:
+          return sqrt_2 * C * 30 * mu * eta * xi;
+        case -3:
+          return -sqrt_2 * C * 15 * (3 * xi * (1 - mu * mu) - 4 * xi * xi * xi);
+        default:
+          mooseError("Invalid order.");
+      }
+    default:
+      mooseError("Invalid degree.");
   }
 }
-
-Real
-RealSphericalHarmonics::evaluatePrecomputed(unsigned int degree,
-                                            int order,
-                                            const Real & mu,
-                                            const Real & omega)
-{
-  const unsigned int index = degree * order; // Change this, it's wrong and a placeholder.
-  const Real & coefficient = _coefficients[index];
-
-  if (0 < order && order <= static_cast<int>(degree))
-    return coefficient * std::assoc_legendre(degree, static_cast<unsigned int>(order), mu) *
-           std::cos(static_cast<Real>(std::abs(order)) * omega);
-
-  if (order == 0)
-    return coefficient * std::assoc_legendre(degree, 0u, mu);
-
-  if (-1 * static_cast<int>(degree) <= order && order < 0)
-    return coefficient * std::assoc_legendre(degree, static_cast<unsigned int>(order), mu) *
-           std::sin(static_cast<Real>(std::abs(order)) * omega);
-
-  return 0.0;
-}
+} // namespace RealSphericalHarmonics
