@@ -43,7 +43,7 @@ EmptyTransportMaterial::validParams()
                         "eta = 0 and c = 1 is equivalent to the SAAF approach "
                         "with no void treatment. Use with caution.");
   params.addParam<MooseEnum>("h_type",
-                             MooseEnum("h_max h_min", "h_max"),
+                             MooseEnum("h_max h_min", "h_min"),
                              "The element length to use for stabilization.");
 
   return params;
