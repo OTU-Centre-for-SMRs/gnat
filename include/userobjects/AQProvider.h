@@ -26,20 +26,15 @@ public:
   const std::vector<RealVectorValue> & getDirections() const { return _aq->getDirections(); }
   const std::vector<Real> & getWeights() const { return _aq->getWeights(); }
 
-  const Real & getPolarRoot(unsigned int n) const { return _aq->getPolarRoot(n); }
-  const Real & getAzimuthalAngularRoot(unsigned int n) const
-  {
-    return _aq->getAzimuthalAngularRoot(n);
-  }
-
   MajorAxis getAxis() const { return _aq->getAxis(); }
   ProblemType getProblemType() const { return _aq->getProblemType(); }
 
 protected:
   enum class AQType
   {
-    GaussChebyshev = 0u
-  } _aq_type;
+    GaussChebyshev = 0u,
+    LevelSymmetric = 1u
+  } _aq_type; //
 
   std::unique_ptr<AngularQuadrature> _aq;
 }; // class ThreadedGeneralUserObject

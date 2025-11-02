@@ -42,6 +42,9 @@ EmptyTransportMaterial::validParams()
                         "Stabilization parameter c for the SAAF-CFEM scheme. "
                         "eta = 0 and c = 1 is equivalent to the SAAF approach "
                         "with no void treatment. Use with caution.");
+  params.addParam<MooseEnum>("h_type",
+                             MooseEnum("h_max h_min", "h_max"),
+                             "The element length to use for stabilization.");
 
   return params;
 }
@@ -89,7 +92,8 @@ EmptyTransportMaterial::EmptyTransportMaterial(const InputParameters & parameter
                                  getParam<std::string>("transport_system") + "saaf_tau")
                            : nullptr),
     _saaf_eta(getParam<Real>("saaf_eta")),
-    _saaf_c(getParam<Real>("saaf_c"))
+    _saaf_c(getParam<Real>("saaf_c")),
+    _h_type(getParam<MooseEnum>("h_type").getEnum<HType>())
 {
   if (_num_groups == 0u)
     mooseError("The provided number of energy groups is zero.");

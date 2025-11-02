@@ -46,36 +46,29 @@ GaussAngularQuadrature::totalOrder() const
 {
   return _quadrature_set_omega.size();
 }
+
 const RealVectorValue &
 GaussAngularQuadrature::direction(unsigned int n) const
 {
   return _quadrature_set_omega[n];
 }
+
 const Real &
 GaussAngularQuadrature::weight(unsigned int n) const
 {
   return _quadrature_set_weight[n];
 }
+
 const std::vector<RealVectorValue> &
 GaussAngularQuadrature::getDirections() const
 {
   return _quadrature_set_omega;
 }
+
 const std::vector<Real> &
 GaussAngularQuadrature::getWeights() const
 {
   return _quadrature_set_weight;
-}
-
-const Real &
-GaussAngularQuadrature::getPolarRoot(unsigned int n) const
-{
-  return _polar_quadrature.root(n / _n_l);
-}
-const Real &
-GaussAngularQuadrature::getAzimuthalAngularRoot(unsigned int n) const
-{
-  return _azimuthal_quadrature.angularRoot(n % _n_c);
 }
 
 void
