@@ -42,6 +42,10 @@ CardinalTransportMaterialAction::validParams()
       false,
       "Whether or not per-group fission heating (kappa-fission) values should be generated.");
 
+  params.addParam<MooseEnum>("h_type",
+                             MooseEnum("h_max h_min", "h_min"),
+                             "The element length to use for stabilization.");
+
   // Whether the scattering ratio should be clamped, and to what value.
   params.addParam<bool>(
     "clamp_scatter_ratio",
@@ -253,6 +257,7 @@ CardinalTransportMaterialAction::addMaterials()
   params.set<bool>("has_fission") = _particle == "neutron" && !_disable_fission;
   params.set<std::string>("transport_system") = _parent_transport_system;
   params.set<bool>("add_heating") = _add_kappa_fission;
+  params.set<MooseEnum>("h_type") = getParam<MooseEnum>("h_type");
 
   // For clamping the scattering ratios if requested.
   params.set<bool>("clamp_scatter_ratio") = _clamp_scatter_ratio;
