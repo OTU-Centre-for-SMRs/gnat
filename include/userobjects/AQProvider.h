@@ -32,8 +32,9 @@ public:
 protected:
   enum class AQType
   {
-    GaussChebyshev = 0u
-  } _aq_type;
+    GaussChebyshev = 0u,
+    LevelSymmetric = 1u
+  } _aq_type; //
 
   std::unique_ptr<AngularQuadrature> _aq;
 }; // class ThreadedGeneralUserObject

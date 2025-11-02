@@ -1,6 +1,7 @@
 #include "AQProvider.h"
 
 #include "GaussAngularQuadrature.h"
+#include "LSAngularQuadrature.h"
 
 registerMooseObject("GnatApp", AQProvider);
 
@@ -16,7 +17,7 @@ AQProvider::validParams()
                                      "Dimensionality and the coordinate system of the "
                                      "problem.");
   params.addParam<MooseEnum>("aq_type",
-                             MooseEnum("gauss_chebyshev", "gauss_chebyshev"),
+                             MooseEnum("gauss_chebyshev level_symmetric", "gauss_chebyshev"),
                              "The angular quadrature set to use. Defaults to Gauss-Chebyshev.");
   params.addRangeCheckedParam<unsigned int>(
       "n_l",
@@ -30,6 +31,11 @@ AQProvider::validParams()
       "n_c > 0",
       "Order of the azimuthal product quadrature. Only required for Gauss-Chebyshev angular "
       "quadratures.");
+  params.addRangeCheckedParam<unsigned int>(
+      "ls_q_order",
+      4,
+      "1 < ls_q_order < 19",
+      "Order of the level-symmetric quadrature rule. Only required if 'aq_type' is 'level_symmetric'.");
   params.addParam<MooseEnum>("major_axis",
                              MooseEnum("x y z", "x"),
                              "Major axis of the angular quadrature. Allows the "
@@ -55,6 +61,11 @@ AQProvider::AQProvider(const InputParameters & parameters)
                                      getParam<MooseEnum>("major_axis").getEnum<MajorAxis>(),
                                      getParam<MooseEnum>("dimensionality").getEnum<ProblemType>()));
       break;
+    case AQType::LevelSymmetric:
+      _aq.reset(
+          new LSAngularQuadrature(getParam<unsigned int>("ls_q_order"),
+                                  getParam<MooseEnum>("major_axis").getEnum<MajorAxis>(),
+                                  getParam<MooseEnum>("dimensionality").getEnum<ProblemType>()));
     default:
       break;
   }

@@ -19,6 +19,7 @@
 #include "libmesh/fe_type.h"
 
 #include "GaussAngularQuadrature.h"
+#include "LSAngularQuadrature.h"
 
 // All schemes.
 registerMooseAction("GnatApp", TransportAction, "add_variable");
@@ -130,6 +131,14 @@ TransportAction::validParams()
 
   //----------------------------------------------------------------------------
   // Quadrature parameters.
+  params.addParam<MooseEnum>("aq_type",
+                             MooseEnum("gauss_chebyshev level_symmetric", "gauss_chebyshev"),
+                             "The angular quadrature set to use. Defaults to Gauss-Chebyshev.");
+  params.addRangeCheckedParam<unsigned int>(
+      "ls_q_order",
+      4,
+      "1 < ls_q_order < 19",
+      "Order of the level-symmetric quadrature rule. Only required if 'aq_type' is 'level_symmetric'.");
   params.addRangeCheckedParam<unsigned int>("n_polar",
                                             3,
                                             "n_polar > 0",
@@ -151,7 +160,7 @@ TransportAction::validParams()
                              "axis with minimal heterogeneity. Default is the "
                              "x-axis. This parameter is only applied in 3D "
                              "cartesian problems.");
-  params.addParamNamesToGroup("n_polar n_azimuthal major_axis", "Quadrature");
+  params.addParamNamesToGroup("aq_type ls_q_order n_polar n_azimuthal major_axis", "Quadrature");
 
   //----------------------------------------------------------------------------
   // Source-driven problem parameters.
@@ -656,29 +665,51 @@ TransportAction::actCommon()
           break;
       }
 
-      switch (_p_type)
+      if (getParam<MooseEnum>("aq_type") == "level_symmetric")
       {
-        case ProblemType::Cartesian1D:
-          _num_flux_ordinates = 2u * _n_l;
-          break;
+        switch (_p_type)
+        {
+          case ProblemType::Cartesian1D:
+            mooseError("Level-symmetric quadratures do not support 1D calculations!");
+            break;
 
-        case ProblemType::Cartesian2D:
-          _num_flux_ordinates = 4u * _n_l * _n_c;
-          break;
+          case ProblemType::Cartesian2D:
+            _num_flux_ordinates = getParam<unsigned int>("ls_q_order") * (getParam<unsigned int>("ls_q_order") + 2) / 2;
+            break;
 
-        case ProblemType::Cartesian3D:
-          _num_flux_ordinates = 8u * _n_l * _n_c;
-          break;
+          case ProblemType::Cartesian3D:
+            _num_flux_ordinates = getParam<unsigned int>("ls_q_order") * (getParam<unsigned int>("ls_q_order") + 2);
+            break;
 
-        default:
-          mooseError("Unknown mesh dimensionality.");
-          break;
+          default:
+            mooseError("Unknown mesh dimensionality.");
+            break;
+        }
+      }
+      else
+      {
+        switch (_p_type)
+        {
+          case ProblemType::Cartesian1D:
+            _num_flux_ordinates = 2u * _n_l;
+            break;
+
+          case ProblemType::Cartesian2D:
+            _num_flux_ordinates = 4u * _n_l * _n_c;
+            break;
+
+          case ProblemType::Cartesian3D:
+            _num_flux_ordinates = 8u * _n_l * _n_c;
+            break;
+
+          default:
+            mooseError("Unknown mesh dimensionality.");
+            break;
+        }
       }
 
       std::string set_info(
           std::string("    - Angular quadrature set information:\n") +
-          std::string("      - Polar points per quadrant: ") + Moose::stringify(_n_l) +
-          std::string("\n      - Azimuthal points per quadrant: ") + Moose::stringify(_n_c) +
           std::string("\n      - Total number of flux ordinates: ") +
           Moose::stringify(_num_flux_ordinates));
       debugOutput(set_info);
@@ -1349,6 +1380,8 @@ TransportAction::addSNUserObjects()
     params.set<MooseEnum>("major_axis") = getParam<MooseEnum>("major_axis");
 
     // Assign quadrature rules.
+    params.set<MooseEnum>("aq_type") = getParam<MooseEnum>("aq_type");
+    params.set<unsigned int>("ls_q_order") = getParam<unsigned int>("ls_q_order");
     params.set<unsigned int>("n_l") = 2u * _n_l;
     params.set<unsigned int>("n_c") = 2u * _n_c;
 
@@ -1462,8 +1495,21 @@ TransportAction::addSNBCs(const std::string & var_name, unsigned int g, unsigned
     face_fe->attach_quadrature_rule(q_face.get());
 
     // The angular quadrature set to calculate reflected directions.
-    const auto aq = GaussAngularQuadrature(
-        2u * _n_c, 2u * _n_l, getParam<MooseEnum>("major_axis").getEnum<MajorAxis>(), _p_type);
+    std::unique_ptr<AngularQuadrature> aq;
+    if (getParam<MooseEnum>("aq_type") == "level_symmetric")
+    {
+      aq.reset(
+        new LSAngularQuadrature(getParam<unsigned int>("ls_q_order"),
+                                getParam<MooseEnum>("major_axis").getEnum<MajorAxis>(),
+                                _p_type));
+    }
+    else
+    {
+      aq.reset(
+        new GaussAngularQuadrature(2u * _n_c, 2u * _n_l,
+                                   getParam<MooseEnum>("major_axis").getEnum<MajorAxis>(),
+                                   _p_type));
+    }
 
     const auto & bnd_ids = _mesh->getBoundaryIDs(_reflective_side_sets);
 
@@ -1503,7 +1549,7 @@ TransportAction::addSNBCs(const std::string & var_name, unsigned int g, unsigned
                      Moose::stringify(static_cast<Point>(norm)));
 
       // Find the reflected directions.
-      auto curr_dir = aq.direction(n);
+      auto curr_dir = aq->direction(n);
       RealVectorValue refl_dir(0.0, 0.0, 0.0);
 
       std::vector<int> reflected_direction_indices;
@@ -1511,10 +1557,10 @@ TransportAction::addSNBCs(const std::string & var_name, unsigned int g, unsigned
 
       for (unsigned int norm_ind = 0u; norm_ind < unique_bnd_normals[i].size(); ++norm_ind)
       {
-        for (unsigned int n_prime = 0u; n_prime < aq.totalOrder(); ++n_prime)
+        for (unsigned int n_prime = 0u; n_prime < aq->totalOrder(); ++n_prime)
         {
-          refl_dir = aq.direction(n_prime) -
-                     (2.0 * aq.direction(n_prime) * unique_bnd_normals[i][norm_ind]) *
+          refl_dir = aq->direction(n_prime) -
+                     (2.0 * aq->direction(n_prime) * unique_bnd_normals[i][norm_ind]) *
                          unique_bnd_normals[i][norm_ind];
 
           if (vecEquals(curr_dir, refl_dir))
