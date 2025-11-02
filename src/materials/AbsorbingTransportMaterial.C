@@ -89,7 +89,7 @@ AbsorbingTransportMaterial::computeQpProperties()
   {
     (*_mat_saaf_tau)[_qp].resize(_num_groups, 0.0);
 
-    auto h = _current_elem->hmin();
+    const auto h = _h_type == HType::HMax ? _current_elem->hmax() : _current_elem->hmin();
     for (unsigned int g = 0; g < _num_groups; ++g)
     {
       if (_sigma_t_g[g] * _saaf_c * h >= _saaf_eta)

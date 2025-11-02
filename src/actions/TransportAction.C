@@ -2380,7 +2380,7 @@ TransportAction::addDiffusionKernels(const std::string & var_name, unsigned int 
     params.set<unsigned int>("group_index") = g;
     params.set<unsigned int>("num_groups") = _num_groups;
 
-    // Copy all of the group flux ordinate names into the variable
+    // Copy all of the group scalar flux names into the variable
     // parameter.
     auto & scalar_flux_names = params.set<std::vector<VariableName>>("group_scalar_fluxes");
     for (unsigned int g_prime = 0; g_prime < _num_groups; ++g_prime)

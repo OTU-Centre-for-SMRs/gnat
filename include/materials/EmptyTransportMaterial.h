@@ -56,4 +56,9 @@ protected:
   ADMaterialProperty<std::vector<Real>> * _mat_saaf_tau;
   Real _saaf_eta;
   Real _saaf_c;
+  const enum class HType
+  {
+    HMax = 0,
+    HMin = 1
+  } _h_type;
 }; // class EmptyTransportMaterial
