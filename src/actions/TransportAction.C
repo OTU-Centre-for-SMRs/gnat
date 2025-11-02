@@ -424,6 +424,27 @@ TransportAction::TransportAction(const InputParameters & params)
     _source_scale_factor(0.0),
     _var_init(false)
 {
+  if (_volumetric_source_blocks.size() != _volumetric_source_moments.size() ||
+      _volumetric_source_blocks.size() != _volumetric_source_anisotropy.size())
+    mooseError("'volumetric_source_blocks', 'volumetric_source_moments', and 'volumetric_source_anisotropies' must be the same size!");
+
+  if (_point_source_locations.size() != _point_source_moments.size() ||
+      _point_source_locations.size() != _point_source_anisotropy.size())
+    mooseError("'point_source_locations', 'point_source_moments', and 'point_source_anisotropies' must be the same size!");
+
+  if (_source_side_sets.size() != _boundary_source_moments.size() ||
+      _source_side_sets.size() != _boundary_source_anisotropy.size())
+    mooseError("'source_boundaries', 'boundary_source_moments', and 'boundary_source_anisotropy' must be the same size!");
+
+  if (_current_side_sets.size() != _boundary_currents.size() ||
+      _current_side_sets.size() != _boundary_current_anisotropy.size())
+    mooseError("'current_boundaries', 'boundary_currents', and 'boundary_current_anisotropy' must be the same size!");
+
+  if (_field_source_blocks.size() != _field_source_moments.size() ||
+      _field_source_blocks.size() != _field_source_anisotropy.size() ||
+      _field_source_blocks.size() != _field_source_scaling.size())
+    mooseError("'field_source_blocks', 'field_source_moments', 'field_source_anisotropies', and 'field_source_scaling' must be the same size!");
+
   if (getParam<bool>("scale_sources"))
   {
     // Find the maximum source moment.
