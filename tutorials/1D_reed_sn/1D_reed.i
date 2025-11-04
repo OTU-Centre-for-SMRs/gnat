@@ -19,6 +19,7 @@
     order = FIRST
     family = LAGRANGE
 
+    aq_type = 'gauss_chebyshev'
     n_polar = 10
 
     vacuum_boundaries = 'right'
