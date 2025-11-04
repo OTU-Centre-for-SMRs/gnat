@@ -131,9 +131,9 @@ TransportAction::validParams()
 
   //----------------------------------------------------------------------------
   // Quadrature parameters.
-  params.addParam<MooseEnum>("aq_type",
-                             MooseEnum("gauss_chebyshev level_symmetric", "gauss_chebyshev"),
-                             "The angular quadrature set to use. Defaults to Gauss-Chebyshev.");
+  params.addRequiredParam<MooseEnum>("aq_type",
+                                     MooseEnum("gauss_chebyshev level_symmetric"),
+                                     "The angular quadrature set to use.");
   params.addRangeCheckedParam<unsigned int>(
       "ls_q_order",
       4,
