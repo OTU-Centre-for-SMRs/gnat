@@ -131,9 +131,9 @@ TransportAction::validParams()
 
   //----------------------------------------------------------------------------
   // Quadrature parameters.
-  params.addRequiredParam<MooseEnum>("aq_type",
-                                     MooseEnum("gauss_chebyshev level_symmetric"),
-                                     "The angular quadrature set to use.");
+  params.addParam<MooseEnum>("aq_type",
+                             MooseEnum("gauss_chebyshev level_symmetric"),
+                             "The angular quadrature set to use.");
   params.addRangeCheckedParam<unsigned int>(
       "ls_q_order",
       4,
@@ -424,6 +424,9 @@ TransportAction::TransportAction(const InputParameters & params)
     _source_scale_factor(0.0),
     _var_init(false)
 {
+  if (_transport_scheme == TransportScheme::SAAFCFEM && !isParamSetByUser("aq_type"))
+    paramError("aq_type", "When using the SAAF-SN scheme, you must specify an angular quadrature type!");
+
   if (_volumetric_source_blocks.size() != _volumetric_source_moments.size() ||
       _volumetric_source_blocks.size() != _volumetric_source_anisotropy.size())
     mooseError("'volumetric_source_blocks', 'volumetric_source_moments', and 'volumetric_source_anisotropies' must be the same size!");
