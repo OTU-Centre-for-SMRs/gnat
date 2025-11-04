@@ -659,11 +659,6 @@ TransportAction::actCommon()
           _p_type = ProblemType::Cartesian3D;
           _num_group_moments = (_max_eval_anisotropy + 1u) * (_max_eval_anisotropy + 1u);
 
-          if (_max_eval_anisotropy > 0u)
-            mooseWarning(
-                "Anisotropic scattering is currently bugged in 3D and will occasionally "
-                "result in a DIVERGED_FNORM_NAN error during parallel residual evaluations.");
-
           for (unsigned int g = 0; g < _num_groups; ++g)
           {
             // Set up variable names for the group flux moments.
@@ -2050,6 +2045,16 @@ TransportAction::addSAAFKernels(const std::string & var_name, unsigned int g, un
             std::copy(_group_angular_fluxes[g_prime].begin(),
                       _group_angular_fluxes[g_prime].end(),
                       std::back_inserter(ordinate_names));
+          }
+
+          // Copy all of the group flux moment names into the variable
+          // parameter.
+          auto & moment_names = params.set<std::vector<VariableName>>("group_flux_moments");
+          for (unsigned int g_prime = 0; g_prime < _num_groups; ++g_prime)
+          {
+            std::copy(_group_flux_moments[g_prime].begin(),
+                      _group_flux_moments[g_prime].end(),
+                      std::back_inserter(moment_names));
           }
 
           if (isParamValid("block"))

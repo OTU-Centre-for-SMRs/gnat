@@ -23,6 +23,7 @@ SAAFScattering::validParams()
                              "enabled through a transport action.");
   params.addRequiredCoupledVar("group_flux_ordinates",
                                "The angular flux ordinates for all groups.");
+  params.addRequiredCoupledVar("group_flux_moments", "The angular flux moments for all groups.");
   params.addRequiredRangeCheckedParam<unsigned int>("num_groups",
                                                     "num_groups >= 1",
                                                     "The number of spectral "
@@ -44,42 +45,55 @@ SAAFScattering::SAAFScattering(const InputParameters & parameters)
     _anisotropy(getMaterialProperty<unsigned int>(getParam<std::string>("transport_system") +
                                                   "medium_anisotropy"))
 {
+  switch (_aq.getProblemType())
+  {
+    case ProblemType::Cartesian1D:
+      _num_moments_per_group = _max_anisotropy + 1u;
+      break;
+
+    case ProblemType::Cartesian2D:
+      _num_moments_per_group = (_max_anisotropy + 1u) * (_max_anisotropy + 2u) / 2u;
+      break;
+
+    case ProblemType::Cartesian3D:
+      _num_moments_per_group = (_max_anisotropy + 1u) * (_max_anisotropy + 1u);
+      break;
+
+    default:
+      _num_moments_per_group = 0u;
+      break;
+  }
+
   if (_group_index >= _num_groups)
     mooseError("The group index exceeds the number of energy groups.");
 
   if (_ordinate_index >= _aq.totalOrder())
     mooseError("The ordinates index exceeds the number of quadrature points.");
 
-  const unsigned int num_coupled = coupledComponents("group_flux_ordinates");
-  if (num_coupled != _aq.totalOrder() * _num_groups)
+  const unsigned int num_ord = coupledComponents("group_flux_ordinates");
+  if (num_ord != _aq.totalOrder() * _num_groups)
     mooseError("Mismatch between the angular flux ordinates and quadrature set.");
 
-  // Fetch the flux ordinates and their derivatives.
-  _group_flux_ordinates.reserve(num_coupled);
-  for (unsigned int i = 0; i < num_coupled; ++i)
+  // Fetch the flux ordinate derivatives.
+  for (unsigned int i = 0; i < num_ord; ++i)
   {
     unsigned int g = i / _aq.totalOrder();
     unsigned int n = i - g * _aq.totalOrder();
     _jvar_map.emplace(coupled("group_flux_ordinates", i), std::make_pair(g, n));
-    _group_flux_ordinates.emplace_back(&coupledValue("group_flux_ordinates", i));
   }
+
+  const unsigned int num_mom = coupledComponents("group_flux_moments");
+  if (num_mom != _num_moments_per_group * _num_groups)
+    mooseError("Mismatch between the number of angular flux moments and the provided anisotropy / "
+               "number of groups.");
+
+  // Fetch the flux moments.
+  _group_flux_moments.reserve(num_mom);
+  for (unsigned int i = 0; i < num_mom; ++i)
+    _group_flux_moments.emplace_back(&coupledValue("group_flux_moments", i));
 
   if (_max_anisotropy > 3)
     mooseError("Maximum degree of anisotropy supported is at most order 3 at present!");
-}
-
-Real
-SAAFScattering::computeFluxMoment(unsigned int g_prime, unsigned int degree, int order)
-{
-  Real moment = 0.0;
-  for (unsigned int n = 0; n < _aq.totalOrder(); ++n)
-  {
-    const auto & dir = _aq.direction(n);
-    moment += RealSphericalHarmonics::evaluate(degree, order, dir(0), dir(1), dir(2)) *
-              (*_group_flux_ordinates[g_prime * _aq.totalOrder() + n])[_qp] * _aq.weight(n);
-  }
-
-  return moment;
 }
 
 // Compute the full scattering term for both in-group and group-to-group
@@ -98,9 +112,10 @@ SAAFScattering::computeQpResidual()
   const auto & dir = _aq.direction(_ordinate_index);
 
   Real res = 0.0;
-  Real moment_l = 0.0;
   for (unsigned int g_prime = 0; g_prime < _num_groups; ++g_prime)
   {
+    Real moment_l = 0.0;
+    unsigned int sh_offset = 0u;
     unsigned int scattering_index =
         g_prime * _num_groups * (_anisotropy[_qp] + 1u) + _group_index * (_anisotropy[_qp] + 1u);
 
@@ -111,19 +126,29 @@ SAAFScattering::computeQpResidual()
       {
         // Legendre moments in 1D, looping over m is unecessary.
         case ProblemType::Cartesian1D:
-          moment_l += computeFluxMoment(g_prime, l, 0) * RealSphericalHarmonics::evaluate(l, 0, dir(0), dir(1), dir(2));
+          moment_l += (*_group_flux_moments[g_prime * _num_moments_per_group + sh_offset])[_qp] *
+                      RealSphericalHarmonics::evaluate(l, 0, dir(0), dir(1), dir(2));
+          sh_offset++;
           break;
 
         // Need moments with m >= 0 for 2D.
         case ProblemType::Cartesian2D:
           for (int m = 0; m <= static_cast<int>(l); ++m)
-            moment_l += computeFluxMoment(g_prime, l, m) * RealSphericalHarmonics::evaluate(l, m, dir(0), dir(1), dir(2));
+          {
+            moment_l += (*_group_flux_moments[g_prime * _num_moments_per_group + sh_offset])[_qp] *
+                        RealSphericalHarmonics::evaluate(l, m, dir(0), dir(1), dir(2));
+            sh_offset++;
+          }
           break;
 
         // Need all moments in 3D.
         case ProblemType::Cartesian3D:
           for (int m = -1 * static_cast<int>(l); m <= static_cast<int>(l); ++m)
-            moment_l += computeFluxMoment(g_prime, l, m) * RealSphericalHarmonics::evaluate(l, m, dir(0), dir(1), dir(2));
+          {
+            moment_l += (*_group_flux_moments[g_prime * _num_moments_per_group + sh_offset])[_qp] *
+                        RealSphericalHarmonics::evaluate(l, m, dir(0), dir(1), dir(2));
+            sh_offset++;
+          }
           break;
 
         default: // Defaults to doing nothing for now.
@@ -133,8 +158,6 @@ SAAFScattering::computeQpResidual()
       res += (2.0 * static_cast<Real>(l) + 1.0) / (4.0 * libMesh::pi) *
              MetaPhysicL::raw_value(_sigma_s_g_prime_g_l[_qp][scattering_index + l]) * moment_l *
              _symmetry_factor;
-
-      moment_l = 0.0;
     }
   }
 
