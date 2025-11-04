@@ -24,32 +24,34 @@ LSAngularQuadrature::LSAngularQuadrature(unsigned int q_order, MajorAxis axis, P
     for (unsigned int j = i; j < ((q_order / 2 - i) + 1) / 2; ++j)
     {
       unsigned int k = q_order / 2 - 1 - i - j;
+      // Renormalize weights so they sum to 2\pi (2D) or 4\pi (3D).
+      const auto w = weights[w_idx] * libMesh::pi / 2.0;
       // For each unique combination of x,y,z component magnitudes, permute through all possible
       // permutations (including for positive and negative components).
-      addAllOctantPermutations(mus[i], mus[j], mus[k], weights[w_idx]);
+      addAllOctantPermutations(mus[i], mus[j], mus[k], w);
       if (i == j && i == k)
       {
         // No extra permutations. Do nothing
       }
       else if (i == j)
       {
-        addAllOctantPermutations(mus[k], mus[i], mus[i], weights[w_idx]);
-        addAllOctantPermutations(mus[i], mus[k], mus[i], weights[w_idx]);
+        addAllOctantPermutations(mus[k], mus[i], mus[i], w);
+        addAllOctantPermutations(mus[i], mus[k], mus[i], w);
       }
       else if (j == k)
       {
-        addAllOctantPermutations(mus[j], mus[i], mus[j], weights[w_idx]);
-        addAllOctantPermutations(mus[j], mus[j], mus[i], weights[w_idx]);
+        addAllOctantPermutations(mus[j], mus[i], mus[j], w);
+        addAllOctantPermutations(mus[j], mus[j], mus[i], w);
       }
       else
       {
-        addAllOctantPermutations(mus[k], mus[i], mus[j], weights[w_idx]);
-        addAllOctantPermutations(mus[j], mus[k], mus[i], weights[w_idx]);
-        addAllOctantPermutations(mus[k], mus[j], mus[i], weights[w_idx]);
-        addAllOctantPermutations(mus[i], mus[k], mus[j], weights[w_idx]);
-        addAllOctantPermutations(mus[j], mus[i], mus[k], weights[w_idx]);
+        addAllOctantPermutations(mus[k], mus[i], mus[j], w);
+        addAllOctantPermutations(mus[j], mus[k], mus[i], w);
+        addAllOctantPermutations(mus[k], mus[j], mus[i], w);
+        addAllOctantPermutations(mus[i], mus[k], mus[j], w);
+        addAllOctantPermutations(mus[j], mus[i], mus[k], w);
       }
-      w_idx += 1;
+      w_idx++;
     }
   }
 
@@ -180,6 +182,7 @@ const std::map<unsigned int, std::vector<Real>> LSAngularQuadrature::_ls_mus
   }
 };
 
+// Note: these weights sum to unity over a single octant.
 const std::map<unsigned int, std::vector<Real>> LSAngularQuadrature::_ls_weights
 {
   { 2u,

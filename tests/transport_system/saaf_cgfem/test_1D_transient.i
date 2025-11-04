@@ -21,6 +21,7 @@
     family = LAGRANGE
     constant_ic = 0.0
 
+    aq_type = 'gauss_chebyshev'
     n_azimuthal = 1
     n_polar = 1
 

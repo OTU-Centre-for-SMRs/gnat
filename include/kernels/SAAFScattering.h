@@ -14,25 +14,16 @@ protected:
   virtual Real computeQpJacobian() override;
   virtual Real computeQpOffDiagJacobian(unsigned int jvar) override;
 
-  Real computeFluxMoment(unsigned int g_prime, unsigned int degree, int order);
-
   const unsigned int _num_groups;     // G
   const unsigned int _max_anisotropy; // L
-  unsigned int _num_dir_sh;           // Number of spherical harmonics evaluations per direction.
+  // Total number of flux moments per particle energy group.
+  unsigned int _num_moments_per_group;
 
-  /*
-   * We assume that the vector of flux ordinates is stored in order of group
-   * first, direction second. An example for 2 energy groups (G = 2) and a
-   * quadrature set with 2 elements (N = 2) is given below:
-   *
-   * The flux ordinates are indexed as Psi_{g, n}:
-   * _group_flux_ordinates[0] = Psi_{1, 1}
-   * _group_flux_ordinates[0] = Psi_{1, 2}
-   * _group_flux_ordinates[0] = Psi_{2, 1}
-   * _group_flux_ordinates[0] = Psi_{2, 2}
-   */
+  // A map between the coupleable variable ID and the ordinate / group index.
   std::map<unsigned int, std::pair<unsigned int, unsigned int>> _jvar_map;
-  std::vector<const VariableValue *> _group_flux_ordinates;
+
+  // The flux moments.
+  std::vector<const VariableValue *> _group_flux_moments;
 
   /*
    * We assume that the vector of scattering cross-sections is stored in the

@@ -42,7 +42,8 @@
     family = LAGRANGE
     order = FIRST
 
-    # The number of angles to use for the SN approximation.
+    # The type of quadrature set and number of angles to use for the SN approximation.
+    aq_type = 'gauss_chebyshev'
     n_azimuthal = 3
     n_polar = 3
 

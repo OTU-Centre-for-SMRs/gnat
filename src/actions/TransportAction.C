@@ -132,8 +132,8 @@ TransportAction::validParams()
   //----------------------------------------------------------------------------
   // Quadrature parameters.
   params.addParam<MooseEnum>("aq_type",
-                             MooseEnum("gauss_chebyshev level_symmetric", "gauss_chebyshev"),
-                             "The angular quadrature set to use. Defaults to Gauss-Chebyshev.");
+                             MooseEnum("gauss_chebyshev level_symmetric"),
+                             "The angular quadrature set to use.");
   params.addRangeCheckedParam<unsigned int>(
       "ls_q_order",
       4,
@@ -424,6 +424,9 @@ TransportAction::TransportAction(const InputParameters & params)
     _source_scale_factor(0.0),
     _var_init(false)
 {
+  if (_transport_scheme == TransportScheme::SAAFCFEM && !isParamSetByUser("aq_type"))
+    paramError("aq_type", "When using the SAAF-SN scheme, you must specify an angular quadrature type!");
+
   if (_volumetric_source_blocks.size() != _volumetric_source_moments.size() ||
       _volumetric_source_blocks.size() != _volumetric_source_anisotropy.size())
     mooseError("'volumetric_source_blocks', 'volumetric_source_moments', and 'volumetric_source_anisotropies' must be the same size!");
@@ -658,11 +661,6 @@ TransportAction::actCommon()
         case 3u:
           _p_type = ProblemType::Cartesian3D;
           _num_group_moments = (_max_eval_anisotropy + 1u) * (_max_eval_anisotropy + 1u);
-
-          if (_max_eval_anisotropy > 0u)
-            mooseWarning(
-                "Anisotropic scattering is currently bugged in 3D and will occasionally "
-                "result in a DIVERGED_FNORM_NAN error during parallel residual evaluations.");
 
           for (unsigned int g = 0; g < _num_groups; ++g)
           {
@@ -1955,6 +1953,11 @@ TransportAction::addSAAFKernels(const std::string & var_name, unsigned int g, un
                   std::back_inserter(ordinate_names));
       }
 
+      // Copy all of the scalar flux names into the variable parameter.
+      auto & scalar_flux_names = params.set<std::vector<VariableName>>("group_scalar_fluxes");
+      for (unsigned int g_prime = 0; g_prime < _num_groups; ++g_prime)
+        scalar_flux_names.emplace_back(_group_flux_moments[g_prime][0u]);
+
       if (isParamValid("block"))
       {
         params.set<std::vector<SubdomainName>>("block") =
@@ -2045,6 +2048,16 @@ TransportAction::addSAAFKernels(const std::string & var_name, unsigned int g, un
             std::copy(_group_angular_fluxes[g_prime].begin(),
                       _group_angular_fluxes[g_prime].end(),
                       std::back_inserter(ordinate_names));
+          }
+
+          // Copy all of the group flux moment names into the variable
+          // parameter.
+          auto & moment_names = params.set<std::vector<VariableName>>("group_flux_moments");
+          for (unsigned int g_prime = 0; g_prime < _num_groups; ++g_prime)
+          {
+            std::copy(_group_flux_moments[g_prime].begin(),
+                      _group_flux_moments[g_prime].end(),
+                      std::back_inserter(moment_names));
           }
 
           if (isParamValid("block"))
