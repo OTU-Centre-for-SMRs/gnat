@@ -1955,6 +1955,11 @@ TransportAction::addSAAFKernels(const std::string & var_name, unsigned int g, un
                   std::back_inserter(ordinate_names));
       }
 
+      // Copy all of the scalar flux names into the variable parameter.
+      auto & scalar_flux_names = params.set<std::vector<VariableName>>("group_scalar_fluxes");
+      for (unsigned int g_prime = 0; g_prime < _num_groups; ++g_prime)
+        scalar_flux_names.emplace_back(_group_flux_moments[g_prime][0u]);
+
       if (isParamValid("block"))
       {
         params.set<std::vector<SubdomainName>>("block") =

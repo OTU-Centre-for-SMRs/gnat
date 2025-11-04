@@ -13,8 +13,14 @@ SAAFFission::validParams()
     "1}^{G}\\nu\\Sigma_{f,g}\\Phi_{g',0,0})$. The group scalar fluxes are computed by this kernel. "
     "This kernel should not be exposed to the user, instead being enabled through a "
     "transport action.");
-  params.addRequiredCoupledVar("group_flux_ordinates",
-                               "The angular flux ordinates for all groups.");
+  params.addRequiredCoupledVar(
+      "group_flux_ordinates",
+      "The angular flux ordinates for all groups. These variables are used to inform the coupleable "
+      "interface (to setup Jacobians), and aren't actually required for any calculations.");
+  params.addRequiredCoupledVar(
+      "group_scalar_fluxes",
+      "The scalar fluxes (zero'th moments of the angular fluxes) for all spectral energy groups. We use "
+      "these moments to compute the fission term");
   params.addRequiredRangeCheckedParam<unsigned int>("num_groups",
                                                     "num_groups >= 1",
                                                     "The number of spectral "
@@ -36,29 +42,25 @@ SAAFFission::SAAFFission(const InputParameters & parameters)
   if (_ordinate_index >= _aq.totalOrder())
     mooseError("The ordinates index exceeds the number of quadrature points.");
 
-  const unsigned int num_coupled = coupledComponents("group_flux_ordinates");
-  if (num_coupled != _aq.totalOrder() * _num_groups)
+  const unsigned int num_ord = coupledComponents("group_flux_ordinates");
+  if (num_ord != _aq.totalOrder() * _num_groups)
     mooseError("Mismatch between the angular flux ordinates and quadrature set.");
 
-  // Fetch the flux ordinates and their derivatives.
-  _group_flux_ordinates.reserve(num_coupled);
-  for (unsigned int i = 0; i < num_coupled; ++i)
+  // Fetch the flux ordinate derivatives.
+  for (unsigned int i = 0; i < num_ord; ++i)
   {
     unsigned int g = i / _aq.totalOrder();
     unsigned int n = i - g * _aq.totalOrder();
     _jvar_map.emplace(coupled("group_flux_ordinates", i), std::make_pair(g, n));
-    _group_flux_ordinates.emplace_back(&coupledValue("group_flux_ordinates", i));
   }
-}
 
-Real
-SAAFFission::computeScalarFlux(unsigned int g_prime)
-{
-  Real moment = 0.0;
-  for (unsigned int n = 0; n < _aq.totalOrder(); ++n)
-    moment += (*_group_flux_ordinates[g_prime * _aq.totalOrder() + n])[_qp] * _aq.weight(n);
+  const unsigned int num_scal = coupledComponents("group_scalar_fluxes");
+  if (num_scal != _num_groups)
+    mooseError("Mismatch between the number of scalar fluxes and the number of groups.");
 
-  return moment;
+  _group_scalar_fluxes.reserve(num_scal);
+  for (unsigned int i = 0u; i < num_scal; ++i)
+    _group_scalar_fluxes.emplace_back(&coupledValue("group_scalar_fluxes", i));
 }
 
 Real
@@ -70,7 +72,7 @@ SAAFFission::computeQpResidual()
 
   Real res = 0.0;
   for (unsigned int g_prime = 0u; g_prime < _num_groups; ++g_prime)
-    res += MetaPhysicL::raw_value(_nu_sigma_f_g[_qp][g_prime]) * computeScalarFlux(g_prime);
+    res += MetaPhysicL::raw_value(_nu_sigma_f_g[_qp][g_prime]) * (*_group_scalar_fluxes[g_prime])[_qp];
 
   res *= MetaPhysicL::raw_value(_chi_g[_qp][_group_index]) / (4.0 * libMesh::pi) * _symmetry_factor;
   return -1.0 * res * computeQpTests();
