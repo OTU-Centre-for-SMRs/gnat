@@ -4,13 +4,23 @@
 [Mesh]
   [domain]
     type = CartesianMeshGenerator
-    dim = 2
-    dx = '4 20 20'
-    dy = '4 20 20'
-    ix = '4 20 20'
-    iy = '4 20 20'
+    dim = 3
+    dx = '5 5 5'
+    dy = '5 5 5'
+    dz = '5 5 5'
+    ix = '5 5 5'
+    iy = '5 5 5'
+    iz = '5 5 5'
     subdomain_id = '
-      2 1 1
+      1 1 1
+      1 1 1
+      1 1 1
+
+      1 1 1
+      1 2 1
+      1 1 1
+
+      1 1 1
       1 1 1
       1 1 1'
   []
@@ -26,15 +36,15 @@
     order = FIRST
     family = LAGRANGE
 
-    n_azimuthal = 20
-    n_polar = 20
+    aq_type = level_symmetric
+    ls_q_order = 18
 
     volumetric_source_blocks = '2'
     volumetric_source_moments = '1e0'
     volumetric_source_anisotropies = '0'
     scale_sources = true
 
-    vacuum_boundaries = 'left right top bottom'
+    vacuum_boundaries = 'left right top bottom front back'
   []
 []
 

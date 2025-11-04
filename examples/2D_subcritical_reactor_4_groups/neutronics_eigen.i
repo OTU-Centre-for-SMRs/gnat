@@ -21,11 +21,14 @@
 
     constant_ic = '1.0'
 
-    n_azimuthal = 3
-    n_polar = 3
+    aq_type = level_symmetric
+    ls_q_order = 8
 
     vacuum_boundaries = 'vacuum'
     reflective_boundaries = 'reflective'
+
+    use_fission_jacobians    = true
+    use_scattering_jacobians = true
   []
 []
 

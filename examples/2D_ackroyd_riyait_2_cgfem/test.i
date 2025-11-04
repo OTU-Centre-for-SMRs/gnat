@@ -27,6 +27,7 @@
     order = FIRST
     family = LAGRANGE
 
+    aq_type = 'gauss_chebyshev'
     n_azimuthal = 10
     n_polar = 10
 

@@ -19,15 +19,15 @@
 [TransportSystems]
   [Neutron]
     num_groups = 2
-    max_anisotropy = 1
+    max_anisotropy = 0
     scheme = saaf_cfem
     particle_type = neutron
 
     order = FIRST
     family = LAGRANGE
 
-    n_azimuthal = 5
-    n_polar = 5
+    aq_type = 'level_symmetric'
+    ls_q_order = 4
 
     vacuum_boundaries = 'left right top bottom'
 
@@ -35,6 +35,8 @@
     point_source_moments = '1e6 0.0'
     point_source_anisotropies = '0'
     scale_sources = true
+
+    use_scattering_jacobians = true
   []
 []
 

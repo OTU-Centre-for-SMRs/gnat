@@ -23,11 +23,15 @@
     order = FIRST
     family = LAGRANGE
 
+    aq_type = 'gauss_chebyshev'
     n_azimuthal = 3
     n_polar = 3
 
     reflective_boundaries = 'reflective'
     vacuum_boundaries = 'vacuum'
+
+    use_scattering_jacobians = true
+    use_fission_jacobians = true
   []
 []
 
