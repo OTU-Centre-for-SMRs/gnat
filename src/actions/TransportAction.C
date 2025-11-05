@@ -1532,8 +1532,13 @@ TransportAction::addSNBCs(const std::string & var_name, unsigned int g, unsigned
 
     const auto & bnd_ids = _mesh->getBoundaryIDs(_reflective_side_sets);
 
-    std::vector<std::vector<RealVectorValue>> unique_bnd_normals;
-    unique_bnd_normals.resize(bnd_ids.size());
+    // TODO: Parallel packing for RealVectorValue to avoid storing each normal component separately.
+    std::vector<std::vector<Real>> unique_bnd_normals_x;
+    std::vector<std::vector<Real>> unique_bnd_normals_y;
+    std::vector<std::vector<Real>> unique_bnd_normals_z;
+    unique_bnd_normals_x.resize(bnd_ids.size());
+    unique_bnd_normals_y.resize(bnd_ids.size());
+    unique_bnd_normals_z.resize(bnd_ids.size());
 
     for (unsigned int i = 0u; i < bnd_ids.size(); ++i)
     {
@@ -1547,16 +1552,30 @@ TransportAction::addSNBCs(const std::string & var_name, unsigned int g, unsigned
           face_fe->reinit(b_elem->_elem, b_elem->_side);
 
           bool has_normal = false;
-          for (const auto & norm : unique_bnd_normals[i])
-            has_normal = has_normal || vecEquals(norm, elem_normals[0u]);
+          for (unsigned int j = 0u; j < unique_bnd_normals_x[i].size(); ++j)
+          {
+            has_normal |= vecEquals(RealVectorValue(unique_bnd_normals_x[i][j],
+                                                    unique_bnd_normals_y[i][j],
+                                                    unique_bnd_normals_z[i][j]), elem_normals[0u]);
+          }
 
           if (!has_normal)
-            unique_bnd_normals[i].emplace_back(elem_normals[0u]);
+          {
+            unique_bnd_normals_x[i].emplace_back(elem_normals[0](0));
+            unique_bnd_normals_y[i].emplace_back(elem_normals[0](1));
+            unique_bnd_normals_z[i].emplace_back(elem_normals[0](2));
+          }
         }
       }
 
+      _communicator.allgather(unique_bnd_normals_x[i]);
+      _communicator.allgather(unique_bnd_normals_y[i]);
+      _communicator.allgather(unique_bnd_normals_z[i]);
+
       // Check to make sure the normals point along a cartesian direction.
-      for (const auto & norm : unique_bnd_normals[i])
+      for (unsigned int j = 0u; j < unique_bnd_normals_x[i].size(); ++j)
+      {
+        const RealVectorValue norm(unique_bnd_normals_x[i][j], unique_bnd_normals_y[i][j], unique_bnd_normals_z[i][j]);
         if (!(vecEquals(norm, RealVectorValue(1.0, 0.0, 0.0)) ||
               vecEquals(norm, RealVectorValue(-1.0, 0.0, 0.0)) ||
               vecEquals(norm, RealVectorValue(0.0, 1.0, 0.0)) ||
@@ -1566,32 +1585,33 @@ TransportAction::addSNBCs(const std::string & var_name, unsigned int g, unsigned
           mooseError("The normal vector does not point along a principal cartesian axis. The "
                      "reflected direction is not guaranteed to be in the quadrature set. " +
                      Moose::stringify(static_cast<Point>(norm)));
+      }
 
       // Find the reflected directions.
       auto curr_dir = aq->direction(n);
       RealVectorValue refl_dir(0.0, 0.0, 0.0);
 
       std::vector<int> reflected_direction_indices;
-      reflected_direction_indices.resize(unique_bnd_normals[i].size(), -1);
+      reflected_direction_indices.resize(unique_bnd_normals_x[i].size(), -1);
 
-      for (unsigned int norm_ind = 0u; norm_ind < unique_bnd_normals[i].size(); ++norm_ind)
+      for (unsigned int j = 0u; j < unique_bnd_normals_x[i].size(); ++j)
       {
+        const RealVectorValue norm(unique_bnd_normals_x[i][j], unique_bnd_normals_y[i][j], unique_bnd_normals_z[i][j]);
+
         for (unsigned int n_prime = 0u; n_prime < aq->totalOrder(); ++n_prime)
         {
-          refl_dir = aq->direction(n_prime) -
-                     (2.0 * aq->direction(n_prime) * unique_bnd_normals[i][norm_ind]) *
-                         unique_bnd_normals[i][norm_ind];
+          refl_dir = aq->direction(n_prime) - (2.0 * aq->direction(n_prime) * norm) * norm;
 
           if (vecEquals(curr_dir, refl_dir))
           {
-            reflected_direction_indices[norm_ind] = static_cast<int>(n_prime);
+            reflected_direction_indices[j] = static_cast<int>(n_prime);
             break;
           }
         }
 
-        if (reflected_direction_indices[norm_ind] < 0)
+        if (reflected_direction_indices[j] < 0)
           mooseError("Reflected direction for the normal " +
-                     Moose::stringify(static_cast<Point>(unique_bnd_normals[i][norm_ind])) +
+                     Moose::stringify(static_cast<Point>(norm)) +
                      " is not in the quadrature set.");
       }
 
@@ -1607,8 +1627,11 @@ TransportAction::addSNBCs(const std::string & var_name, unsigned int g, unsigned
             _group_angular_fluxes[g][static_cast<unsigned int>(refl_index)]);
 
       // The unique boundary normals for this BC.
-      for (const auto & norm : unique_bnd_normals[i])
+      for (unsigned int j = 0u; j < unique_bnd_normals_x[i].size(); ++j)
+      {
+        const RealVectorValue norm(unique_bnd_normals_x[i][j], unique_bnd_normals_y[i][j], unique_bnd_normals_z[i][j]);
         params.set<std::vector<RealVectorValue>>("unique_normals").emplace_back(norm);
+      }
 
       // Apply the parameters for the quadrature rule.
       applyQuadratureParameters(params);
