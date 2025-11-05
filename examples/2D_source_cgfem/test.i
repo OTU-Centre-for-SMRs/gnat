@@ -5,25 +5,21 @@
   [domain]
     type = CartesianMeshGenerator
     dim = 3
-    dx = '5 5 5'
-    dy = '5 5 5'
-    dz = '5 5 5'
-    ix = '5 5 5'
-    iy = '5 5 5'
-    iz = '5 5 5'
+    dx = '5 5'
+    dy = '5 5'
+    dz = '5 5'
+    ix = '5 5'
+    iy = '5 5'
+    iz = '5 5'
     subdomain_id = '
-      1 1 1
-      1 1 1
-      1 1 1
+      2 1
+      1 1
 
-      1 1 1
-      1 2 1
-      1 1 1
-
-      1 1 1
-      1 1 1
-      1 1 1'
+      1 1
+      1 1'
   []
+
+  parallel_type = DISTRIBUTED
 []
 
 [TransportSystems]
@@ -44,7 +40,8 @@
     volumetric_source_anisotropies = '0'
     scale_sources = true
 
-    vacuum_boundaries = 'left right top bottom front back'
+    vacuum_boundaries = 'right top front'
+    reflective_boundaries = 'left bottom back'
   []
 []
 
