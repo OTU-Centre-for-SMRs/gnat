@@ -136,7 +136,7 @@ class GnatOpenMCMGXS:
       mgxs.load_from_statepoint(sp)
 
   # Write the microscopic cross section results for this specific domain and nuclide set to a xml node.
-  def to_micro_xml_node(self):
+  def to_micro_xml_node(self, debug_print = False):
     xml_element = ET.Element('domain')
     xml_element.attrib['type'] = str(self._domain_type)
     xml_element.attrib['name'] = str(self._name)
@@ -150,6 +150,9 @@ class GnatOpenMCMGXS:
       for rxn_type, mgxs in zip(self._micro_xs_objs.keys(), self._micro_xs_objs.values()):
         reaction_xml_element = ET.Element('reaction')
         reaction_xml_element.attrib['type'] = str(rxn_type)
+
+        if debug_print:
+          mgxs.print_xs(subdomains='all', nuclides=[nuclide], xs_type='micro')
 
         xs_data = mgxs.get_xs(groups='all', subdomains='all', nuclides=[nuclide], xs_type='micro', order_groups='increasing', value='mean', squeeze=True)
         if (np.all(np.isclose(xs_data, 0.0, rtol=1e-16, atol=1e-16))):
@@ -188,7 +191,7 @@ class GnatOpenMCMGXS:
     tree.write(directory + '/' + file + '.xml', encoding='utf-8', pretty_print=True)
 
   # Write the macroscopic cross section results for this specific domain to a xml node.
-  def to_macro_xml_node(self):
+  def to_macro_xml_node(self, debug_print = False):
     xml_element = ET.Element('domain')
     xml_element.attrib['type'] = str(self._domain_type)
     xml_element.attrib['name'] = str(self._name)
@@ -196,6 +199,9 @@ class GnatOpenMCMGXS:
     for rxn_type, mgxs in zip(self._macro_xs_objs.keys(), self._macro_xs_objs.values()):
       reaction_element = ET.Element('reaction')
       reaction_element.attrib['type'] = str(rxn_type)
+
+      if debug_print:
+        mgxs.print_xs()
 
       xs_data = mgxs.get_xs(subdomains='all', nuclides='sum', xs_type='macro',\
                             order_groups='increasing', value='mean', squeeze=True)
@@ -205,8 +211,11 @@ class GnatOpenMCMGXS:
         reaction_element.attrib['mgxs'] = ''
         for incoming_group in xs_data:
           for outgoing_group in incoming_group:
-            for legendre_moment in outgoing_group:
-              reaction_element.attrib['mgxs'] += str(legendre_moment) + ' '
+            if mgxs.legendre_order > 0:
+              for legendre_moment in outgoing_group:
+                reaction_element.attrib['mgxs'] += str(legendre_moment) + ' '
+            else:
+              reaction_element.attrib['mgxs'] += str(outgoing_group) + ' '
         reaction_element.attrib['mgxs'] = reaction_element.attrib['mgxs'].rstrip(reaction_element.attrib['mgxs'][-1])
       else:
         reaction_element.attrib['mgxs'] = ''
@@ -264,6 +273,7 @@ class OpenMCMGXSCollection:
     tallies = openmc.Tallies()
     for mgxs in self._mgxs_objs:
       tallies += mgxs.get_tallies()
+    tallies.merge_tallies()
     return tallies
 
   # Load the tally data from a given statepoint.
@@ -272,7 +282,7 @@ class OpenMCMGXSCollection:
       mgxs.load_from_statepoint(sp)
 
   # Write the microscopic cross section results to an xml file readable by Gnat.
-  def to_micro_xml_file(self, file, directory):
+  def to_micro_xml_file(self, file, directory, debug_print = False):
     root_elem = ET.Element('depletion_chain')
     root_elem.attrib['generator'] = 'openmc'
     root_elem.attrib['num_groups'] = str(self._groups.group_edges.size - 1)
@@ -284,7 +294,7 @@ class OpenMCMGXSCollection:
     root_elem.attrib['xs_units'] = 'barns'
 
     for mgxs in self._mgxs_objs:
-      root_elem.append(mgxs.to_micro_xml_node())
+      root_elem.append(mgxs.to_micro_xml_node(debug_print))
 
     if not os.path.exists(os.path.join('./', directory)):
       os.makedirs(os.path.join('./', directory))
@@ -293,7 +303,7 @@ class OpenMCMGXSCollection:
     tree.write(directory + '/' + file + '.xml', encoding='utf-8', pretty_print=True)
 
   # Write the macroscopic cross section results to an xml file readable by Gnat.
-  def to_macro_xml_file(self, file, directory):
+  def to_macro_xml_file(self, file, directory, debug_print = False):
     root_elem = ET.Element('macroscopic_cross_sections')
     root_elem.attrib['generator'] = 'openmc'
     root_elem.attrib['num_groups'] = str(self._groups.group_edges.size - 1)
@@ -305,7 +315,7 @@ class OpenMCMGXSCollection:
     root_elem.attrib['xs_units'] = 'cm^-1'
 
     for mgxs in self._mgxs_objs:
-      root_elem.append(mgxs.to_macro_xml_node())
+      root_elem.append(mgxs.to_macro_xml_node(debug_print))
 
     if not os.path.exists(os.path.join('./', directory)):
       os.makedirs(os.path.join('./', directory))
