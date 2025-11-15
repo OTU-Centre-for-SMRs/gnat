@@ -5,7 +5,7 @@ import lxml.etree as ET
 
 import openmc
 
-GNAT_SUPPORTED_MACRO_MGXS = ['total', 'scatter', 'inverse-vel', 'nu-fission', 'chi', 'kappa-fission', 'diffusion', 'absorption']
+GNAT_SUPPORTED_MACRO_MGXS = ['total', 'scatter', 'inverse-vel', 'nu-fission', 'chi', 'kappa-fission', 'diffusion', 'absorption', 'transport']
 GNAT_SUPPORTED_MICRO_MGXS = ['(n,2n)', '(n,3n)', '(n,4n)', '(n,gamma)', '(n,p)', '(n,a)']
 
 # A class which initializes and stores data required to compute a collection of
@@ -59,11 +59,14 @@ class GnatOpenMCMGXS:
     if domain != None:
       # Prepare macroscopic cross section objects.
       for mgxs in macro:
-        if mgxs == 'total':
+        if mgxs == 'total' and correction == None:
           self._macro_xs_objs[mgxs] = openmc.mgxs.TotalXS(domain=self._domain,\
                                                           domain_type=self._domain_type,\
                                                           energy_groups=self._groups,\
                                                           name=self._name)
+        elif mgxs == 'total' and correction == 'P0':
+          raise Exception('Can only use total cross sections when correction is set to None.')
+
         if mgxs == 'absorption':
           self._macro_xs_objs[mgxs] = openmc.mgxs.AbsorptionXS(domain=self._domain,\
                                                                domain_type=self._domain_type,\
@@ -105,6 +108,13 @@ class GnatOpenMCMGXS:
           self._macro_xs_objs[mgxs].formulation = 'consistent'
           self._macro_xs_objs[mgxs].legendre_order = legendre_order
           self._macro_xs_objs[mgxs].correction = correction
+        if mgxs == 'transport' and correction == 'P0':
+          self._macro_xs_objs[mgxs] = openmc.mgxs.TransportXS(domain=self._domain,\
+                                                              domain_type=self._domain_type,\
+                                                              energy_groups=self._groups,
+                                                              nu=True, name=self._name)
+        elif mgxs == 'transport' and correction == None:
+          raise Exception('transport cross sections can only be used with a P0 transport correction!')
 
       # Prepare microscopic cross section objects.
       for mgxs in micro:
@@ -198,7 +208,10 @@ class GnatOpenMCMGXS:
     xml_element.attrib['id'] = str(self._domain.id)
     for rxn_type, mgxs in zip(self._macro_xs_objs.keys(), self._macro_xs_objs.values()):
       reaction_element = ET.Element('reaction')
-      reaction_element.attrib['type'] = str(rxn_type)
+      if rxn_type == 'transport':
+        reaction_element.attrib['type'] = 'total'
+      else:
+        reaction_element.attrib['type'] = str(rxn_type)
 
       if debug_print:
         mgxs.print_xs()
