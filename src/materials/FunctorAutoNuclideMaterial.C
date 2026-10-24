@@ -108,7 +108,7 @@ FunctorAutoNuclideMaterial::FunctorAutoNuclideMaterial(const InputParameters & p
             }
           }
 
-          symmetric_strain_tensor_norm = std::sqrt(symmetric_strain_tensor_norm + offset);
+          symmetric_strain_tensor_norm = MetaPhysicL::sqrt(symmetric_strain_tensor_norm + offset);
           ADReal eddy_viscosity =
               symmetric_strain_tensor_norm * (*_mixing_len)(r, t) * (*_mixing_len)(r, t);
 
@@ -181,7 +181,7 @@ FunctorAutoNuclideMaterial::FunctorAutoNuclideMaterial(const InputParameters & p
           inv_tau_sq += 16.0 * ((*_nuc_diff)(r, t)) * ((*_nuc_diff)(r, t)) / (h2 * h2);
 
           // The coefficient.
-          return 1.0 / std::sqrt(inv_tau_sq);
+          return 1.0 / MetaPhysicL::sqrt(inv_tau_sq);
         },
         clearance_schedule);
   }
