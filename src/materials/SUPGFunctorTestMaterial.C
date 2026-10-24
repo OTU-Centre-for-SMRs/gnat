@@ -74,7 +74,7 @@ SUPGFunctorTestMaterial::SUPGFunctorTestMaterial(const InputParameters & paramet
         inv_tau_sq += 16.0 * _diff * _diff / (h2 * h2);
 
         // The coefficient.
-        return 1.0 / std::sqrt(inv_tau_sq);
+        return 1.0 / MetaPhysicL::sqrt(inv_tau_sq);
       },
       clearance_schedule);
 }

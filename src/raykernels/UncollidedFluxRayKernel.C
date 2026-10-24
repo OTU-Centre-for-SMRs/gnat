@@ -98,7 +98,7 @@ void
 UncollidedFluxRayKernel::addValue(const RealEigenVector & value)
 {
   Threads::spin_mutex::scoped_lock lock(_add_value_mutex);
-  _var.setNodalValue(value, 0u);
+  _var.setNodalValue(value);
   _var.add(_aux.solution());
 }
 
