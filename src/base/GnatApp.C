@@ -22,7 +22,7 @@ GnatApp::validParams()
   return params;
 }
 
-GnatApp::GnatApp(InputParameters parameters) : MooseApp(parameters)
+GnatApp::GnatApp(const InputParameters & parameters) : MooseApp(parameters)
 {
   GnatApp::registerAll(_factory, _action_factory, _syntax);
 
