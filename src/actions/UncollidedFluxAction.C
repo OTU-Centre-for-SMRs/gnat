@@ -261,7 +261,7 @@ UncollidedFluxAction::act()
         break;
     }
   }
-  else
+  else if (_current_task == "post_mesh_prepared" && _uncollided_treatment == UncollidedTreatment::SASF)
   {
     switch (_mesh->dimension())
     {
