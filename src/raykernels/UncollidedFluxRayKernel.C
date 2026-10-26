@@ -76,7 +76,7 @@ UncollidedFluxRayKernel::UncollidedFluxRayKernel(const InputParameters & paramet
     if (_fe_problem.getCoordSystem(subdomain_id) != Moose::COORD_XYZ)
       mooseError("Not valid on coordinate systems other than XYZ");
 
-  if (_var.feType() != FEType(CONSTANT, MONOMIAL))
+  if (_var.feType().family != libMesh::MONOMIAL || _var.feType().order != CONSTANT)
     paramError("variable", "Only CONSTANT MONOMIAL variables are supported");
 
   addMooseVariableDependency(&variable());
@@ -98,7 +98,7 @@ void
 UncollidedFluxRayKernel::addValue(const RealEigenVector & value)
 {
   Threads::spin_mutex::scoped_lock lock(_add_value_mutex);
-  _var.setNodalValue(value, 0u);
+  _var.setNodalValue(value);
   _var.add(_aux.solution());
 }
 

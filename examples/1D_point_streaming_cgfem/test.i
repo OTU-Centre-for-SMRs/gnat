@@ -45,6 +45,7 @@
     order = FIRST
     family = LAGRANGE
 
+    aq_type = 'gauss_chebyshev'
     n_polar = 20
 
     vacuum_boundaries = 'left right'
@@ -64,6 +65,7 @@
     order = FIRST
     family = LAGRANGE
 
+    aq_type = 'gauss_chebyshev'
     n_polar = 40
 
     vacuum_boundaries = 'left right'

@@ -16,7 +16,7 @@ class GnatApp : public MooseApp
 public:
   static InputParameters validParams();
 
-  GnatApp(InputParameters parameters);
+  GnatApp(const InputParameters & parameters);
   virtual ~GnatApp();
 
   static void registerApps();
